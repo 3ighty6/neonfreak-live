@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: ui-monospace, monospace;
+  background: #000;
+  color: white;
+}
+
+.neon-text {
+  text-shadow: 0 0 10px #ff00ff, 0 0 20px #00ffff;
+}
