@@ -1,9 +1,34 @@
+import React from 'react'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { AuthPage } from './pages/Auth'
+import { HomePage } from './pages/Home'
+import { StreamerDashboard } from './pages/StreamerDashboard'
+import { LiveRoom } from './pages/LiveRoom'
+
+function AppRoutes() {
+  const { user, loading } = useAuth()
+
+  if (loading) {
+    return <div style={{ padding: '20px', textAlign: 'center' }}>Loading...</div>
+  }
+
+  return (
+    <Routes>
+      <Route path="/auth" element={<AuthPage />} />
+      <Route path="/" element={user ? <HomePage /> : <Navigate to="/auth" />} />
+      <Route path="/streamer" element={user?.is_streamer ? <StreamerDashboard /> : <Navigate to="/" />} />
+      <Route path="/room/:roomId" element={user ? <LiveRoom /> : <Navigate to="/auth" />} />
+    </Routes>
+  )
+}
+
 export default function App() {
   return (
-    <div style={{ textAlign: 'center', padding: '40px', fontFamily: 'sans-serif' }}>
-      <h1>🔥 NeonFreak Live</h1>
-      <p>Cam Chat Platform - Coming Soon</p>
-      <p style={{ color: '#888' }}>Supabase Connected ✓</p>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
   )
 }
