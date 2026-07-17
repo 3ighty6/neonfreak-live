@@ -1,26 +1,27 @@
 import { useState, useEffect } from 'react'
+import { Session } from '@supabase/supabase-js'
 import { supabase } from './supabaseClient'
 import AuthPage from './pages/AuthPage'
 import MainApp from './pages/MainApp'
 import './index.css'
 
 export default function App() {
-  const [user, setUser] = useState(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Check if user is logged in
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user || null)
+      setSession(session)
       setLoading(false)
     }
 
     checkAuth()
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user || null)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
     })
 
     return () => subscription?.unsubscribe()
@@ -39,5 +40,5 @@ export default function App() {
     )
   }
 
-  return user ? <MainApp user={user} /> : <AuthPage />
+  return session ? <MainApp session={session} /> : <AuthPage />
 }

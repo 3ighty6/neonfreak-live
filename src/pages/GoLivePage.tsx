@@ -14,7 +14,7 @@ export default function GoLivePage({ userId }: { userId: string }) {
     
     const key = Math.random().toString(36).substring(2, 15)
     
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('rooms')
       .insert({ streamer_id: userId, title, category_id: category, is_live: true, rtmp_key: key })
       .select()

@@ -9,7 +9,7 @@ const PACKAGES = [
   { tokens: 5000, price: 299.99, bonus: 2000 },
 ]
 
-export default function TokenShopPage({ userId }: { userId: string }) {
+export default function TokenShopPage({ userId: _userId }: { userId: string }) {
   const handlePurchase = (tokens: number, price: number) => {
     // TODO: Integrate Stripe
     alert(`Purchase ${tokens} tokens for $${price} - Stripe integration coming soon`)

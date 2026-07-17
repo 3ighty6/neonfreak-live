@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabaseClient'
-import { LogOut, Home, Radio, Zap, User, Search } from 'lucide-react'
+import { LogOut, Home, Radio, Zap, User } from 'lucide-react'
 import HomePage from './HomePage'
 import GoLivePage from './GoLivePage'
 import TokenShopPage from './TokenShopPage'
@@ -8,9 +9,13 @@ import ProfilePage from './ProfilePage'
 
 type Page = 'home' | 'golive' | 'tokens' | 'profile'
 
-export default function MainApp({ user }: { user: any }) {
+interface MainAppProps {
+  session: Session
+}
+
+export default function MainApp({ session }: MainAppProps) {
   const [currentPage, setCurrentPage] = useState<Page>('home')
-  const [searchOpen, setSearchOpen] = useState(false)
+  const user = session.user
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
