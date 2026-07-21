@@ -1,148 +1,231 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { LogIn, UserPlus, Zap } from 'lucide-react'
+import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function AuthPage() {
+  const [isLogin, setIsLogin] = useState(true)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [username, setUsername] = useState('')
-  const [mode, setMode] = useState('login')
   const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [verificationSent, setVerificationSent] = useState(false)
 
-  const handleAuth = async (e: React.FormEvent) => {
+  useEffect(() => {
+    // Check for confirmation token in URL
+    const params = new URLSearchParams(window.location.search)
+    const token = params.get('token')
+    const type = params.get('type')
+
+    if (token && type === 'email') {
+      verifyEmail(token)
+    }
+  }, [])
+
+  const verifyEmail = async (token: string) => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'email',
+      })
+
+      if (error) {
+        setError(`Verification error: ${error.message}`)
+      } else {
+        setMessage('✅ Email verified! You can now log in.')
+        setIsLogin(true)
+      }
+    } catch (err) {
+      setError('Verification failed. Try logging in.')
+    }
+  }
+
+  const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setMessage('')
 
     try {
-      if (mode === 'signup') {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email,
-          password,
-        })
-        if (authError) throw authError
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username,
+          },
+          emailRedirectTo: `${window.location.origin}/auth?type=email`,
+        },
+      })
 
-        if (authData.user) {
-          await supabase.from('users').insert({
-            id: authData.user.id,
-            email,
-            username: username || email.split('@')[0],
-            token_balance: 0,
-          })
-        }
+      if (error) {
+        setError(error.message)
       } else {
-        const { error: loginError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        })
-        if (loginError) throw loginError
+        setMessage('✅ Signup successful! Check your email to verify.')
+        setVerificationSent(true)
+        setEmail('')
+        setPassword('')
+        setUsername('')
       }
-    } catch (err: any) {
-      setError(err.message)
+    } catch (err) {
+      setError(String(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError('')
+    setMessage('')
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (error) {
+        setError(error.message)
+      } else {
+        setMessage('✅ Logged in successfully!')
+        setEmail('')
+        setPassword('')
+      }
+    } catch (err) {
+      setError(String(err))
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="text-5xl mb-3">💬</div>
-          <h1 className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-2">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-2">
             Neon Chat
           </h1>
-          <p className="text-gray-400">Stream. Connect. Earn.</p>
+          <p className="text-gray-400">Live streaming platform</p>
         </div>
 
-        {/* Auth Card */}
-        <div className="bg-black/50 border border-cyan-500/30 rounded-lg p-8">
+        {/* Card */}
+        <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-8">
+          {/* Messages */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded flex gap-2 text-red-300 text-sm">
+              <AlertCircle size={16} className="flex-shrink-0 mt-0.5" />
+              {error}
+            </div>
+          )}
+
+          {message && (
+            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded flex gap-2 text-green-300 text-sm">
+              <CheckCircle size={16} className="flex-shrink-0 mt-0.5" />
+              {message}
+            </div>
+          )}
+
+          {verificationSent && (
+            <div className="mb-4 p-4 bg-blue-500/10 border border-blue-500/30 rounded text-blue-300 text-sm">
+              <strong>Check your email!</strong> Click the verification link to confirm your account.
+            </div>
+          )}
+
           {/* Tabs */}
-          <div className="flex gap-4 mb-8">
+          <div className="flex gap-2 mb-6">
             <button
-              onClick={() => setMode('login')}
-              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${
-                mode === 'login'
-                  ? 'bg-gradient-to-r from-cyan-600 to-purple-600 text-white'
-                  : 'bg-gray-900 text-gray-400 hover:bg-gray-800'
+              onClick={() => setIsLogin(true)}
+              className={`flex-1 py-2 rounded font-semibold transition ${
+                isLogin
+                  ? 'bg-cyan-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
-              <LogIn size={18} /> Login
+              Login
             </button>
             <button
-              onClick={() => setMode('signup')}
-              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition flex items-center justify-center gap-2 ${
-                mode === 'signup'
-                  ? 'bg-gradient-to-r from-cyan-600 to-purple-600 text-white'
-                  : 'bg-gray-900 text-gray-400 hover:bg-gray-800'
+              onClick={() => setIsLogin(false)}
+              className={`flex-1 py-2 rounded font-semibold transition ${
+                !isLogin
+                  ? 'bg-cyan-600 text-white'
+                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
               }`}
             >
-              <UserPlus size={18} /> Sign Up
+              Sign Up
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleAuth} className="space-y-4">
-            {mode === 'signup' && (
+          <form onSubmit={isLogin ? handleLogin : handleSignUp} className="space-y-4">
+            {!isLogin && (
               <div>
-                <label className="block text-xs font-semibold text-gray-400 mb-2">Username</label>
+                <label className="text-sm text-gray-400 block mb-2">Username</label>
+                <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
+                  <User size={18} className="text-gray-500 mr-2" />
+                  <input
+                    type="text"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Your username"
+                    className="flex-1 bg-transparent text-white outline-none"
+                    required={!isLogin}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div>
+              <label className="text-sm text-gray-400 block mb-2">Email</label>
+              <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
+                <Mail size={18} className="text-gray-500 mr-2" />
                 <input
-                  type="text"
-                  placeholder="Choose a username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 transition"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="flex-1 bg-transparent text-white outline-none"
                   required
                 />
               </div>
-            )}
-
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-2">Email</label>
-              <input
-                type="email"
-                placeholder="your@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 transition"
-                required
-              />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-gray-400 mb-2">Password</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-900 border border-gray-700 rounded-lg text-white placeholder-gray-600 focus:outline-none focus:border-cyan-500 transition"
-                required
-              />
-            </div>
-
-            {error && (
-              <div className="bg-red-600/20 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
-                {error}
+              <label className="text-sm text-gray-400 block mb-2">Password</label>
+              <div className="flex items-center bg-gray-800 border border-gray-700 rounded px-3 py-2">
+                <Lock size={18} className="text-gray-500 mr-2" />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="flex-1 bg-transparent text-white outline-none"
+                  required
+                />
               </div>
-            )}
+            </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 disabled:from-gray-700 disabled:to-gray-700 text-white rounded-lg font-bold transition flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700 disabled:opacity-50 text-white py-2 rounded font-semibold transition mt-6"
             >
-              <Zap size={18} />
-              {loading ? 'Loading...' : mode === 'login' ? 'Login to Neon Chat' : 'Create Account'}
+              {loading ? 'Loading...' : isLogin ? 'Login' : 'Sign Up'}
             </button>
           </form>
 
-          {/* Footer */}
-          <p className="text-center text-gray-500 text-xs mt-6">
-            By continuing, you agree to our Terms of Service and Privacy Policy
-          </p>
+          {/* Info */}
+          <div className="mt-6 p-4 bg-gray-800 rounded text-xs text-gray-400">
+            <strong>Test Account:</strong>
+            <div className="mt-2">
+              Email: demo@test.com
+              <br />
+              Password: demo123456
+            </div>
+          </div>
         </div>
       </div>
     </div>
