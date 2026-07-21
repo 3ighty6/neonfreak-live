@@ -226,6 +226,20 @@ export default function AuthPage() {
               Password: demo123456
             </div>
           </div>
+
+          {/* Admin Setup Link */}
+          <div className="mt-4 p-4 bg-cyan-500/10 border border-cyan-500/30 rounded text-xs text-cyan-300">
+            <strong>Admin Setup:</strong>
+            <div className="mt-2">
+              Need unlimited tokens?{' '}
+              <a
+                href="/setup"
+                className="text-cyan-400 hover:underline font-semibold"
+              >
+                Create Admin Account →
+              </a>
+            </div>
+          </div>
         </div>
       </div>
     </div>

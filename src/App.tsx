@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from './supabaseClient'
 import AuthPage from './pages/AuthPage'
+import SetupPage from './pages/SetupPage'
 import MainApp from './pages/MainApp'
 import './index.css'
 
@@ -38,6 +39,13 @@ export default function App() {
         </div>
       </div>
     )
+  }
+
+  // Check if user is trying to access setup page
+  const isSetupPage = window.location.pathname === '/setup'
+
+  if (isSetupPage) {
+    return <SetupPage />
   }
 
   return session ? <MainApp session={session} /> : <AuthPage />
