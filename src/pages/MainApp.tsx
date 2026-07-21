@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabaseClient'
-import { LogOut, Home, Radio, BarChart3, Film, User } from 'lucide-react'
+import { LogOut, Home, Radio, BarChart3, Film, User, Heart } from 'lucide-react'
 import HomePage from './HomePage'
 import StreamSetupPage from './StreamSetupPage'
+import TipPage from './TipPage'
 import AnalyticsDashboard from './AnalyticsDashboard'
 import VODLibrary from './VODLibrary'
 import ProfilePage from './ProfilePage'
 
-type Page = 'home' | 'setup' | 'analytics' | 'vods' | 'profile'
+type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile'
 
 interface MainAppProps {
   session: Session
@@ -22,51 +23,31 @@ export default function MainApp({ session }: MainAppProps) {
     await supabase.auth.signOut()
   }
 
+  const navItems = [
+    { id: 'home', label: 'Home', icon: Home },
+    { id: 'setup', label: 'Go Live', icon: Radio },
+    { id: 'tips', label: 'Tips', icon: Heart },
+    { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+    { id: 'vods', label: 'Videos', icon: Film },
+    { id: 'profile', label: 'Profile', icon: User },
+  ]
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white">
       {/* Mobile Bottom Nav */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-cyan-500/20 md:hidden z-40">
-        <div className="flex justify-around">
-          <button
-            onClick={() => setCurrentPage('home')}
-            className={`flex-1 py-3 flex justify-center transition ${
-              currentPage === 'home' ? 'text-cyan-400 border-t-2 border-cyan-400' : 'text-gray-400'
-            }`}
-          >
-            <Home size={24} />
-          </button>
-          <button
-            onClick={() => setCurrentPage('setup')}
-            className={`flex-1 py-3 flex justify-center transition ${
-              currentPage === 'setup' ? 'text-cyan-400 border-t-2 border-cyan-400' : 'text-gray-400'
-            }`}
-          >
-            <Radio size={24} />
-          </button>
-          <button
-            onClick={() => setCurrentPage('analytics')}
-            className={`flex-1 py-3 flex justify-center transition ${
-              currentPage === 'analytics' ? 'text-cyan-400 border-t-2 border-cyan-400' : 'text-gray-400'
-            }`}
-          >
-            <BarChart3 size={24} />
-          </button>
-          <button
-            onClick={() => setCurrentPage('vods')}
-            className={`flex-1 py-3 flex justify-center transition ${
-              currentPage === 'vods' ? 'text-cyan-400 border-t-2 border-cyan-400' : 'text-gray-400'
-            }`}
-          >
-            <Film size={24} />
-          </button>
-          <button
-            onClick={() => setCurrentPage('profile')}
-            className={`flex-1 py-3 flex justify-center transition ${
-              currentPage === 'profile' ? 'text-cyan-400 border-t-2 border-cyan-400' : 'text-gray-400'
-            }`}
-          >
-            <User size={24} />
-          </button>
+        <div className="flex justify-around overflow-x-auto">
+          {navItems.map(({ id, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => setCurrentPage(id as Page)}
+              className={`flex-1 py-3 flex justify-center transition min-w-max ${
+                currentPage === id ? 'text-cyan-400 border-t-2 border-cyan-400' : 'text-gray-400'
+              }`}
+            >
+              <Icon size={24} />
+            </button>
+          ))}
         </div>
       </div>
 
@@ -79,13 +60,7 @@ export default function MainApp({ session }: MainAppProps) {
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
-          {[
-            { id: 'home', label: 'Home', icon: Home },
-            { id: 'setup', label: 'Go Live', icon: Radio },
-            { id: 'analytics', label: 'Analytics', icon: BarChart3 },
-            { id: 'vods', label: 'Videos', icon: Film },
-            { id: 'profile', label: 'Profile', icon: User },
-          ].map(({ id, label, icon: Icon }) => (
+          {navItems.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               onClick={() => setCurrentPage(id as Page)}
@@ -102,7 +77,7 @@ export default function MainApp({ session }: MainAppProps) {
         </nav>
 
         <div className="p-4 border-t border-gray-800">
-          <div className="text-sm text-gray-400 mb-3">{user.email}</div>
+          <div className="text-sm text-gray-400 mb-3 truncate">{user.email}</div>
           <button
             onClick={handleLogout}
             className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-semibold flex items-center justify-center gap-2 transition"
@@ -117,6 +92,7 @@ export default function MainApp({ session }: MainAppProps) {
       <div className="md:ml-64 pb-20 md:pb-0">
         {currentPage === 'home' && <HomePage />}
         {currentPage === 'setup' && <StreamSetupPage />}
+        {currentPage === 'tips' && <TipPage />}
         {currentPage === 'analytics' && <AnalyticsDashboard userId={user.id} />}
         {currentPage === 'vods' && <VODLibrary userId={user.id} />}
         {currentPage === 'profile' && <ProfilePage />}
