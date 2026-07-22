@@ -18,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const stripe = new Stripe(secretKey, {
-      apiVersion: '2023-10-16',
+      apiVersion: '2026-06-24.dahlia',
     })
 
     // Test the connection
