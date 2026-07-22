@@ -59,17 +59,20 @@ export default function HomePage() {
     <div className="p-4 md:p-6">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-black text-white mb-4">Live Streams</h1>
+        <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-cyan-400 to-yellow-300 mb-2">
+          🎬 NeonLights
+        </h1>
+        <p className="text-cyan-300 text-lg mb-4">Discover Live Creators</p>
         
         {/* Search Bar */}
         <div className="relative mb-6">
-          <Search className="absolute left-4 top-3 text-gray-500" size={20} />
+          <Search className="absolute left-4 top-3 text-pink-500" size={20} />
           <input
             type="text"
-            placeholder="Search streams..."
+            placeholder="Search creators..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-gray-900 border border-cyan-500/30 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-cyan-500 transition"
+            className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-pink-500/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-pink-400 transition focus:shadow-lg focus:shadow-pink-500/30"
           />
         </div>
 
@@ -77,8 +80,10 @@ export default function HomePage() {
         <div className="flex overflow-x-auto gap-2 pb-2">
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-full whitespace-nowrap transition ${
-              !selectedCategory ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+            className={`px-4 py-2 rounded-full whitespace-nowrap transition font-semibold ${
+              !selectedCategory 
+                ? 'bg-gradient-to-r from-pink-500 to-cyan-500 text-white shadow-lg shadow-pink-500/50' 
+                : 'bg-slate-800/50 text-gray-300 hover:bg-slate-700/50 border border-pink-500/30'
             }`}
           >
             All
@@ -87,8 +92,10 @@ export default function HomePage() {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-full whitespace-nowrap transition ${
-                selectedCategory === cat.id ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+              className={`px-4 py-2 rounded-full whitespace-nowrap transition font-semibold ${
+                selectedCategory === cat.id 
+                  ? 'bg-gradient-to-r from-pink-500 to-cyan-500 text-white shadow-lg shadow-pink-500/50' 
+                  : 'bg-slate-800/50 text-gray-300 hover:bg-slate-700/50 border border-pink-500/30'
               }`}
             >
               {cat.icon} {cat.name}
@@ -99,25 +106,25 @@ export default function HomePage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-gradient-to-br from-cyan-600/20 to-purple-600/20 border border-cyan-500/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
-            <Radio size={16} /> Live Now
+        <div className="bg-gradient-to-br from-pink-600/20 to-cyan-600/20 border border-pink-500/30 rounded-lg p-4 shadow-lg shadow-pink-500/10">
+          <div className="flex items-center gap-2 text-cyan-300 text-sm mb-2">
+            <Radio size={16} /> 🔴 Live Now
           </div>
-          <div className="text-2xl font-bold text-cyan-400">{streams.length}</div>
+          <div className="text-2xl font-bold text-pink-400">{streams.length}</div>
         </div>
-        <div className="bg-gradient-to-br from-cyan-600/20 to-purple-600/20 border border-cyan-500/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
+        <div className="bg-gradient-to-br from-cyan-600/20 to-yellow-600/20 border border-cyan-500/30 rounded-lg p-4 shadow-lg shadow-cyan-500/10">
+          <div className="flex items-center gap-2 text-cyan-300 text-sm mb-2">
             <Users size={16} /> Viewers
           </div>
           <div className="text-2xl font-bold text-cyan-400">
             {streams.reduce((sum, s) => sum + s.viewer_count, 0).toLocaleString()}
           </div>
         </div>
-        <div className="bg-gradient-to-br from-cyan-600/20 to-purple-600/20 border border-cyan-500/30 rounded-lg p-4">
-          <div className="flex items-center gap-2 text-gray-400 text-sm mb-2">
+        <div className="bg-gradient-to-br from-yellow-600/20 to-pink-600/20 border border-yellow-500/30 rounded-lg p-4 shadow-lg shadow-yellow-500/10">
+          <div className="flex items-center gap-2 text-yellow-300 text-sm mb-2">
             <TrendingUp size={16} /> Trending
           </div>
-          <div className="text-2xl font-bold text-cyan-400">{Math.floor(Math.random() * 100) + 20}</div>
+          <div className="text-2xl font-bold text-yellow-400">{Math.floor(Math.random() * 100) + 20}</div>
         </div>
       </div>
 
