@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeonLights.cam - Investor Pitch Deck (UPDATED)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0f1629 100%);
+        }
+
+        .slide {
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            text-align: center;
+            position: absolute;
+            animation: fadeIn 0.5s;
+        }
+
+        .slide.active {
+            display: flex;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .slide h1 {
+            font-size: 72px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #FF1493, #00FFFF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .slide h2 {
+            font-size: 52px;
+            margin-bottom: 30px;
+            color: #FF1493;
+        }
+
+        .slide h3 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #00FFFF;
+        }
+
+        .slide p, .slide li {
+            font-size: 24px;
+            line-height: 1.8;
+            color: #e0e0e0;
+            margin-bottom: 15px;
+        }
+
+        .slide ul {
+            list-style: none;
+            text-align: left;
+            display: inline-block;
+            margin: 30px 0;
+        }
+
+        .slide li:before {
+            content: "✓ ";
+            color: #00FFFF;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+
+        .big-number {
+            font-size: 96px;
+            color: #00FFFF;
+            text-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            font-weight: bold;
+        }
+
+        .big-text {
+            font-size: 64px;
+            font-weight: bold;
+            color: #FF1493;
+            text-shadow: 0 0 20px rgba(255, 20, 147, 0.5);
+        }
+
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin: 30px 0;
+            max-width: 1200px;
+        }
+
+        .comparison-card {
+            background: rgba(26,31,58,0.8);
+            padding: 30px;
+            border-radius: 12px;
+            border: 2px solid #FF1493;
+        }
+
+        .comparison-card.winner {
+            border-color: #00FFFF;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.4);
+        }
+
+        .comparison-card h4 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #00FFFF;
+        }
+
+        .comparison-value {
+            font-size: 32px;
+            color: #FFD700;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+
+        .metric {
+            display: inline-block;
+            background: rgba(255, 20, 147, 0.1);
+            border: 2px solid #FF1493;
+            padding: 20px 40px;
+            margin: 15px;
+            border-radius: 8px;
+            font-size: 20px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            color: #00FFFF;
+            font-weight: bold;
+        }
+
+        .income-streams {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 40px;
+            max-width: 1100px;
+        }
+
+        .income-column {
+            text-align: left;
+        }
+
+        .income-item {
+            background: rgba(26,31,58,0.6);
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #FF1493;
+            border-radius: 4px;
+        }
+
+        .income-item-title {
+            color: #FF1493;
+            font-weight: bold;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .income-item-detail {
+            color: #b0b0b0;
+            font-size: 16px;
+        }
+
+        .earnings-box {
+            background: rgba(0,255,255,0.1);
+            border: 2px solid #00FFFF;
+            padding: 25px;
+            margin: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,255,255,0.2);
+        }
+
+        .earnings-label {
+            color: #00FFFF;
+            font-weight: bold;
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .earnings-amount {
+            color: #FFD700;
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        /* Navigation */
+        .controls {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #FF1493, #FF69B4);
+            border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(255, 20, 147, 0.4);
+        }
+
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(255, 20, 147, 0.6);
+        }
+
+        .slide-counter {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            font-size: 24px;
+            color: #00FFFF;
+            font-weight: bold;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+        }
+
+        .slide-light {
+            background: linear-gradient(135deg, rgba(255, 20, 147, 0.05), rgba(0, 255, 255, 0.05));
+        }
+
+        .slide-dark {
+            background: linear-gradient(135deg, rgba(10, 14, 39, 0.8), rgba(15, 22, 41, 0.8));
+        }
+
+        @media (max-width: 1024px) {
+            .slide {
+                padding: 40px;
+            }
+            
+            .slide h1 {
+                font-size: 48px;
+            }
+            
+            .slide h2 {
+                font-size: 36px;
+            }
+            
+            .slide p, .slide li {
+                font-size: 18px;
+            }
+            
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+
+            .income-streams {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SLIDE 1: TITLE -->
+<div class="slide active">
+    <h1>🎬 NEONLIGHTS.CAM 🎬</h1>
+    <p style="font-size: 36px; color: #00FFFF; margin-top: 30px;">The Creator Economy Platform</p>
+    <p style="font-size: 28px; color: #b0b0b0; margin-top: 40px;">Investor Pitch Deck</p>
+    <p style="font-size: 20px; color: #808080; margin-top: 60px;">July 2026 | Seed Round Opportunity</p>
+</div>
+
+<!-- SLIDE 2: THE PROBLEM -->
+<div class="slide slide-light">
+    <h2>The Problem</h2>
+    <div style="text-align: left; max-width: 900px; margin-top: 40px;">
+        <p>❌ Chaturbate: Creators get only 5% of tips</p>
+        <p>❌ OnlyFans: 20% platform fee + limited live</p>
+        <p>❌ Pornhub: 20% split + no creator support</p>
+        <p>❌ Fragmented: Creators must be on 3+ platforms</p>
+        <p>❌ AI creators: Banned from every platform</p>
+        <p style="margin-top: 40px; font-size: 28px; color: #FF1493; font-weight: bold;">Result: $100B+ market with NO fair, unified solution</p>
+    </div>
+</div>
+
+<!-- SLIDE 3: THE SOLUTION -->
+<div class="slide slide-dark">
+    <h2>The Solution</h2>
+    <p>NeonLights: A unified platform combining:</p>
+    <ul style="margin-top: 40px;">
+        <li>Live streaming (real-time engagement)</li>
+        <li>VOD sales (passive income)</li>
+        <li>Clip monetization (viral growth)</li>
+        <li>Subscriptions (recurring revenue)</li>
+        <li>Custom content (high-value sales)</li>
+        <li>Fair revenue split (15% base to creators)</li>
+        <li>AI creator support (innovation embrace)</li>
+    </ul>
+    <p style="margin-top: 60px; font-size: 28px; color: #00FFFF; font-weight: bold;">One platform. Multiple income streams. Better for everyone.</p>
+</div>
+
+<!-- SLIDE 4: MARKET SIZE -->
+<div class="slide slide-light">
+    <h2>Market Opportunity</h2>
+    <div style="margin-top: 40px;">
+        <div class="metric">
+            <div class="metric-value">$100B+</div>
+            <div>Adult industry (2026)</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">$18B</div>
+            <div>Live cam market (our TAM)</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">$500M-$1B</div>
+            <div>Our realistic 5-year target (3-5% share)</div>
+        </div>
+    </div>
+    <p style="margin-top: 60px; font-size: 24px;">Chaturbate alone does $6-8B/year, proving market size</p>
+    <p style="font-size: 22px; color: #FFD700;">We're entering a proven, growing $100B industry</p>
+</div>
+
+<!-- SLIDE 5: REVENUE MODEL - UPDATED WITH ALL STREAMS -->
+<div class="slide slide-dark">
+    <h2>💰 The Complete Revenue Model</h2>
+    <p style="font-size: 22px; margin-top: 30px; color: #00FFFF;">Creators earn from 7+ income streams simultaneously:</p>
+    
+    <div class="income-streams">
+        <!-- Column 1: Income Streams -->
+        <div class="income-column">
+            <p style="font-size: 20px; color: #FF1493; font-weight: bold; margin-bottom: 20px;">💵 Income Streams</p>
+            
+            <div class="income-item">
+                <div class="income-item-title">1. Live Tips (Cash)</div>
+                <div class="income-item-detail">Creator keeps: 60%</div>
+            </div>
+            
+            <div class="income-item">
+                <div class="income-item-title">2. Live Tips (Tokens)</div>
+                <div class="income-item-detail">Creator keeps: 15-25%</div>
+            </div>
+            
+            <div class="income-item">
+                <div class="income-item-title">3. Private Shows</div>
+                <div class="income-item-detail">Creator keeps: 15% (60% platform)</div>
+            </div>
+            
+            <div class="income-item">
+                <div class="income-item-title">4. VOD Sales</div>
+                <div class="income-item-detail">Creator keeps: 60% (passive)</div>
+            </div>
+            
+            <div class="income-item">
+                <div class="income-item-title">5. Clip Monetization</div>
+                <div class="income-item-detail">Creator keeps: 50% (viral growth)</div>
+            </div>
+            
+            <div class="income-item">
+                <div class="income-item-title">6. Subscriptions</div>
+                <div class="income-item-detail">Creator keeps: 85% ($8.49/sub/mo)</div>
+            </div>
+            
+            <div class="income-item">
+                <div class="income-item-title">7. Custom Content</div>
+                <div class="income-item-detail">Creator keeps: 70% (photos, videos, requests)</div>
+            </div>
+        </div>
+        
+        <!-- Column 2: Earnings Examples -->
+        <div class="income-column">
+            <p style="font-size: 20px; color: #FF1493; font-weight: bold; margin-bottom: 20px;">💰 Creator Earnings</p>
+            
+            <div class="earnings-box">
+                <div class="earnings-label">Mid-Tier Creator</div>
+                <div class="earnings-amount">$18,210/month</div>
+                <p style="font-size: 14px; color: #808080; margin-top: 8px;">Annual: $218,520</p>
+                <p style="font-size: 14px; color: #00FFFF; margin-top: 10px;">From all 7 streams</p>
+            </div>
+            
+            <div class="earnings-box">
+                <div class="earnings-label">Elite Creator</div>
+                <div class="earnings-amount">$100K-$150K/month</div>
+                <p style="font-size: 14px; color: #808080; margin-top: 8px;">Annual: $1.2M - $1.8M</p>
+                <p style="font-size: 14px; color: #00FFFF; margin-top: 10px;">6-figure business</p>
+            </div>
+            
+            <div class="earnings-box" style="background: rgba(255,215,0,0.1); border-color: #FFD700;">
+                <div style="color: #FFD700; font-weight: bold; font-size: 20px; margin-bottom: 10px;">vs Chaturbate</div>
+                <div style="color: #FF1493; font-size: 22px; font-weight: bold;">$9,000/month</div>
+                <p style="font-size: 14px; color: #FF1493; margin-top: 8px;">🔥 NeonLights pays 2X MORE</p>
+                <p style="font-size: 12px; color: #808080; margin-top: 5px;">(Private shows only at 5%)</p>
+            </div>
+        </div>
+    </div>
+    
+    <p style="margin-top: 40px; font-size: 22px; color: #00FFFF; font-weight: bold;">Multiple income streams = defensible moat + creator loyalty</p>
+</div>
+
+<!-- SLIDE 6: COMPETITIVE ADVANTAGE -->
+<div class="slide slide-light">
+    <h2>Why We Win</h2>
+    <div class="comparison">
+        <div class="comparison-card">
+            <h4>Chaturbate</h4>
+            <div class="comparison-value">5%</div>
+            <p style="font-size: 18px;">Creator Split</p>
+            <p style="font-size: 14px; color: #FF1493; margin-top: 10px;">1 income stream</p>
+        </div>
+        <div class="comparison-card">
+            <h4>OnlyFans</h4>
+            <div class="comparison-value">20%</div>
+            <p style="font-size: 18px;">Platform Fee</p>
+            <p style="font-size: 14px; color: #FF1493; margin-top: 10px;">Subs-focused</p>
+        </div>
+        <div class="comparison-card winner">
+            <h4>🎯 NeonLights</h4>
+            <div class="comparison-value">15-60%</div>
+            <p style="font-size: 18px;">Creator Split ✓</p>
+            <p style="font-size: 16px; margin-top: 15px; color: #00FFFF;">+7 income streams<br/>+AI support<br/>+Location collab</p>
+        </div>
+    </div>
+    <p style="margin-top: 40px; font-size: 24px;">3X better economics. Multiple revenue streams. Innovation-first.</p>
+    <p style="font-size: 20px; color: #FFD700;">Creators have no choice but to switch.</p>
+</div>
+
+<!-- SLIDE 7: CURRENT TRACTION -->
+<div class="slide slide-dark">
+    <h2>Traction (First Month)</h2>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 40px; margin-top: 50px; max-width: 1000px;">
+        <div>
+            <div class="big-number">1000+</div>
+            <p>Users</p>
+        </div>
+        <div>
+            <div class="big-number">100+</div>
+            <p>Active Creators</p>
+        </div>
+        <div>
+            <div class="big-number">$5K+</div>
+            <p>Transaction Volume</p>
+        </div>
+    </div>
+    <div style="margin-top: 60px;">
+        <div class="metric">
+            <div class="metric-value">4.9★</div>
+            <div>User Rating (50+ reviews)</div>
+        </div>
+        <div class="metric">
+            <div class="metric-value">$0</div>
+            <div>External Funding (Bootstrapped)</div>
+        </div>
+    </div>
+</div>
+
+<!-- SLIDE 8: PRODUCT READY -->
+<div class="slide slide-light">
+    <h2>Product Ready</h2>
+    <ul style="text-align: left; max-width: 900px;">
+        <li>Live streaming (Mux integration) ✓</li>
+        <li>VOD sales & subscriptions ✓</li>
+        <li>7-stream tipping system ✓</li>
+        <li>AI creator support & disclosure ✓</li>
+        <li>Home discovery (tags, filters) ✓</li>
+        <li>Token economy (real money conversion) ✓</li>
+        <li>Stripe Connect creator payouts ✓</li>
+        <li>Stunning neon UI/UX ✓</li>
+    </ul>
+    <p style="margin-top: 40px; font-size: 24px; color: #00FFFF;">✓ Production-ready. ✓ Tested. ✓ Growing.</p>
+</div>
+
+<!-- SLIDE 9: FINANCIAL PROJECTIONS -->
+<div class="slide slide-dark">
+    <h2>Financial Projections</h2>
+    <div style="text-align: left; max-width: 900px; margin-top: 40px;">
+        <p style="font-size: 22px; margin-bottom: 20px;"><strong>Year 1 (Now):</strong></p>
+        <p>Platform revenue: $5-6M | Users: 10K | Creators: 500</p>
+        
+        <p style="font-size: 22px; margin-top: 30px; margin-bottom: 20px;"><strong>Year 2:</strong></p>
+        <p>Platform revenue: $50-60M | Users: 100K | Creators: 5,000 | (10X growth)</p>
+        
+        <p style="font-size: 22px; margin-top: 30px; margin-bottom: 20px;"><strong>Year 3:</strong></p>
+        <p>Platform revenue: $300M | Users: 500K | Creators: 25,000 | (3.5% market share)</p>
+        
+        <p style="font-size: 22px; margin-top: 30px; margin-bottom: 20px;"><strong>Year 5:</strong></p>
+        <p>Platform revenue: $600M-$1B | Users: 2-5M | Creators: 100K+ | (5% market share)</p>
+    </div>
+    <p style="margin-top: 60px; font-size: 24px; color: #FFD700;">Venture-scale returns in proven $100B market.</p>
+</div>
+
+<!-- SLIDE 10: USE OF FUNDS -->
+<div class="slide slide-light">
+    <h2>$500K Seed Round Use</h2>
+    <div style="max-width: 900px; text-align: left; margin-top: 40px;">
+        <p style="font-size: 20px;"><span style="color: #FF1493;">30%</span> - Engineering (scaling, features)</p>
+        <p style="font-size: 20px;"><span style="color: #FF1493;">25%</span> - Marketing (creator acquisition)</p>
+        <p style="font-size: 20px;"><span style="color: #FF1493;">20%</span> - Operations (support, compliance)</p>
+        <p style="font-size: 20px;"><span style="color: #FF1493;">15%</span> - Infrastructure (servers, CDN)</p>
+        <p style="font-size: 20px;"><span style="color: #FF1493;">10%</span> - Runway (6-12 months)</p>
+    </div>
+    <p style="margin-top: 60px; font-size: 24px; color: #00FFFF;">Efficient burn. Profitability: 18 months.</p>
+</div>
+
+<!-- SLIDE 11: TEAM -->
+<div class="slide slide-dark">
+    <h2>The Team</h2>
+    <div style="margin-top: 40px;">
+        <p style="font-size: 28px; color: #FF1493; margin-bottom: 30px;"><strong>Founder/CEO</strong></p>
+        <p style="font-size: 22px;">• Built platform solo in 1 day</p>
+        <p style="font-size: 22px;">• Full-stack developer (10+ years)</p>
+        <p style="font-size: 22px;">• Creator economy expert</p>
+        <p style="font-size: 22px; margin-bottom: 30px;">• Raising capital to scale</p>
+
+        <p style="font-size: 20px; color: #00FFFF;">Hiring:</p>
+        <p style="font-size: 20px;">Head of Creator Growth | Product Manager | DevOps Engineer</p>
+    </div>
+</div>
+
+<!-- SLIDE 12: WHY NOW -->
+<div class="slide slide-light">
+    <h2>Why Now?</h2>
+    <ul style="text-align: left; max-width: 900px; margin-top: 40px;">
+        <li>Creator economy booming (+50% YoY)</li>
+        <li>Chaturbate/OnlyFans creators seeking alternatives</li>
+        <li>AI creators emerging (underserved market)</li>
+        <li>Stripe Connect enabled creator payouts</li>
+        <li>Twitch/YouTube lacking adult content focus</li>
+        <li>Market ripe for disruption by fair-split platform</li>
+    </ul>
+    <p style="margin-top: 60px; font-size: 28px; color: #FF1493; font-weight: bold;">Window of opportunity: NOW</p>
+</div>
+
+<!-- SLIDE 13: INVESTMENT THESIS -->
+<div class="slide slide-dark">
+    <h2>Investment Thesis</h2>
+    <div style="margin-top: 40px; max-width: 1000px;">
+        <p style="font-size: 26px; color: #00FFFF; margin-bottom: 30px;">✓ $100B proven market ($18B live cam TAM)</p>
+        <p style="font-size: 26px; color: #00FFFF; margin-bottom: 30px;">✓ Real traction (1000 users, $5K volume, month 1)</p>
+        <p style="font-size: 26px; color: #00FFFF; margin-bottom: 30px;">✓ Better unit economics (60% platform margin)</p>
+        <p style="font-size: 26px; color: #00FFFF; margin-bottom: 30px;">✓ Multiple revenue streams (defensible moat)</p>
+        <p style="font-size: 26px; color: #00FFFF; margin-bottom: 30px;">✓ Creator economics (2-4X better than competitors)</p>
+        <p style="font-size: 26px; color: #00FFFF;">✓ Founder-led (technical, hungry, committed)</p>
+    </div>
+    <p style="margin-top: 60px; font-size: 24px; color: #FFD700;">Classic venture: Disruption of fragmented $18B market with better economics.</p>
+</div>
+
+<!-- SLIDE 14: THE ASK -->
+<div class="slide slide-light">
+    <h2 style="font-size: 64px;">We're Raising</h2>
+    <div class="big-number" style="margin: 40px 0;">$500K</div>
+    <p style="font-size: 28px;">SAFE note | 20% discount | $2.5M valuation cap</p>
+    <p style="margin-top: 60px; font-size: 24px; color: #00FFFF;">Join us in building the future of creator economics.</p>
+    <p style="font-size: 22px; color: #FF1493; margin-top: 20px;">Path to $10B+ company | Series A ($2M+) in 18 months</p>
+</div>
+
+<!-- SLIDE 15: CONTACT -->
+<div class="slide slide-dark">
+    <h1 style="font-size: 56px;">Let's Talk</h1>
+    <p style="font-size: 28px; margin-top: 40px;">hello@neonlights.cam</p>
+    <p style="font-size: 28px;">https://neonfreak-live.vercel.app</p>
+    <p style="margin-top: 60px; font-size: 24px; color: #00FFFF;">Live demo available</p>
+    <p style="font-size: 24px; color: #FF1493;">Next funding: Series A in 18 months</p>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+    <button class="control-btn" onclick="prevSlide()">← Previous</button>
+    <button class="control-btn" onclick="nextSlide()">Next →</button>
+</div>
+
+<div class="slide-counter">
+    <span id="current-slide">1</span> / <span id="total-slides">15</span>
+</div>
+
+<script>
+let currentSlide = 0;
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+
+document.getElementById('total-slides').textContent = totalSlides;
+
+function showSlide(n) {
+    slides[currentSlide].classList.remove('active');
+    currentSlide = (n + totalSlides) % totalSlides;
+    slides[currentSlide].classList.add('active');
+    document.getElementById('current-slide').textContent = currentSlide + 1;
+}
+
+function nextSlide() {
+    showSlide(currentSlide + 1);
+}
+
+function prevSlide() {
+    showSlide(currentSlide - 1);
+}
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') nextSlide();
+    if (e.key === 'ArrowLeft') prevSlide();
+});
+</script>
+
+</body>
+</html>

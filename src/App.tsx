@@ -43,9 +43,16 @@ export default function App() {
 
   // Check if user is trying to access setup page
   const isSetupPage = window.location.pathname === '/setup'
+  const isPitchDeck = window.location.pathname === '/pitch-deck'
 
   if (isSetupPage) {
     return <SetupPage />
+  }
+
+  if (isPitchDeck) {
+    // Redirect to static HTML file
+    window.location.href = '/pitch-deck.html'
+    return <div></div>
   }
 
   return session ? <MainApp session={session} /> : <AuthPage />
