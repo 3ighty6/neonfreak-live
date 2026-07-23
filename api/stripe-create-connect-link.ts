@@ -7,7 +7,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2026-06-24.dahlia',
+  apiVersion: '2024-06-20' as any,
 })
 
 export default async function handler(_req: VercelRequest, res: VercelResponse) {
