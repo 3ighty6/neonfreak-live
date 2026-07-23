@@ -3,7 +3,7 @@
  * Simple admin account with unlimited tokens
  */
 
-import { supabase } from '../supabaseClient'
+import { supabase } from '@/supabaseClient'
 
 export const ADMIN_EMAIL = 'm.zarling86@gmail.com'
 

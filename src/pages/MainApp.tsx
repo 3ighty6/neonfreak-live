@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Session } from '@supabase/supabase-js'
-import { supabase } from '../supabaseClient'
+import { supabase } from '@/supabaseClient'
 import { LogOut, Home, Radio, BarChart3, Film, User, Heart } from 'lucide-react'
 import HomePage from './HomePage'
 import StreamSetupPage from './StreamSetupPage'

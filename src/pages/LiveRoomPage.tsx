@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Session } from '@supabase/supabase-js'
-import { supabase } from '../supabaseClient'
+import { supabase } from '@/supabaseClient'
 import { Send, Heart, Users, Share2, Settings } from 'lucide-react'
 
 interface LiveRoomPageProps {

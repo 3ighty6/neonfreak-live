@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../supabaseClient'
+import { supabase } from '@/supabaseClient'
 import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function AuthPage() {

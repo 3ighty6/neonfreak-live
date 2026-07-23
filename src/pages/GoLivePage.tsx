@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Copy, Check, ArrowLeft } from 'lucide-react'
-import { supabase } from '../supabaseClient'
+import { supabase } from '@/supabaseClient'
 
 export default function GoLivePage() {
   const [title, setTitle] = useState('')

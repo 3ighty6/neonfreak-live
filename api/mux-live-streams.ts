@@ -15,7 +15,7 @@ function getAuthHeader() {
   return `Basic ${credentials}`
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(_req: VercelRequest, res: VercelResponse) {
   if (req.method === 'POST') {
     return await createLiveStream(req, res)
   } else if (req.method === 'GET') {

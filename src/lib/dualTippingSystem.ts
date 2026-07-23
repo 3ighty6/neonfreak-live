@@ -70,8 +70,8 @@ export async function processCashTip(
         metadata: {
           from_user_id: fromUserId,
           to_model_id: toModelId,
-          stream_id: context.streamId,
-          private_chat_id: context.privateChatId,
+          stream_id: context.streamId || '',
+          private_chat_id: context.privateChatId || '',
         },
       },
       {

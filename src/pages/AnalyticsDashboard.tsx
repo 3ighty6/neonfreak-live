@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { TrendingUp, Eye, DollarSign, Users, Clock } from 'lucide-react'
-import { supabase } from '../supabaseClient'
+import { supabase } from '@/supabaseClient'
 
 interface StreamStat {
   date: string

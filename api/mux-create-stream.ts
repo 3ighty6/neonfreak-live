@@ -8,7 +8,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 const MUX_API_KEY = process.env.VITE_MUX_API_KEY || ''
 const MUX_API_SECRET = process.env.MUX_API_SECRET || ''
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(_req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
@@ -17,7 +17,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Mux credentials not configured' })
   }
 
-  const { streamerId, title } = req.body
+  const { streamerId: _streamerId, title: _title } = req.body
 
   try {
     const auth = Buffer.from(`${MUX_API_KEY}:${MUX_API_SECRET}`).toString('base64')
