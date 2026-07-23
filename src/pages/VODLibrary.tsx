@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Play, Download, Trash2, Eye } from 'lucide-react'
-import { supabase } from '@/supabaseClient'
+import { supabase } from '../supabaseClient'
 
 interface Recording {
   id: string

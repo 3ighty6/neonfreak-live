@@ -7,7 +7,7 @@
  * - Platform neutral stance: Enable both human and AI creators
  */
 
-import { supabase } from '@/supabaseClient'
+import { supabase } from '../supabaseClient'
 
 // ============================================
 // AI CREATOR TYPES

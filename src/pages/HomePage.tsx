@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '@/supabaseClient'
+import { supabase } from '../supabaseClient'
 import { Search, Users, TrendingUp, Radio } from 'lucide-react'
 import LiveStreamCard from '../components/LiveStreamCard'
 

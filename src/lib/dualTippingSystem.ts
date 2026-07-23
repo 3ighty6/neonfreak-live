@@ -5,7 +5,7 @@
  * - Incentivizes token purchasing (more profitable for platform)
  */
 
-import { supabase } from '@/supabaseClient'
+import { supabase } from '../supabaseClient'
 import Stripe from 'stripe'
 
 const stripe = new Stripe(process.env.VITE_STRIPE_SECRET_KEY || '')
