@@ -8,7 +8,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 const MUX_API_KEY = process.env.VITE_MUX_API_KEY || ''
 const MUX_API_SECRET = process.env.MUX_API_SECRET || ''
 
-export default async function handler(_req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
   }

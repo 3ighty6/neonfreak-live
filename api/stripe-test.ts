@@ -6,7 +6,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Stripe from 'stripe'
 
-export default async function handler(_req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   const secretKey = process.env.STRIPE_SECRET_KEY
 
   if (!secretKey) {
@@ -22,7 +22,7 @@ export default async function handler(_req: VercelRequest, res: VercelResponse) 
     })
 
     // Test the connection
-    const account = await stripe.account.retrieve()
+    const account = await (stripe.account as any).retrieve('me')
 
     res.json({
       status: 'OK',
