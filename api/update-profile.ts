@@ -1,39 +1,49 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { createClient } from '@supabase/supabase-js'
-
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || ''
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || ''
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
 
   const { userId, username, bio, email } = req.body
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+  const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
 
-  if (!userId) return res.status(400).json({ error: 'Missing userId' })
+  if (!userId) {
+    return res.status(400).json({ error: 'Missing userId' })
+  }
 
   try {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      return res.json({ success: true, message: 'Profile updated (offline)' })
+      return res.json({ success: false, error: 'Supabase not configured' })
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: username || undefined,
+          bio: bio || undefined,
+          email: email || undefined,
+        }),
+      }
+    )
 
-    // Update user profile
-    const { error } = await supabase
-      .from('profiles')
-      .update({
-        username,
-        bio,
-        email,
-        updated_at: new Date(),
-      })
-      .eq('id', userId)
+    if (!response.ok) {
+      const error = await response.text()
+      console.error('Profile update failed:', response.status, error)
+      return res.json({ success: false, error: `Supabase ${response.status}: ${error}` })
+    }
 
-    if (error) throw error
-
-    res.json({ success: true, message: 'Profile updated successfully' })
+    res.json({ success: true, message: 'Profile updated' })
   } catch (error) {
     console.error('Error:', error)
-    res.status(500).json({ error: 'Failed to update profile' })
+    res.status(500).json({ success: false, error: String(error) })
   }
 }

@@ -1,43 +1,51 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { createClient } from '@supabase/supabase-js'
-
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || ''
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || ''
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' })
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' })
+  }
 
   const { tag } = req.query
+  const SUPABASE_URL = process.env.VITE_SUPABASE_URL
+  const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY
 
-  if (!tag) return res.status(400).json({ error: 'Missing tag' })
+  if (!tag) {
+    return res.status(400).json({ error: 'Missing tag' })
+  }
 
   try {
     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      return res.json({ results: [] })
+      return res.json({ results: [], error: 'Supabase not configured' })
     }
 
-    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-    const tagStr = tag as string
-    
-    // Search for streams with this hashtag
-    const { data, error } = await supabase
-      .from('streams')
-      .select('id, title, status')
-      .ilike('title', `%${tagStr}%`)
-      .eq('status', 'active')
-      .limit(10)
+    const tagStr = String(tag)
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/streams?title=ilike.%25${encodeURIComponent(tagStr)}%25&status=eq.active&select=id,title,status`,
+      {
+        method: 'GET',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    )
 
-    if (error) throw error
+    if (!response.ok) {
+      console.error('Supabase error:', response.status, await response.text())
+      return res.json({ results: [], error: `Supabase ${response.status}` })
+    }
+
+    const data = await response.json()
 
     res.json({
-      results: (data || []).map(stream => ({
+      results: (data || []).map((stream: any) => ({
         tag: tagStr,
-        count: 1,
         stream,
       })),
     })
   } catch (error) {
     console.error('Error:', error)
-    res.status(500).json({ error: 'Search failed' })
+    res.status(500).json({ error: String(error) })
   }
 }
