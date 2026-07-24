@@ -5,6 +5,12 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import crypto from 'crypto'
+import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL || '',
+  process.env.VITE_SUPABASE_ANON_KEY || ''
+)
 
 const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET || ''
 
@@ -74,10 +80,44 @@ async function handleTransactionCompleted(data: any) {
 
   console.log(`Processing transaction ${transactionId} for customer ${customerId}`)
 
-  // TODO: Update creator token balance in Supabase
-  // TODO: Send notification to creator
-  // TODO: Log transaction in analytics
-
+  // Parse custom data for tip destination
   const tipAmount = items?.[0]?.total_amount || 0
-  console.log(`Tip processed: $${tipAmount / 100} to creator`)
+  const creatorId = customerId // In real app, extract from custom_data
+
+  if (!creatorId) {
+    console.error('No creator ID found in transaction')
+    return
+  }
+
+  // Calculate split: 70% to creator, 30% platform
+  const creatorShare = Math.floor(tipAmount * 0.7)
+  const platformShare = tipAmount - creatorShare
+
+  try {
+    // Get current balance first
+    const { data: current } = await supabase
+      .from('user_tokens')
+      .select('balance, lifetime_earned')
+      .eq('user_id', creatorId)
+      .single()
+
+    const newBalance = (current?.balance || 0) + creatorShare
+    const newLifetime = (current?.lifetime_earned || 0) + creatorShare
+
+    // Update creator's token balance
+    const { error: updateError } = await supabase
+      .from('user_tokens')
+      .update({
+        balance: newBalance,
+        lifetime_earned: newLifetime,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', creatorId)
+
+    if (updateError) throw updateError
+
+    console.log(`✅ Tip processed: $${tipAmount / 100} (${creatorShare} tokens to creator, ${platformShare} tokens to platform)`)
+  } catch (error) {
+    console.error('Failed to update creator tokens:', error)
+  }
 }

@@ -12,15 +12,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@stripe/react-stripe-js": "^6.8.0",
-    "@stripe/stripe-js": "^9.12.0",
     "@supabase/supabase-js": "^2.43.4",
     "lucide-react": "^0.408.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.20.0",
     "recharts": "^3.9.2",
-    "stripe": "^22.3.2",
     "zustand": "^4.4.0"
   },
   "devDependencies": {
