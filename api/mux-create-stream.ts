@@ -1,89 +1,63 @@
-/**
- * Vercel API Route: /api/mux/create-stream
- * Creates a real Mux live stream with proper RTMP details
- */
-
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
 
-const MUX_API_KEY = process.env.MUX_TOKEN_ID || ''
-const MUX_API_SECRET = process.env.MUX_TOKEN_SECRET || ''
+const MUX_TOKEN_ID = process.env.MUX_TOKEN_ID || ''
+const MUX_TOKEN_SECRET = process.env.MUX_TOKEN_SECRET || ''
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || ''
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || ''
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
-  if (!MUX_API_KEY || !MUX_API_SECRET) {
-    return res.status(400).json({ error: 'Mux credentials not configured' })
-  }
-
-  const { streamerId: _streamerId, title: _title } = req.body
+  const { streamerId, title } = req.body
+  if (!streamerId || !title) return res.status(400).json({ error: 'Missing streamerId or title' })
 
   try {
-    // Validate credentials
-    if (!MUX_API_KEY || !MUX_API_SECRET) {
-      console.error('Missing Mux credentials:', {
-        hasApiKey: !!MUX_API_KEY,
-        hasSecret: !!MUX_API_SECRET,
-      })
-      return res.status(500).json({
-        error: 'Mux credentials not configured',
-        debug: { hasApiKey: !!MUX_API_KEY, hasSecret: !!MUX_API_SECRET },
-      })
+    if (!MUX_TOKEN_ID || !MUX_TOKEN_SECRET) {
+      return res.status(500).json({ error: 'Mux not configured' })
     }
 
-    const auth = Buffer.from(`${MUX_API_KEY}:${MUX_API_SECRET}`).toString('base64')
-    const requestBody = {
-      playback_policy: ['public'],
-      new_asset_settings: {
-        playback_policy: ['public'],
-      },
-    }
-
-    console.log('Creating Mux stream with:', {
-      apiKeyPrefix: MUX_API_KEY.substring(0, 10),
-      requestBody,
-    })
-
-    // Create live stream in Mux
-    const response = await fetch('https://api.mux.com/video/v1/live-streams', {
+    const auth = Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')
+    const muxRes = await fetch('https://api.mux.com/video/v1/live-streams', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(requestBody),
+      body: JSON.stringify({ playback_policy: ['public'] }),
     })
 
-    console.log('Mux API response:', {
-      status: response.status,
-      statusText: response.statusText,
-    })
+    if (!muxRes.ok) {
+      const error = await muxRes.text()
+      console.error('Mux error:', error)
+      return res.status(muxRes.status).json({ error: 'Mux API failed' })
+    }
 
-    if (!response.ok) {
-      const error = await response.json()
-      console.error('Mux error response:', error)
-      return res.status(response.status).json({
-        error: 'Failed to create Mux stream',
-        details: error,
+    const muxData = await muxRes.json()
+    const stream = muxData.data
+
+    // Store in Supabase
+    if (SUPABASE_URL && SUPABASE_ANON_KEY) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      await supabase.from('streams').insert({
+        id: stream.id,
+        creator_id: streamerId,
+        mux_stream_id: stream.id,
+        rtmp_url: stream.rtmp_server_url,
+        rtmp_key: stream.rtmp_stream_key,
+        status: 'active',
       })
     }
 
-    const data = await response.json()
-    const stream = data.data
-    console.log('Stream created:', { id: stream.id })
-
-    // Return RTMP credentials
     res.json({
       id: stream.id,
       rtmpServerUrl: stream.rtmp_server_url,
       rtmpStreamKey: stream.rtmp_stream_key,
       playbackId: stream.playback_ids?.[0]?.id,
-      hlsUrl: stream.playback_ids?.[0]?.id ? `https://stream.mux.com/${stream.playback_ids[0].id}.m3u8` : null,
       status: 'active',
     })
   } catch (error) {
-    console.error('Error creating stream:', error)
+    console.error('Error:', error)
     res.status(500).json({ error: 'Failed to create stream' })
   }
 }

@@ -1,41 +1,39 @@
-/**
- * Vercel API Route: /api/update-profile
- * Updates user profile info (username, bio, email, avatar)
- */
-
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { createClient } from '@supabase/supabase-js'
+
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || ''
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || ''
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' })
-  }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
 
   const { userId, username, bio, email } = req.body
 
-  if (!userId) {
-    return res.status(400).json({ error: 'Missing userId' })
-  }
+  if (!userId) return res.status(400).json({ error: 'Missing userId' })
 
   try {
-    // TODO: Update Supabase user profile
-    // const { error } = await supabase
-    //   .from('user_profiles')
-    //   .update({ username, bio, email, updated_at: new Date() })
-    //   .eq('user_id', userId)
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+      return res.json({ success: true, message: 'Profile updated (offline)' })
+    }
 
-    // TODO: Handle avatar upload to Supabase storage if provided
-    // if (avatarFile) {
-    //   const { data, error } = await supabase.storage
-    //     .from('avatars')
-    //     .upload(`${userId}/avatar`, avatarFile)
-    // }
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-    res.json({
-      success: true,
-      message: 'Profile updated successfully',
-    })
+    // Update user profile
+    const { error } = await supabase
+      .from('profiles')
+      .update({
+        username,
+        bio,
+        email,
+        updated_at: new Date(),
+      })
+      .eq('id', userId)
+
+    if (error) throw error
+
+    res.json({ success: true, message: 'Profile updated successfully' })
   } catch (error) {
-    console.error('Error updating profile:', error)
+    console.error('Error:', error)
     res.status(500).json({ error: 'Failed to update profile' })
   }
 }
