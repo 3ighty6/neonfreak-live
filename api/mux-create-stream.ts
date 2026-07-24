@@ -1,20 +1,20 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const MUX_TOKEN_ID = process.env.MUX_TOKEN_ID
-  const MUX_TOKEN_SECRET = process.env.MUX_TOKEN_SECRET
+  // Read env vars directly
+  const MUX_TOKEN_ID = process.env.MUX_TOKEN_ID || ''
+  const MUX_TOKEN_SECRET = process.env.MUX_TOKEN_SECRET || ''
 
-  console.log('Mux credentials check:', {
-    hasTokenId: !!MUX_TOKEN_ID,
-    hasTokenSecret: !!MUX_TOKEN_SECRET,
-    tokenIdLength: MUX_TOKEN_ID?.length,
-  })
+  console.log('MUX_TOKEN_ID env:', !!MUX_TOKEN_ID, MUX_TOKEN_ID?.substring(0, 5))
+  console.log('MUX_TOKEN_SECRET env:', !!MUX_TOKEN_SECRET, MUX_TOKEN_SECRET?.substring(0, 5))
+  console.log('All env vars:', Object.keys(process.env).filter(k => k.includes('MUX')))
 
   if (!MUX_TOKEN_ID || !MUX_TOKEN_SECRET) {
+    console.error('Mux credentials missing')
     return res.status(500).json({
       error: 'Mux not configured',
-      hasTokenId: !!MUX_TOKEN_ID,
-      hasTokenSecret: !!MUX_TOKEN_SECRET,
+      hasId: !!MUX_TOKEN_ID,
+      hasSecret: !!MUX_TOKEN_SECRET,
     })
   }
 
@@ -31,7 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const auth = Buffer.from(`${MUX_TOKEN_ID}:${MUX_TOKEN_SECRET}`).toString('base64')
 
-    const response = await fetch('https://api.mux.com/video/v1/live-streams', {
+    const muxRes = await fetch('https://api.mux.com/video/v1/live-streams', {
       method: 'POST',
       headers: {
         'Authorization': `Basic ${auth}`,
@@ -40,13 +40,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       body: JSON.stringify({ playback_policy: ['public'] }),
     })
 
-    if (!response.ok) {
-      const error = await response.text()
-      console.error('Mux error:', error)
-      return res.status(response.status).json({ error: 'Mux API failed', details: error })
+    if (!muxRes.ok) {
+      const error = await muxRes.text()
+      console.error('Mux error:', muxRes.status, error)
+      return res.status(muxRes.status).json({ error: 'Mux API failed', status: muxRes.status })
     }
 
-    const data = await response.json()
+    const data = await muxRes.json()
     const stream = data.data
 
     res.json({

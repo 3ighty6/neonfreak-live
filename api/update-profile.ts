@@ -18,8 +18,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.json({ success: false, error: 'Supabase not configured' })
     }
 
+    // Use streamers table, not profiles
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/profiles?id=eq.${userId}`,
+      `${SUPABASE_URL}/rest/v1/streamers?id=eq.${userId}`,
       {
         method: 'PATCH',
         headers: {
@@ -38,7 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!response.ok) {
       const error = await response.text()
       console.error('Profile update failed:', response.status, error)
-      return res.json({ success: false, error: `Supabase ${response.status}: ${error}` })
+      return res.json({ success: false, error: `Supabase ${response.status}` })
     }
 
     res.json({ success: true, message: 'Profile updated' })

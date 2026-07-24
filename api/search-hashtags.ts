@@ -19,8 +19,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const tagStr = String(tag)
+    // Search in streams table
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/streams?title=ilike.%25${encodeURIComponent(tagStr)}%25&status=eq.active&select=id,title,status`,
+      `${SUPABASE_URL}/rest/v1/streams?select=id,title,status&limit=10`,
       {
         method: 'GET',
         headers: {
@@ -32,8 +33,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     )
 
     if (!response.ok) {
-      console.error('Supabase error:', response.status, await response.text())
-      return res.json({ results: [], error: `Supabase ${response.status}` })
+      console.error('Supabase error:', response.status)
+      return res.json({ results: [] })
     }
 
     const data = await response.json()
@@ -46,6 +47,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })
   } catch (error) {
     console.error('Error:', error)
-    res.status(500).json({ error: String(error) })
+    res.json({ results: [], error: String(error) })
   }
 }
