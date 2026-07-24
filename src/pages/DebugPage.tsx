@@ -1,177 +1,151 @@
 import { useState } from 'react'
-import { Bug, CheckCircle, AlertCircle } from 'lucide-react'
-
-interface TestResult {
-  endpoint: string
-  status: 'idle' | 'loading' | 'success' | 'error'
-  message: string
-  response?: any
-}
+import { supabase } from '../lib/supabase'
 
 export default function DebugPage() {
-  const [results, setResults] = useState<TestResult[]>([])
+  const [results, setResults] = useState<Record<string, any>>({})
+  const [loading, setLoading] = useState<Record<string, boolean>>({})
 
-  const testEndpoint = async (endpoint: string, method: string = 'GET', body?: any) => {
-    const testName = `${method} ${endpoint}`
-    setResults((prev) => [...prev, { endpoint: testName, status: 'loading', message: 'Testing...' }])
-
+  const test = async (name: string, fn: () => Promise<any>) => {
+    setLoading(prev => ({ ...prev, [name]: true }))
     try {
-      const response = await fetch(endpoint, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: body ? JSON.stringify(body) : undefined,
-      })
-
-      const data = await response.json()
-
-      setResults((prev) =>
-        prev.map((r) =>
-          r.endpoint === testName
-            ? {
-                ...r,
-                status: response.ok ? 'success' : 'error',
-                message: response.ok ? 'Success' : `Error: ${data.error}`,
-                response: data,
-              }
-            : r
-        )
-      )
-    } catch (error) {
-      setResults((prev) =>
-        prev.map((r) =>
-          r.endpoint === testName
-            ? {
-                ...r,
-                status: 'error',
-                message: `Network error: ${String(error)}`,
-              }
-            : r
-        )
-      )
+      const result = await fn()
+      setResults(prev => ({ ...prev, [name]: { status: 'OK', data: result } }))
+    } catch (error: any) {
+      setResults(prev => ({ ...prev, [name]: { status: 'ERROR', error: error?.message || String(error) } }))
     }
+    setLoading(prev => ({ ...prev, [name]: false }))
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-4 md:p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-2 mb-6">
-          <Bug className="text-yellow-400" size={32} />
-          <h1 className="text-4xl font-bold">Debug Console</h1>
-        </div>
+    <div className="min-h-screen bg-gray-900 text-white p-8">
+      <h1 className="text-4xl font-bold mb-8 text-pink-500">🔧 Debug Tests</h1>
 
-        <div className="bg-gray-900 border border-yellow-500/30 rounded-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold mb-6">Test Endpoints</h2>
-
-          <div className="grid md:grid-cols-2 gap-4 mb-8">
-            <button
-              onClick={() => testEndpoint('/api/mux-create-stream', 'POST', {
-                streamerId: 'test-user',
-                title: 'Test Stream',
-              })}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold transition"
-            >
-              Test Mux Stream Creation
-            </button>
-
-            <button
-              onClick={() => testEndpoint('/api/get-token-balance', 'GET')}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold transition"
-            >
-              Test Token Balance
-            </button>
-
-            <button
-              onClick={() => testEndpoint('/api/search-hashtags?tag=%23live', 'GET')}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold transition"
-            >
-              Test Hashtag Search
-            </button>
-
-            <button
-              onClick={() => testEndpoint('/api/admin/stats', 'GET')}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold transition"
-            >
-              Test Admin Stats
-            </button>
-
-            <button
-              onClick={() => testEndpoint('/api/verify-age-dob', 'POST', {
-                dob: '2000-01-01',
-              })}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold transition"
-            >
-              Test Age Verification
-            </button>
-
-            <button
-              onClick={() => testEndpoint('/api/creator/analytics', 'GET')}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold transition"
-            >
-              Test Creator Analytics
-            </button>
-          </div>
-
+      <div className="grid grid-cols-1 gap-6">
+        {/* Auth Test */}
+        <div className="bg-gray-800 p-6 rounded">
           <button
-            onClick={() => setResults([])}
-            className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded font-semibold transition"
+            onClick={() => test('auth', async () => {
+              const { data } = await supabase.auth.getSession()
+              return data
+            })}
+            disabled={loading['auth']}
+            className="bg-pink-500 px-4 py-2 rounded hover:bg-pink-600 disabled:opacity-50"
           >
-            Clear Results
+            {loading['auth'] ? 'Testing...' : 'Test Auth'}
           </button>
+          {results['auth'] && (
+            <pre className={`mt-4 p-4 rounded ${results['auth'].status === 'OK' ? 'bg-green-900' : 'bg-red-900'}`}>
+              {JSON.stringify(results['auth'], null, 2)}
+            </pre>
+          )}
         </div>
 
-        {/* Results */}
-        <div className="space-y-4">
-          {results.map((result, idx) => (
-            <div
-              key={idx}
-              className={`border rounded-lg p-4 ${
-                result.status === 'success'
-                  ? 'bg-green-500/10 border-green-500/30'
-                  : result.status === 'error'
-                    ? 'bg-red-500/10 border-red-500/30'
-                    : 'bg-gray-800/50 border-gray-700'
-              }`}
-            >
-              <div className="flex items-start gap-3 mb-2">
-                {result.status === 'success' && (
-                  <CheckCircle className="text-green-400 mt-1" size={20} />
-                )}
-                {result.status === 'error' && (
-                  <AlertCircle className="text-red-400 mt-1" size={20} />
-                )}
-                {result.status === 'loading' && (
-                  <div className="animate-spin">⏳</div>
-                )}
-                <div className="flex-1">
-                  <p className="font-mono text-sm font-semibold">{result.endpoint}</p>
-                  <p
-                    className={`text-sm ${
-                      result.status === 'success'
-                        ? 'text-green-300'
-                        : result.status === 'error'
-                          ? 'text-red-300'
-                          : 'text-gray-400'
-                    }`}
-                  >
-                    {result.message}
-                  </p>
-                </div>
-              </div>
-
-              {result.response && (
-                <div className="mt-3 p-3 bg-black/50 rounded font-mono text-xs text-gray-400 overflow-auto max-h-48">
-                  <pre>{JSON.stringify(result.response, null, 2)}</pre>
-                </div>
-              )}
-            </div>
-          ))}
+        {/* Mux Stream Test */}
+        <div className="bg-gray-800 p-6 rounded">
+          <button
+            onClick={() => test('mux', async () => {
+              const res = await fetch('/api/mux-create-stream', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ streamerId: 'test-user', title: 'Test Stream' })
+              })
+              const data = await res.json()
+              if (!res.ok) throw new Error(JSON.stringify(data))
+              return data
+            })}
+            disabled={loading['mux']}
+            className="bg-cyan-500 px-4 py-2 rounded hover:bg-cyan-600 disabled:opacity-50"
+          >
+            {loading['mux'] ? 'Testing...' : 'Test Mux Stream Creation'}
+          </button>
+          {results['mux'] && (
+            <pre className={`mt-4 p-4 rounded ${results['mux'].status === 'OK' ? 'bg-green-900' : 'bg-red-900'}`}>
+              {JSON.stringify(results['mux'], null, 2)}
+            </pre>
+          )}
         </div>
 
-        {/* Info Box */}
-        <div className="mt-8 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded text-sm text-gray-300">
-          <p className="font-semibold text-yellow-400 mb-2">🔍 Debug Info</p>
-          <p>Check browser console for detailed logs when testing endpoints.</p>
-          <p>Check Vercel Deployments for real-time logs: https://vercel.com/dashboard/neonfreak-live</p>
+        {/* Token Balance Test */}
+        <div className="bg-gray-800 p-6 rounded">
+          <button
+            onClick={() => test('token', async () => {
+              const res = await fetch('/api/get-token-balance?userId=test-user')
+              const data = await res.json()
+              if (!res.ok) throw new Error(JSON.stringify(data))
+              return data
+            })}
+            disabled={loading['token']}
+            className="bg-yellow-500 px-4 py-2 rounded hover:bg-yellow-600 disabled:opacity-50"
+          >
+            {loading['token'] ? 'Testing...' : 'Test Token Balance'}
+          </button>
+          {results['token'] && (
+            <pre className={`mt-4 p-4 rounded ${results['token'].status === 'OK' ? 'bg-green-900' : 'bg-red-900'}`}>
+              {JSON.stringify(results['token'], null, 2)}
+            </pre>
+          )}
+        </div>
+
+        {/* Hashtag Search Test */}
+        <div className="bg-gray-800 p-6 rounded">
+          <button
+            onClick={() => test('search', async () => {
+              const res = await fetch('/api/search-hashtags?tag=test')
+              const data = await res.json()
+              if (!res.ok) throw new Error(JSON.stringify(data))
+              return data
+            })}
+            disabled={loading['search']}
+            className="bg-purple-500 px-4 py-2 rounded hover:bg-purple-600 disabled:opacity-50"
+          >
+            {loading['search'] ? 'Testing...' : 'Test Hashtag Search'}
+          </button>
+          {results['search'] && (
+            <pre className={`mt-4 p-4 rounded ${results['search'].status === 'OK' ? 'bg-green-900' : 'bg-red-900'}`}>
+              {JSON.stringify(results['search'], null, 2)}
+            </pre>
+          )}
+        </div>
+
+        {/* Supabase Connection Test */}
+        <div className="bg-gray-800 p-6 rounded">
+          <button
+            onClick={() => test('supabase', async () => {
+              const { data, error } = await supabase.from('streams').select('count')
+              if (error) throw error
+              return data
+            })}
+            disabled={loading['supabase']}
+            className="bg-blue-500 px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+          >
+            {loading['supabase'] ? 'Testing...' : 'Test Supabase Connection'}
+          </button>
+          {results['supabase'] && (
+            <pre className={`mt-4 p-4 rounded ${results['supabase'].status === 'OK' ? 'bg-green-900' : 'bg-red-900'}`}>
+              {JSON.stringify(results['supabase'], null, 2)}
+            </pre>
+          )}
+        </div>
+
+        {/* Environment Variables Test */}
+        <div className="bg-gray-800 p-6 rounded">
+          <button
+            onClick={() => test('env', async () => {
+              const res = await fetch('/api/debug-env')
+              const data = await res.json()
+              if (!res.ok) throw new Error(JSON.stringify(data))
+              return data
+            })}
+            disabled={loading['env']}
+            className="bg-orange-500 px-4 py-2 rounded hover:bg-orange-600 disabled:opacity-50"
+          >
+            {loading['env'] ? 'Testing...' : 'Test Environment Variables'}
+          </button>
+          {results['env'] && (
+            <pre className={`mt-4 p-4 rounded ${results['env'].status === 'OK' ? 'bg-green-900' : 'bg-red-900'}`}>
+              {JSON.stringify(results['env'], null, 2)}
+            </pre>
+          )}
         </div>
       </div>
     </div>
