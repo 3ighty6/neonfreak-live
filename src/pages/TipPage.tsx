@@ -45,7 +45,7 @@ export default function TipPage() {
         <h1 className="text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
           Support Your Favorite Creators
         </h1>
-        <p className="text-gray-400 mb-8">Send tips and purchase tokens with Stripe</p>
+        <p className="text-gray-400 mb-8">Send tips and purchase tokens with Paddle</p>
 
         {/* Quick Tips */}
         <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-8">
@@ -131,7 +131,7 @@ export default function TipPage() {
           </div>
 
           <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded text-sm text-gray-300">
-            <strong>🔒 Secure:</strong> Powered by Stripe, the world's most trusted payment processor. All transactions are encrypted and secure.
+            <strong>🔒 Secure:</strong> Powered by Paddle, a secure global payment processor. All transactions are encrypted and safe.
           </div>
         </div>
       </div>

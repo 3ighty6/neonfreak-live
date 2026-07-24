@@ -5,8 +5,8 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
-const MUX_API_KEY = process.env.VITE_MUX_API_KEY || ''
-const MUX_API_SECRET = process.env.MUX_API_SECRET || ''
+const MUX_API_KEY = process.env.MUX_TOKEN_ID || ''
+const MUX_API_SECRET = process.env.MUX_TOKEN_SECRET || ''
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {

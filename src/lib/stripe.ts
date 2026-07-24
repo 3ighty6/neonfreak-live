@@ -1,13 +1,11 @@
 /**
- * Stripe Integration for Neon Chat
- * Handles payments + Stripe Connect for creator payouts
+ * Paddle Integration for Neon Chat
+ * Handles payments for tips and token purchases
  */
 
-import { loadStripe } from '@stripe/stripe-js'
-
-export const STRIPE_PUBLIC_KEY = import.meta.env.VITE_STRIPE_PUBLIC_KEY || ''
-
-export const stripe = loadStripe(STRIPE_PUBLIC_KEY)
+// Paddle configuration
+export const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN || ''
+export const PADDLE_VENDOR_ID = import.meta.env.VITE_PADDLE_VENDOR_ID || ''
 
 // Tip products
 export const TIP_PRODUCTS = {
@@ -29,29 +27,30 @@ export const TOKEN_PACKAGES = [
 ]
 
 /**
- * Create a Stripe Checkout session for tipping
+ * Create a Paddle Checkout for tipping
  */
 export async function createTipCheckout(
   creatorId: string,
   tipAmount: number,
   userId: string
 ): Promise<{ url: string | null }> {
-  const response = await fetch('/api/stripe/create-tip-checkout', {
+  const response = await fetch('/api/paddle-create-tip-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       creatorId,
-      amount: tipAmount,
-      userId,
+      amount: tipAmount * 100, // Convert to cents
+      tierName: getTierNameForAmount(tipAmount),
     }),
   })
 
-  if (!response.ok) throw new Error('Failed to create checkout session')
-  return response.json()
+  if (!response.ok) throw new Error('Failed to create checkout')
+  const data = await response.json()
+  return { url: data.checkoutUrl }
 }
 
 /**
- * Create a Stripe Checkout session for token purchase
+ * Create a Paddle Checkout for token purchase
  */
 export async function createTokenCheckout(
   userId: string,
@@ -60,60 +59,33 @@ export async function createTokenCheckout(
   const pkg = TOKEN_PACKAGES[packageIndex]
   if (!pkg) throw new Error('Invalid package')
 
-  const response = await fetch('/api/stripe/create-token-checkout', {
+  const response = await fetch('/api/paddle-create-tip-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      userId,
-      tokens: pkg.tokens,
-      bonus: pkg.bonus,
+      creatorId: userId,
       amount: pkg.priceCents,
+      tierName: `${pkg.tokens} Tokens`,
     }),
   })
 
-  if (!response.ok) throw new Error('Failed to create token checkout')
-  return response.json()
+  if (!response.ok) throw new Error('Failed to create checkout')
+  const data = await response.json()
+  return { url: data.checkoutUrl }
 }
 
 /**
- * Get Stripe Connect onboarding link for creator
+ * Helper function to map tip amount to tier name
  */
-export async function createConnectOnboarding(userId: string): Promise<{ url: string }> {
-  const response = await fetch('/api/stripe/create-connect-link', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ userId }),
-  })
-
-  if (!response.ok) throw new Error('Failed to create onboarding link')
-  return response.json()
-}
-
-/**
- * Get creator's connected account status
- */
-export async function getCreatorConnectStatus(userId: string): Promise<{
-  connected: boolean
-  accountId: string | null
-  email: string | null
-}> {
-  const response = await fetch(`/api/stripe/connect-status?userId=${userId}`)
-
-  if (!response.ok) throw new Error('Failed to fetch connect status')
-  return response.json()
-}
-
-/**
- * Get creator's pending balance
- */
-export async function getCreatorBalance(creatorId: string): Promise<{
-  pending: number
-  available: number
-}> {
-  const response = await fetch(`/api/stripe/creator-balance?creatorId=${creatorId}`)
-
-  if (!response.ok) return { pending: 0, available: 0 }
-  return response.json()
+function getTierNameForAmount(amount: number): string {
+  const tierMap: { [key: number]: string } = {
+    1: 'Say Hi',
+    5: 'Wave',
+    10: 'Gift',
+    25: 'Love',
+    50: 'Fire',
+  }
+  return tierMap[amount] || 'Tip'
 }
 
 /**
