@@ -20,16 +20,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    console.log('Paddle webhook received:', {
+      headers: Object.keys(req.headers),
+      bodyType: typeof req.body,
+    })
+
     // Verify webhook signature
     const signature = req.headers['paddle-signature'] as string
+    if (!signature) {
+      console.error('No paddle-signature header found')
+      return res.status(401).json({ error: 'Missing signature' })
+    }
+
     if (!verifySignature(req.body, signature)) {
+      console.error('Signature verification failed')
       return res.status(401).json({ error: 'Invalid signature' })
     }
 
     const event = JSON.parse(req.body.event)
     const eventType = event.type
 
-    console.log(`Webhook received: ${eventType}`)
+    console.log(`Webhook received: ${eventType}`, {
+      transactionId: event.data?.id,
+      customerId: event.data?.customer_id,
+    })
 
     // Handle different event types
     switch (eventType) {
