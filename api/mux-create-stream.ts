@@ -1,22 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Read env vars directly
-  const MUX_TOKEN_ID = process.env.MUX_TOKEN_ID || ''
-  const MUX_TOKEN_SECRET = process.env.MUX_TOKEN_SECRET || ''
-
-  console.log('MUX_TOKEN_ID env:', !!MUX_TOKEN_ID, MUX_TOKEN_ID?.substring(0, 5))
-  console.log('MUX_TOKEN_SECRET env:', !!MUX_TOKEN_SECRET, MUX_TOKEN_SECRET?.substring(0, 5))
-  console.log('All env vars:', Object.keys(process.env).filter(k => k.includes('MUX')))
-
-  if (!MUX_TOKEN_ID || !MUX_TOKEN_SECRET) {
-    console.error('Mux credentials missing')
-    return res.status(500).json({
-      error: 'Mux not configured',
-      hasId: !!MUX_TOKEN_ID,
-      hasSecret: !!MUX_TOKEN_SECRET,
-    })
-  }
+  // Hardcode credentials for Hobby plan limitation
+  const MUX_TOKEN_ID = 'mk_1Tjy2pRxr3tPjLUBUgkI8ZpG'
+  const MUX_TOKEN_SECRET = 'gh0hbbokv8mb0ac8iq2kig3cq'
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -42,8 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!muxRes.ok) {
       const error = await muxRes.text()
-      console.error('Mux error:', muxRes.status, error)
-      return res.status(muxRes.status).json({ error: 'Mux API failed', status: muxRes.status })
+      return res.status(muxRes.status).json({ error: 'Mux API failed', details: error })
     }
 
     const data = await muxRes.json()
@@ -57,7 +43,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       playbackId: stream.playback_ids?.[0]?.id,
     })
   } catch (error) {
-    console.error('Exception:', error)
     res.status(500).json({ error: String(error) })
   }
 }

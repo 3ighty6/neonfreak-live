@@ -1,10 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
-const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET || ''
-const SUPABASE_URL = process.env.VITE_SUPABASE_URL || ''
-const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || ''
+const PADDLE_WEBHOOK_SECRET = 'pdl_ntfset_01ky8q4kk7ets4qw8hgsgp9xhx_SX0CJLJ1P8yjOOrdOST4b0G3L2nJx148'
+const SUPABASE_URL = 'https://acvdwrkqmyumlmgpfvcu.supabase.co'
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjdmR3cmtxbXl1bWxtZ3BmdmN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMjgzOTMsImV4cCI6MjA5OTgwNDM5M30.OMVHer-yBxyJ-EfiGsIlTNua9rNmyRtnNn1wmyv9vng'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -12,7 +11,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const signature = req.headers['paddle-signature'] as string
     if (!signature || !verifySignature(req.body, signature)) {
-      console.error('Invalid signature')
       return res.status(401).json({ error: 'Invalid signature' })
     }
 
@@ -25,31 +23,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const creatorId = data.custom_data?.creatorId
     const amount = Math.floor((data.total_amount || 0) / 100)
 
-    if (creatorId && amount > 0 && SUPABASE_URL && SUPABASE_ANON_KEY) {
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-      
-      // Update creator balance (70% of tip)
+    if (creatorId && amount > 0) {
       const creatorShare = Math.floor(amount * 0.7)
-      const { data: balance } = await supabase
-        .from('user_token_balance')
-        .select('balance')
-        .eq('user_id', creatorId)
-        .single()
       
-      await supabase
-        .from('user_token_balance')
-        .upsert({
-          user_id: creatorId,
-          balance: (balance?.balance || 0) + creatorShare,
-        })
-
-      // Log transaction
-      await supabase.from('transactions').insert({
-        id: data.id,
-        creator_id: creatorId,
-        amount: amount,
-        type: 'tip',
-        status: 'completed',
+      // Update creator balance
+      await fetch(`${SUPABASE_URL}/rest/v1/user_token_balance?user_id=eq.${creatorId}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ balance: creatorShare }),
       })
     }
 
