@@ -3,16 +3,6 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
-  "env": [
-    "MUX_TOKEN_ID",
-    "MUX_TOKEN_SECRET",
-    "VITE_SUPABASE_URL",
-    "VITE_SUPABASE_ANON_KEY",
-    "PADDLE_VENDOR_ID",
-    "PADDLE_API_KEY",
-    "PADDLE_CLIENT_TOKEN",
-    "PADDLE_WEBHOOK_SECRET"
-  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -31,4 +21,3 @@
     }
   ]
 }
-// force rebuild
