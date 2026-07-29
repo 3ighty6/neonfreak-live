@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import crypto from 'crypto'
 
-const PADDLE_WEBHOOK_SECRET = 'pdl_ntfset_01ky8q4kk7ets4qw8hgsgp9xhx_SX0CJLJ1P8yjOOrdOST4b0G3L2nJx148'
-const SUPABASE_URL = 'https://acvdwrkqmyumlmgpfvcu.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFjdmR3cmtxbXl1bWxtZ3BmdmN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQyMjgzOTMsImV4cCI6MjA5OTgwNDM5M30.OMVHer-yBxyJ-EfiGsIlTNua9rNmyRtnNn1wmyv9vng'
+const PADDLE_WEBHOOK_SECRET = process.env.PADDLE_WEBHOOK_SECRET || ''
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || ''
+const SUPABASE_ANON_KEY = process.env.VITE_SUPABASE_ANON_KEY || ''
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' })
@@ -23,18 +23,43 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const creatorId = data.custom_data?.creatorId
     const amount = Math.floor((data.total_amount || 0) / 100)
 
-    if (creatorId && amount > 0) {
+    if (creatorId && amount > 0 && SUPABASE_URL && SUPABASE_ANON_KEY) {
       const creatorShare = Math.floor(amount * 0.7)
-      
-      // Update creator balance
+
+      const balRes = await fetch(`${SUPABASE_URL}/rest/v1/user_token_balance?user_id=eq.${creatorId}&select=balance`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+      })
+      const balRows = await balRes.json()
+      const currentBalance = balRows?.[0]?.balance || 0
+
       await fetch(`${SUPABASE_URL}/rest/v1/user_token_balance?user_id=eq.${creatorId}`, {
         method: 'PATCH',
         headers: {
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
           'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates',
         },
-        body: JSON.stringify({ balance: creatorShare }),
+        body: JSON.stringify({ balance: currentBalance + creatorShare }),
+      })
+
+      await fetch(`${SUPABASE_URL}/rest/v1/transactions`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: data.id,
+          creator_id: creatorId,
+          amount: amount,
+          type: 'tip',
+          status: 'completed',
+        }),
       })
     }
 
