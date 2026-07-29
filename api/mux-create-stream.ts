@@ -1,9 +1,13 @@
+
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Hardcode credentials for Hobby plan limitation
-  const MUX_TOKEN_ID = 'mk_1Tjy2pRxr3tPjLUBUgkI8ZpG'
-  const MUX_TOKEN_SECRET = 'gh0hbbokv8mb0ac8iq2kig3cq'
+  const MUX_TOKEN_ID = process.env.MUX_TOKEN_ID || ''
+  const MUX_TOKEN_SECRET = process.env.MUX_TOKEN_SECRET || ''
+
+  if (!MUX_TOKEN_ID || !MUX_TOKEN_SECRET) {
+    return res.status(500).json({ error: 'Mux not configured' })
+  }
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
