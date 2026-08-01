@@ -10,6 +10,15 @@ export interface User {
   token_balance: number
   total_earnings: number
   is_verified: boolean
+  is_admin: boolean
+  followers_count: number
+  following_count: number
+  view_count: number
+  last_login: string | null
+  is_ai_creator?: boolean
+  ai_disclosure?: string | null
+  stripe_connect_id?: string | null
+  stripe_connect_onboarded?: boolean
   created_at: string
   updated_at: string
 }

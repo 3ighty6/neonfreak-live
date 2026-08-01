@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { X, Upload } from 'lucide-react'
+import { supabase } from '../supabaseClient'
 
 interface ProfileEditModalProps {
   isOpen: boolean
@@ -16,7 +17,6 @@ export default function ProfileEditModal({
 }: ProfileEditModalProps) {
   const [username, setUsername] = useState('')
   const [bio, setBio] = useState('')
-  const [email, setEmail] = useState('')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -27,26 +27,34 @@ export default function ProfileEditModal({
     setLoading(true)
 
     try {
-      const formData = new FormData()
-      formData.append('userId', userId)
-      formData.append('username', username)
-      formData.append('bio', bio)
-      formData.append('email', email)
-      if (avatarFile) formData.append('avatar', avatarFile)
+      let avatarUrl: string | undefined
 
-      const response = await fetch('/api/update-profile', {
-        method: 'POST',
-        body: formData,
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update profile')
+      if (avatarFile) {
+        const ext = avatarFile.name.split('.').pop()
+        const path = `${userId}/avatar-${Date.now()}.${ext}`
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(path, avatarFile, { upsert: true })
+        if (uploadError) throw uploadError
+        avatarUrl = supabase.storage.from('avatars').getPublicUrl(path).data.publicUrl
       }
+
+      const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+      if (username.trim()) updates.username = username.trim()
+      if (bio.trim()) updates.bio = bio.trim()
+      if (avatarUrl) updates.avatar_url = avatarUrl
+
+      const { error: updateError } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', userId)
+
+      if (updateError) throw updateError
 
       onProfileUpdate?.()
       onClose()
     } catch (err) {
-      setError(String(err))
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }
@@ -98,18 +106,6 @@ export default function ProfileEditModal({
               rows={3}
             />
             <div className="text-xs text-gray-500 mt-1">{bio.length}/150</div>
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="block text-sm text-gray-300 mb-2">Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
-              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white placeholder-gray-500 focus:border-cyan-500 focus:outline-none transition"
-            />
           </div>
 
           {/* Avatar Upload */}

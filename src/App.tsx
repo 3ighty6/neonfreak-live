@@ -2,14 +2,17 @@ import { useState, useEffect } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from './supabaseClient'
 import AuthPage from './pages/AuthPage'
-import SetupPage from './pages/SetupPage'
 import MainApp from './pages/MainApp'
 import DiagnosticPage from './pages/DiagnosticPage'
+import AgeVerificationGate from './components/AgeVerificationGate'
 import './index.css'
 
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
+  const [ageVerified, setAgeVerified] = useState(
+    () => typeof window !== 'undefined' && localStorage.getItem('ageVerified') === 'true'
+  )
 
   useEffect(() => {
     // Check if user is logged in
@@ -43,13 +46,8 @@ export default function App() {
   }
 
   // Check if user is trying to access special pages
-  const isSetupPage = window.location.pathname === '/setup'
   const isPitchDeck = window.location.pathname === '/pitch-deck'
   const isDiagnostic = window.location.pathname === '/diagnostic'
-
-  if (isSetupPage) {
-    return <SetupPage />
-  }
 
   if (isPitchDeck) {
     // Redirect to static HTML file
@@ -59,6 +57,10 @@ export default function App() {
 
   if (isDiagnostic) {
     return <DiagnosticPage />
+  }
+
+  if (!ageVerified) {
+    return <AgeVerificationGate onVerified={() => setAgeVerified(true)} />
   }
 
   return session ? <MainApp session={session} /> : <AuthPage />

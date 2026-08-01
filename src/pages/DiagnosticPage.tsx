@@ -10,9 +10,9 @@ export default function DiagnosticPage() {
     const newResults: Record<string, any> = {}
 
     try {
-      // Test 1: Supabase connection
+      // Test 1: Supabase connection (rooms is the canonical live-stream table)
       try {
-        const { data, error } = await supabase.from('streams').select('count').limit(1)
+        const { error } = await supabase.from('rooms').select('id').limit(1)
         newResults.supabaseConnection = error ? `❌ ${error.message}` : '✅ Connected'
       } catch (e) {
         newResults.supabaseConnection = `❌ ${String(e)}`
@@ -58,15 +58,10 @@ export default function DiagnosticPage() {
         newResults.envVars = `❌ ${String(e)}`
       }
 
-      // Test 6: Profile update API
+      // Test 6: users table read (profile edits now go direct through Supabase, RLS-scoped)
       try {
-        const res = await fetch('/api/update-profile', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: 'test', username: 'test' }),
-        })
-        const data = await res.json()
-        newResults.profileAPI = res.ok ? `✅ ${JSON.stringify(data).slice(0, 100)}` : `❌ ${data.error || res.status}`
+        const { error } = await supabase.from('users').select('id').limit(1)
+        newResults.profileAPI = error ? `❌ ${error.message}` : '✅ users table reachable'
       } catch (e) {
         newResults.profileAPI = `❌ ${String(e)}`
       }

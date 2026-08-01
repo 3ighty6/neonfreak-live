@@ -217,29 +217,6 @@ export default function AuthPage() {
             </button>
           </form>
 
-          {/* Info */}
-          <div className="mt-6 p-4 bg-slate-700/50 border border-cyan-500/30 rounded-lg text-xs text-cyan-300">
-            <strong>🧪 Test Account:</strong>
-            <div className="mt-2 font-mono text-gray-300">
-              📧 demo@test.com
-              <br />
-              🔐 demo123456
-            </div>
-          </div>
-
-          {/* Admin Setup Link */}
-          <div className="mt-4 p-4 bg-pink-500/10 border border-pink-500/30 rounded-lg text-xs text-pink-300">
-            <strong>👑 Admin Setup:</strong>
-            <div className="mt-2">
-              Need unlimited tokens?{' '}
-              <a
-                href="/setup"
-                className="text-pink-400 hover:text-pink-300 hover:underline font-semibold"
-              >
-                Create Admin Account →
-              </a>
-            </div>
-          </div>
         </div>
       </div>
     </div>

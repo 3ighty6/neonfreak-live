@@ -1,13 +1,41 @@
-import { useState } from 'react'
-import { Copy, Check, Video, AlertCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Copy, Check, Video, AlertCircle, Radio, Square } from 'lucide-react'
+import { supabase } from '../supabaseClient'
 
 export default function StreamSetupPage() {
   const [copied, setCopied] = useState<string | null>(null)
+  const [title, setTitle] = useState('')
   const [rtmpUrl, setRtmpUrl] = useState('')
   const [rtmpKey, setRtmpKey] = useState('')
   const [hlsUrl, setHlsUrl] = useState('')
+  const [roomId, setRoomId] = useState<string | null>(null)
+  const [isLive, setIsLive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  // Resume an in-progress / already-live room on load, so refreshing this
+  // page doesn't orphan your stream key.
+  useEffect(() => {
+    const loadExisting = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase
+        .from('rooms')
+        .select('*')
+        .eq('streamer_id', user.id)
+        .eq('is_live', true)
+        .maybeSingle()
+
+      if (data) {
+        setRoomId(data.id)
+        setTitle(data.title || '')
+        setRtmpKey(data.rtmp_key || '')
+        setHlsUrl(data.hls_url || '')
+        setIsLive(true)
+      }
+    }
+    loadExisting()
+  }, [])
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text)
@@ -19,25 +47,71 @@ export default function StreamSetupPage() {
     setLoading(true)
     setError('')
     try {
-      const response = await fetch('/api/mux/create-stream', {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('You must be signed in to go live')
+      if (!title.trim()) throw new Error('Give your stream a title first')
+
+      const response = await fetch('/api/mux-create-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          streamerId: 'user-123', // Would get from context
-          title: 'My Stream',
+          streamerId: user.id,
+          title: title.trim(),
         }),
       })
 
+      const data = await response.json()
       if (!response.ok) {
-        throw new Error('Failed to create stream')
+        throw new Error(data.error || 'Failed to create stream')
       }
 
-      const data = await response.json()
       setRtmpUrl(data.rtmpServerUrl || '')
       setRtmpKey(data.rtmpStreamKey || '')
       setHlsUrl(data.hlsUrl || '')
+
+      // Persist it so it actually shows up on the homepage / discovery feed.
+      const { data: room, error: insertError } = await supabase
+        .from('rooms')
+        .insert({
+          streamer_id: user.id,
+          title: title.trim(),
+          rtmp_key: data.rtmpStreamKey,
+          hls_url: data.hlsUrl,
+          is_live: true,
+        })
+        .select()
+        .single()
+
+      if (insertError) throw insertError
+
+      setRoomId(room.id)
+      setIsLive(true)
     } catch (err) {
-      setError(String(err))
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const endStream = async () => {
+    if (!roomId) return
+    setLoading(true)
+    setError('')
+    try {
+      const { error: updateError } = await supabase
+        .from('rooms')
+        .update({ is_live: false, ended_at: new Date().toISOString() })
+        .eq('id', roomId)
+
+      if (updateError) throw updateError
+
+      setIsLive(false)
+      setRoomId(null)
+      setRtmpUrl('')
+      setRtmpKey('')
+      setHlsUrl('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }
@@ -49,7 +123,7 @@ export default function StreamSetupPage() {
         <h1 className="text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
           Go Live Setup
         </h1>
-        <p className="text-gray-400 mb-8">Configure OBS to stream on Neon Chat</p>
+        <p className="text-gray-400 mb-8">Configure OBS to stream on NeonLights</p>
 
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded text-red-300 flex gap-2">
@@ -58,11 +132,20 @@ export default function StreamSetupPage() {
           </div>
         )}
 
-        {/* Create Stream Button */}
-        {!rtmpUrl && (
+        {/* Create Stream */}
+        {!rtmpKey && (
           <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-6">
             <h2 className="text-xl font-bold mb-4">Step 1: Create Your Stream</h2>
-            <p className="text-gray-400 mb-4">Click below to generate your RTMP credentials</p>
+            <div className="mb-4">
+              <label className="text-sm text-gray-400 block mb-2">Stream Title</label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="What are you streaming today?"
+                className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-white"
+              />
+            </div>
             <button
               onClick={createStream}
               disabled={loading}
@@ -74,15 +157,21 @@ export default function StreamSetupPage() {
         )}
 
         {/* RTMP Details */}
-        {rtmpUrl && (
+        {rtmpKey && (
           <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-6">
-            <div className="flex items-center gap-2 mb-4">
-              <Video className="text-cyan-400" size={24} />
-              <h2 className="text-2xl font-bold">OBS Studio Setup</h2>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Video className="text-cyan-400" size={24} />
+                <h2 className="text-2xl font-bold">OBS Studio Setup</h2>
+              </div>
+              {isLive && (
+                <span className="flex items-center gap-2 text-red-400 text-sm font-bold">
+                  <Radio size={16} className="animate-pulse" /> LIVE — visible on homepage
+                </span>
+              )}
             </div>
 
             <div className="space-y-4">
-              {/* RTMP Server */}
               <div>
                 <label className="text-sm text-gray-400 block mb-2">RTMP Server URL</label>
                 <div className="flex gap-2">
@@ -101,7 +190,6 @@ export default function StreamSetupPage() {
                 </div>
               </div>
 
-              {/* Stream Key */}
               <div>
                 <label className="text-sm text-gray-400 block mb-2">Stream Key</label>
                 <div className="flex gap-2">
@@ -120,7 +208,6 @@ export default function StreamSetupPage() {
                 </div>
               </div>
 
-              {/* HLS URL */}
               {hlsUrl && (
                 <div>
                   <label className="text-sm text-gray-400 block mb-2">HLS Playback URL</label>
@@ -129,7 +216,7 @@ export default function StreamSetupPage() {
                       type="text"
                       value={hlsUrl}
                       readOnly
-                      className="flex-1 bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-300 font-mono text-sm text-xs"
+                      className="flex-1 bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-300 font-mono text-xs"
                     />
                     <button
                       onClick={() => copyToClipboard(hlsUrl, 'hls')}
@@ -141,7 +228,6 @@ export default function StreamSetupPage() {
                 </div>
               )}
 
-              {/* Instructions */}
               <div className="bg-gray-950 rounded p-4 mt-6">
                 <h3 className="font-semibold mb-3 text-cyan-400">Steps in OBS:</h3>
                 <ol className="space-y-2 text-sm text-gray-300">
@@ -152,6 +238,15 @@ export default function StreamSetupPage() {
                   <li>5. Click "Start Streaming"</li>
                 </ol>
               </div>
+
+              <button
+                onClick={endStream}
+                disabled={loading}
+                className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-3 rounded font-bold transition flex items-center justify-center gap-2"
+              >
+                <Square size={18} />
+                {loading ? 'Ending...' : 'End Stream'}
+              </button>
             </div>
           </div>
         )}

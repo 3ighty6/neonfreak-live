@@ -38,13 +38,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const data = await muxRes.json()
     const stream = data.data
+    const playbackId = stream.playback_ids?.[0]?.id
 
     res.json({
       success: true,
       id: stream.id,
-      rtmpServerUrl: stream.rtmp_server_url,
-      rtmpStreamKey: stream.rtmp_stream_key,
-      playbackId: stream.playback_ids?.[0]?.id,
+      muxStreamId: stream.id,
+      rtmpServerUrl: 'rtmp://global-live.mux.com:5222/app',
+      rtmpStreamKey: stream.stream_key,
+      playbackId,
+      hlsUrl: playbackId ? `https://stream.mux.com/${playbackId}.m3u8` : null,
     })
   } catch (error) {
     res.status(500).json({ error: String(error) })

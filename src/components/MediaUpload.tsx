@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Upload, X, Image, Video } from 'lucide-react'
+import { supabase } from '../supabaseClient'
 
 interface MediaUploadProps {
   userId: string
@@ -53,30 +54,31 @@ export default function MediaUpload({ userId, type, onUploadComplete }: MediaUpl
     setError('')
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      formData.append('userId', userId)
-      formData.append('type', type)
+      const bucket = type === 'photo' ? 'photos' : 'videos'
+      const ext = file.name.split('.').pop()
+      const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
 
-      const response = await fetch('/api/upload-media', {
-        method: 'POST',
-        body: formData,
-      })
+      setProgress(10)
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Upload failed')
-      }
+      const { error: uploadError } = await supabase.storage
+        .from(bucket)
+        .upload(path, file, { upsert: false })
 
-      const data = await response.json()
-      onUploadComplete?.(data.url)
+      if (uploadError) throw uploadError
+
+      setProgress(90)
+
+      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path)
+      setProgress(100)
+
+      onUploadComplete?.(urlData.publicUrl)
 
       // Reset
       setFile(null)
       setPreview('')
       setProgress(0)
     } catch (err) {
-      setError(String(err))
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }

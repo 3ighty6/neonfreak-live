@@ -7,46 +7,12 @@ import { supabase } from '../supabaseClient'
 
 export const ADMIN_EMAIL = 'm.zarling86@gmail.com'
 
-export async function createAdminAccount(password: string) {
-  try {
-    // Create admin user via Supabase auth
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email: ADMIN_EMAIL,
-      password: password,
-    })
-
-    if (authError) {
-      console.error('Auth error:', authError)
-      return { error: authError.message }
-    }
-
-    if (!authData.user) {
-      return { error: 'Failed to create user' }
-    }
-
-    // Create admin profile with unlimited tokens
-    const { error: profileError } = await supabase.from('users').insert({
-      id: authData.user.id,
-      username: 'admin',
-      email: ADMIN_EMAIL,
-      is_streamer: true,
-      is_admin: true,
-      token_balance: 999999, // Unlimited
-      total_earnings: 0,
-      is_verified: true,
-    })
-
-    if (profileError) {
-      console.error('Profile error:', profileError)
-      return { error: profileError.message }
-    }
-
-    return { success: true, userId: authData.user.id }
-  } catch (error) {
-    console.error('Admin creation error:', error)
-    return { error: String(error) }
-  }
-}
+// NOTE: admin accounts are provisioned directly in Supabase (SQL), not
+// through any client-reachable code path. A previous version of this file
+// had a createAdminAccount(password) function wired to a public /setup
+// route that only checked a client-supplied password against nothing —
+// any visitor could have called it. Removed. If you need to grant admin
+// to another account, do it via a migration/SQL, not client code.
 
 export async function isAdmin(userId: string): Promise<boolean> {
   try {

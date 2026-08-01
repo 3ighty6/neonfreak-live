@@ -61,29 +61,27 @@ export function NeonButton({
   disabled = false,
   className = '',
 }: NeonButtonProps) {
+  const [hovered, setHovered] = React.useState(false)
+
   const baseStyles = `
     font-bold rounded-lg transition-all duration-200
-    hover:shadow-lg active:scale-95
+    active:scale-95
     disabled:opacity-50 disabled:cursor-not-allowed
   `
 
+  // Tailwind can't parse arbitrary-value classes built from runtime template
+  // literals (Tailwind's JIT scanner reads raw source text, even inside
+  // comments — it can't parse runtime interpolation), so that pattern
+  // silently produced invalid CSS. Glow is applied via inline style + hover state instead.
   const variantStyles = {
-    primary: `
-      bg-gradient-to-r from-pink-600 to-pink-500
-      text-white border-2 border-pink-400
-      hover:shadow-[${neonTheme.shadows.pinkNeon}]
-      hover:text-yellow-200
-    `,
-    secondary: `
-      bg-gradient-to-r from-cyan-600 to-cyan-500
-      text-white border-2 border-cyan-400
-      hover:shadow-[${neonTheme.shadows.cyanNeon}]
-    `,
-    accent: `
-      bg-gradient-to-r from-yellow-500 to-orange-500
-      text-black border-2 border-yellow-300
-      hover:shadow-lg
-    `,
+    primary: 'bg-gradient-to-r from-pink-600 to-pink-500 text-white border-2 border-pink-400 hover:text-yellow-200',
+    secondary: 'bg-gradient-to-r from-cyan-600 to-cyan-500 text-white border-2 border-cyan-400',
+    accent: 'bg-gradient-to-r from-yellow-500 to-orange-500 text-black border-2 border-yellow-300 hover:shadow-lg',
+  }
+
+  const glowByVariant: Record<string, string> = {
+    primary: neonTheme.shadows.pinkNeon,
+    secondary: neonTheme.shadows.cyanNeon,
   }
 
   const sizeStyles = {
@@ -96,9 +94,12 @@ export function NeonButton({
     <button
       onClick={onClick}
       disabled={disabled}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
       style={{
         textShadow: '0 0 10px rgba(255, 20, 147, 0.5)',
+        boxShadow: hovered && !disabled ? glowByVariant[variant] : undefined,
       }}
     >
       {children}
@@ -117,10 +118,12 @@ interface NeonCardProps {
 }
 
 export function NeonCard({ children, className = '', glow = 'pink' }: NeonCardProps) {
+  // Border color only here — actual glow is applied below via inline
+  // boxShadow (Tailwind's scanner can't handle runtime-interpolated arbitrary values).
   const glowStyles = {
-    pink: `border-pink-500 shadow-[${neonTheme.shadows.pinkNeon}]`,
-    cyan: `border-cyan-500 shadow-[${neonTheme.shadows.cyanNeon}]`,
-    both: `border-pink-500 shadow-[${neonTheme.shadows.pinkCyanNeon}]`,
+    pink: 'border-pink-500',
+    cyan: 'border-cyan-500',
+    both: 'border-pink-500',
   }
 
   return (
