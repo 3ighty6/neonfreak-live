@@ -32,6 +32,8 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
   const [newMessage, setNewMessage] = useState('')
   const [tips, setTips] = useState<{ amount: number }[]>([])
   const [tipError, setTipError] = useState('')
+  const [tokenBalance, setTokenBalance] = useState<number | null>(null)
+  const [tipping, setTipping] = useState(false)
   const messageEndRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -42,6 +44,14 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
     { amount: 25, emoji: '❤️', label: 'Love' },
     { amount: 50, emoji: '🔥', label: 'Fire' },
   ]
+
+  useEffect(() => {
+    const loadBalance = async () => {
+      const { data } = await supabase.from('users').select('token_balance').eq('id', session.user.id).single()
+      setTokenBalance(data?.token_balance ?? 0)
+    }
+    loadBalance()
+  }, [session.user.id])
 
   // Load room info
   useEffect(() => {
@@ -144,18 +154,24 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
       setTipError("You can't tip your own stream")
       return
     }
-
-    const { error } = await supabase.from('tips').insert({
-      room_id: roomId,
-      sender_id: session.user.id,
-      receiver_id: room.streamer_id,
-      amount,
-    })
-
-    if (error) {
-      setTipError(error.message)
+    if (tokenBalance !== null && tokenBalance < amount) {
+      setTipError(`Not enough tokens — you have ${tokenBalance}, need ${amount}. Buy more from the Tips page.`)
       return
     }
+
+    setTipping(true)
+    const { data, error } = await supabase.rpc('send_room_tip', {
+      p_room_id: roomId,
+      p_amount: amount,
+    })
+    setTipping(false)
+
+    if (error) {
+      setTipError(error.message.replace(/^.*Insufficient token balance.*$/, 'Not enough tokens for that tip.'))
+      return
+    }
+
+    setTokenBalance(data?.newBalance ?? tokenBalance)
     setTips((prev) => [...prev, { amount }])
   }
 
@@ -240,16 +256,20 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
         </div>
 
         <div className="w-full md:w-48 p-3 flex flex-col gap-2 border-t md:border-t-0 md:border-l border-gray-800">
-          <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-2">Quick Tips</div>
+          <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">Quick Tips</div>
+          {tokenBalance !== null && (
+            <div className="text-xs text-cyan-400 mb-2">Balance: {tokenBalance} tokens</div>
+          )}
           {tipError && <div className="text-xs text-red-400 mb-1">{tipError}</div>}
           {TIP_AMOUNTS.map((tip) => (
             <button
               key={tip.amount}
               onClick={() => sendTip(tip.amount)}
-              className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded text-sm font-semibold flex items-center justify-center gap-2 transition"
+              disabled={tipping}
+              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-3 py-2 rounded text-sm font-semibold flex items-center justify-center gap-2 transition"
             >
               <span>{tip.emoji}</span>
-              <span>${tip.amount}</span>
+              <span>{tip.amount} tokens</span>
             </button>
           ))}
         </div>
