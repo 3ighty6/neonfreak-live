@@ -22,13 +22,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Stripe not configured (STRIPE_SECRET_KEY missing)' })
   }
 
-  const { kind, userId, creatorId, amountUsdCents, tokens, label } = req.body as {
+  const { kind, userId, creatorId, amountUsdCents, tokens, label, returnRoomId } = req.body as {
     kind: 'tip' | 'tokens'
     userId: string
     creatorId?: string
     amountUsdCents: number
     tokens?: number
     label?: string
+    returnRoomId?: string
   }
 
   if (!kind || !userId || !amountUsdCents) {
@@ -40,6 +41,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const stripe = new Stripe(STRIPE_SECRET_KEY)
+
+    const successUrl = returnRoomId
+      ? `${SITE_URL}/?checkout=success&room=${returnRoomId}`
+      : `${SITE_URL}/?checkout=success`
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -62,7 +67,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         creatorId: creatorId || '',
         tokens: tokens ? String(tokens) : '',
       },
-      success_url: `${SITE_URL}/?checkout=success`,
+      success_url: successUrl,
       cancel_url: `${SITE_URL}/?checkout=cancelled`,
     })
 

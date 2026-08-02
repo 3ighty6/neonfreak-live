@@ -57,7 +57,8 @@ export async function createTipCheckout(
  */
 export async function createTokenCheckout(
   userId: string,
-  packageIndex: number
+  packageIndex: number,
+  returnRoomId?: string
 ): Promise<{ url: string | null }> {
   const pkg = TOKEN_PACKAGES[packageIndex]
   if (!pkg) throw new Error('Invalid package')
@@ -70,6 +71,7 @@ export async function createTokenCheckout(
       userId,
       amountUsdCents: pkg.priceCents,
       tokens: pkg.tokens + pkg.bonus,
+      returnRoomId,
     }),
   })
 

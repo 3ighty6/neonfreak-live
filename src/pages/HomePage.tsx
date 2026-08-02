@@ -1,14 +1,34 @@
 import { useState, useEffect } from 'react'
+import { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabaseClient'
-import { Search, Users, TrendingUp, Radio } from 'lucide-react'
+import { Search, Users, TrendingUp, Radio, Heart } from 'lucide-react'
 import LiveStreamCard from '../components/LiveStreamCard'
 
-export default function HomePage({ onSelectStream }: { onSelectStream?: (roomId: string) => void }) {
+export default function HomePage({
+  session,
+  onSelectStream,
+}: {
+  session: Session
+  onSelectStream?: (roomId: string) => void
+}) {
   const [streams, setStreams] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const [followedIds, setFollowedIds] = useState<Set<string>>(new Set())
+  const [followingOnly, setFollowingOnly] = useState(false)
+
+  useEffect(() => {
+    const loadFollowed = async () => {
+      const { data } = await supabase
+        .from('followers')
+        .select('streamer_id')
+        .eq('follower_id', session.user.id)
+      setFollowedIds(new Set((data || []).map((f) => f.streamer_id)))
+    }
+    loadFollowed()
+  }, [session.user.id])
 
   useEffect(() => {
     const fetchData = async () => {
@@ -52,7 +72,8 @@ export default function HomePage({ onSelectStream }: { onSelectStream?: (roomId:
   const filteredStreams = streams.filter(stream => {
     const matchesCategory = !selectedCategory || stream.category_id === selectedCategory
     const matchesSearch = !searchQuery || stream.title.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch
+    const matchesFollowing = !followingOnly || followedIds.has(stream.streamer_id)
+    return matchesCategory && matchesSearch && matchesFollowing
   })
 
   return (
@@ -78,6 +99,17 @@ export default function HomePage({ onSelectStream }: { onSelectStream?: (roomId:
 
         {/* Categories */}
         <div className="flex overflow-x-auto gap-2 pb-2">
+          <button
+            onClick={() => setFollowingOnly((v) => !v)}
+            className={`px-4 py-2 rounded-full whitespace-nowrap transition font-semibold flex items-center gap-1.5 ${
+              followingOnly
+                ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/50'
+                : 'bg-slate-800/50 text-gray-300 hover:bg-slate-700/50 border border-pink-500/30'
+            }`}
+          >
+            <Heart size={14} fill={followingOnly ? 'currentColor' : 'none'} />
+            Following
+          </button>
           <button
             onClick={() => setSelectedCategory(null)}
             className={`px-4 py-2 rounded-full whitespace-nowrap transition font-semibold ${
@@ -135,7 +167,11 @@ export default function HomePage({ onSelectStream }: { onSelectStream?: (roomId:
         </div>
       ) : filteredStreams.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-gray-400">No streams found. Check back soon!</p>
+          <p className="text-gray-400">
+            {followingOnly
+              ? "Nobody you follow is live right now — check back later!"
+              : 'No streams found. Check back soon!'}
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

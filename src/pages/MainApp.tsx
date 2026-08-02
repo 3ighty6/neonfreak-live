@@ -18,9 +18,22 @@ interface MainAppProps {
 }
 
 export default function MainApp({ session }: MainAppProps) {
-  const [currentPage, setCurrentPage] = useState<Page>('home')
-  const [activeRoomId, setActiveRoomId] = useState<string | null>(null)
+  const [currentPage, setCurrentPage] = useState<Page>(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('room') ? 'live' : 'home'
+  })
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search)
+    return params.get('room')
+  })
   const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    // Clean the checkout/room params out of the visible URL once read
+    if (window.location.search.includes('room=') || window.location.search.includes('checkout=')) {
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
   const user = session.user
 
   useEffect(() => {
@@ -124,7 +137,7 @@ export default function MainApp({ session }: MainAppProps) {
 
       {/* Main Content */}
       <div className="md:ml-64 pb-20 md:pb-0">
-        {currentPage === 'home' && <HomePage onSelectStream={openRoom} />}
+        {currentPage === 'home' && <HomePage session={session} onSelectStream={openRoom} />}
         {currentPage === 'setup' && <StreamSetupPage />}
         {currentPage === 'tips' && <TipPage />}
         {currentPage === 'analytics' && <AnalyticsDashboard userId={user.id} />}

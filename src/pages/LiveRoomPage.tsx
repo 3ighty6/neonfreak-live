@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { Session } from '@supabase/supabase-js'
 import Hls from 'hls.js'
 import { supabase } from '../supabaseClient'
-import { Send, Heart, Users, Share2, ArrowLeft } from 'lucide-react'
+import { TOKEN_PACKAGES, createTokenCheckout } from '../lib/stripe'
+import { Send, Heart, HeartOff, Users, Share2, ArrowLeft, ShoppingCart } from 'lucide-react'
 
 interface LiveRoomPageProps {
   session: Session
@@ -34,6 +35,10 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
   const [tipError, setTipError] = useState('')
   const [tokenBalance, setTokenBalance] = useState<number | null>(null)
   const [tipping, setTipping] = useState(false)
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [followLoading, setFollowLoading] = useState(false)
+  const [showBuyPrompt, setShowBuyPrompt] = useState(false)
+  const [buyLoading, setBuyLoading] = useState<number | null>(null)
   const messageEndRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -61,10 +66,49 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
         .select('id, title, streamer_id, hls_url, is_live, viewer_count')
         .eq('id', roomId)
         .single()
-      if (data) setRoom(data)
+      if (data) {
+        setRoom(data)
+        const { data: followRow } = await supabase
+          .from('followers')
+          .select('id')
+          .eq('follower_id', session.user.id)
+          .eq('streamer_id', data.streamer_id)
+          .maybeSingle()
+        setIsFollowing(!!followRow)
+      }
     }
     loadRoom()
-  }, [roomId])
+  }, [roomId, session.user.id])
+
+  const toggleFollow = async () => {
+    if (!room) return
+    setFollowLoading(true)
+    if (isFollowing) {
+      await supabase
+        .from('followers')
+        .delete()
+        .eq('follower_id', session.user.id)
+        .eq('streamer_id', room.streamer_id)
+      setIsFollowing(false)
+    } else {
+      await supabase
+        .from('followers')
+        .insert({ follower_id: session.user.id, streamer_id: room.streamer_id })
+      setIsFollowing(true)
+    }
+    setFollowLoading(false)
+  }
+
+  const handleBuyTokens = async (packageIndex: number) => {
+    setBuyLoading(packageIndex)
+    try {
+      const { url } = await createTokenCheckout(session.user.id, packageIndex, roomId)
+      if (url) window.location.href = url
+    } catch (err) {
+      setTipError(err instanceof Error ? err.message : 'Failed to start checkout')
+      setBuyLoading(null)
+    }
+  }
 
   // Wire up HLS playback once we know the playback URL
   useEffect(() => {
@@ -155,7 +199,7 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
       return
     }
     if (tokenBalance !== null && tokenBalance < amount) {
-      setTipError(`Not enough tokens — you have ${tokenBalance}, need ${amount}. Buy more from the Tips page.`)
+      setShowBuyPrompt(true)
       return
     }
 
@@ -167,7 +211,11 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
     setTipping(false)
 
     if (error) {
-      setTipError(error.message.replace(/^.*Insufficient token balance.*$/, 'Not enough tokens for that tip.'))
+      if (error.message.includes('Insufficient token balance')) {
+        setShowBuyPrompt(true)
+        return
+      }
+      setTipError(error.message)
       return
     }
 
@@ -212,6 +260,20 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
               <span>{tips.length} tips</span>
             </div>
           </div>
+          {room && room.streamer_id !== session.user.id && (
+            <button
+              onClick={toggleFollow}
+              disabled={followLoading}
+              className={`px-4 py-2 rounded-lg font-semibold text-sm transition flex items-center gap-2 disabled:opacity-50 ${
+                isFollowing
+                  ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  : 'bg-pink-500 text-white hover:bg-pink-600'
+              }`}
+            >
+              {isFollowing ? <HeartOff size={16} /> : <Heart size={16} />}
+              {isFollowing ? 'Following' : 'Follow'}
+            </button>
+          )}
           <button className="bg-cyan-500/20 hover:bg-cyan-500/40 p-2 rounded-lg text-cyan-400">
             <Share2 size={20} />
           </button>
@@ -274,6 +336,48 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
           ))}
         </div>
       </div>
+
+      {/* Buy Tokens popup — shown when a tip fails for insufficient balance */}
+      {showBuyPrompt && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-cyan-500/30 rounded-lg w-full max-w-sm p-6">
+            <div className="flex items-center gap-2 mb-2">
+              <ShoppingCart className="text-cyan-400" size={22} />
+              <h2 className="text-lg font-bold">Not enough tokens</h2>
+            </div>
+            <p className="text-sm text-gray-400 mb-4">
+              You have {tokenBalance ?? 0} tokens. Grab a package to keep tipping.
+            </p>
+
+            <div className="space-y-2 mb-4">
+              {TOKEN_PACKAGES.map((pkg, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => handleBuyTokens(idx)}
+                  disabled={buyLoading !== null}
+                  className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-gray-700 rounded px-4 py-3 transition"
+                >
+                  <span className="text-sm">
+                    <span className="font-semibold text-cyan-400">{pkg.tokens + pkg.bonus} tokens</span>
+                    {pkg.popular && <span className="ml-2 text-xs text-cyan-500">POPULAR</span>}
+                  </span>
+                  <span className="font-semibold">
+                    {buyLoading === idx ? '...' : `$${pkg.priceUSD.toFixed(2)}`}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowBuyPrompt(false)}
+              disabled={buyLoading !== null}
+              className="w-full text-sm text-gray-400 hover:text-gray-300 transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
