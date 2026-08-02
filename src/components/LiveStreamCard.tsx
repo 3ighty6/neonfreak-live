@@ -1,13 +1,20 @@
 import { Users, Heart } from 'lucide-react'
 
-export default function LiveStreamCard({ stream }: { stream: any }) {
+export default function LiveStreamCard({ stream, onClick }: { stream: any; onClick?: () => void }) {
   return (
-    <div className="group cursor-pointer rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/50 transition">
+    <div
+      onClick={onClick}
+      className="group cursor-pointer rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/50 transition"
+    >
       {/* Thumbnail */}
       <div className="relative bg-gradient-to-b from-purple-600/30 to-black h-40 overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-gray-500">Stream Preview</div>
-        </div>
+        {stream.thumbnail_url ? (
+          <img src={stream.thumbnail_url} alt={stream.title} className="w-full h-full object-cover" />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-gray-500">Stream Preview</div>
+          </div>
+        )}
         <div className="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
           <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
           LIVE

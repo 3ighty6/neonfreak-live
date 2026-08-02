@@ -1,20 +1,39 @@
 import { useState, useEffect, useRef } from 'react'
 import { Session } from '@supabase/supabase-js'
+import Hls from 'hls.js'
 import { supabase } from '../supabaseClient'
-import { Send, Heart, Users, Share2, Settings } from 'lucide-react'
+import { Send, Heart, Users, Share2, ArrowLeft } from 'lucide-react'
 
 interface LiveRoomPageProps {
   session: Session
   roomId: string
+  onBack?: () => void
 }
 
-export default function LiveRoomPage({ session, roomId }: LiveRoomPageProps) {
-  const [messages, setMessages] = useState<any[]>([])
+interface RoomInfo {
+  id: string
+  title: string
+  streamer_id: string
+  hls_url: string | null
+  is_live: boolean
+  viewer_count: number
+}
+
+interface ChatMessage {
+  id: string
+  user_id: string
+  content: string
+  username?: string
+}
+
+export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPageProps) {
+  const [room, setRoom] = useState<RoomInfo | null>(null)
+  const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
-  const [_viewers, _setViewers] = useState(0)
-  const [_isStreaming, _setIsStreaming] = useState(true)
-  const [tips, setTips] = useState<any[]>([])
+  const [tips, setTips] = useState<{ amount: number }[]>([])
+  const [tipError, setTipError] = useState('')
   const messageEndRef = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
 
   const TIP_AMOUNTS = [
     { amount: 1, emoji: '💬', label: 'Say Hi' },
@@ -24,13 +43,79 @@ export default function LiveRoomPage({ session, roomId }: LiveRoomPageProps) {
     { amount: 50, emoji: '🔥', label: 'Fire' },
   ]
 
+  // Load room info
   useEffect(() => {
-    // Subscribe to messages
+    const loadRoom = async () => {
+      const { data } = await supabase
+        .from('rooms')
+        .select('id, title, streamer_id, hls_url, is_live, viewer_count')
+        .eq('id', roomId)
+        .single()
+      if (data) setRoom(data)
+    }
+    loadRoom()
+  }, [roomId])
+
+  // Wire up HLS playback once we know the playback URL
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video || !room?.hls_url) return
+
+    if (Hls.isSupported()) {
+      const hls = new Hls()
+      hls.loadSource(room.hls_url)
+      hls.attachMedia(video)
+      return () => hls.destroy()
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari/iOS supports HLS natively
+      video.src = room.hls_url
+    }
+  }, [room?.hls_url])
+
+  // Load recent chat history with usernames
+  useEffect(() => {
+    const loadMessages = async () => {
+      const { data } = await supabase
+        .from('messages')
+        .select('id, user_id, content, users:user_id(username)')
+        .eq('room_id', roomId)
+        .order('created_at', { ascending: true })
+        .limit(50)
+
+      if (data) {
+        setMessages(
+          data.map((m: any) => ({
+            id: m.id,
+            user_id: m.user_id,
+            content: m.content,
+            username: m.users?.username,
+          }))
+        )
+      }
+    }
+    loadMessages()
+  }, [roomId])
+
+  // Subscribe to new messages
+  useEffect(() => {
     const subscription = supabase
       .channel(`room:${roomId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-        setMessages(prev => [...prev, payload.new])
-      })
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${roomId}` },
+        async (payload) => {
+          const row = payload.new as any
+          const { data: userRow } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', row.user_id)
+            .single()
+          setMessages((prev) => [
+            ...prev,
+            { id: row.id, user_id: row.user_id, content: row.content, username: userRow?.username },
+          ])
+        }
+      )
       .subscribe()
 
     return () => {
@@ -44,94 +129,104 @@ export default function LiveRoomPage({ session, roomId }: LiveRoomPageProps) {
 
   const sendMessage = async () => {
     if (!newMessage.trim()) return
-
-    const { error } = await supabase
-      .from('messages')
-      .insert({
-        room_id: roomId,
-        user_id: session.user.id,
-        content: newMessage,
-      })
-
-    if (!error) {
-      setNewMessage('')
-    }
+    const { error } = await supabase.from('messages').insert({
+      room_id: roomId,
+      user_id: session.user.id,
+      content: newMessage.trim(),
+    })
+    if (!error) setNewMessage('')
   }
 
   const sendTip = async (amount: number) => {
-    const { error } = await supabase
-      .from('tips')
-      .insert({
-        room_id: roomId,
-        sender_id: session.user.id,
-        receiver_id: roomId,
-        amount: amount,
-      })
-
-    if (!error) {
-      setTips(prev => [...prev, { amount, timestamp: new Date() }])
+    setTipError('')
+    if (!room) return
+    if (room.streamer_id === session.user.id) {
+      setTipError("You can't tip your own stream")
+      return
     }
+
+    const { error } = await supabase.from('tips').insert({
+      room_id: roomId,
+      sender_id: session.user.id,
+      receiver_id: room.streamer_id,
+      amount,
+    })
+
+    if (error) {
+      setTipError(error.message)
+      return
+    }
+    setTips((prev) => [...prev, { amount }])
   }
 
   return (
     <div className="h-screen flex flex-col bg-black">
       {/* Video Player */}
       <div className="flex-1 bg-gray-900 relative overflow-hidden">
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="text-center">
-            <div className="text-6xl mb-4">🎥</div>
-            <div className="text-gray-400 mb-2">HLS Video Stream</div>
-            <div className={`text-lg font-bold ${true ? 'text-red-500' : 'text-gray-500'}`}>
-              {true ? '● LIVE' : 'OFFLINE'}
+        {room?.hls_url ? (
+          <video ref={videoRef} controls autoPlay muted className="w-full h-full object-contain bg-black" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-6xl mb-4">🎥</div>
+              <div className="text-gray-400">
+                {room?.is_live ? 'Waiting for stream to connect...' : 'Stream is offline'}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Stats Overlay */}
-        <div className="absolute top-4 left-4 bg-black/70 px-4 py-2 rounded-lg flex gap-4">
-          <div className="flex items-center gap-2 text-white">
-            <Users size={16} />
-            <span>{0} viewers</span>
-          </div>
-          <div className="flex items-center gap-2 text-cyan-400">
-            <Heart size={16} />
-            <span>{tips.length} tips</span>
-          </div>
-        </div>
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="absolute top-4 left-4 bg-black/70 hover:bg-black/90 p-2 rounded-lg text-white flex items-center gap-2 px-3"
+          >
+            <ArrowLeft size={18} /> Back
+          </button>
+        )}
 
-        {/* Top Right Actions */}
-        <div className="absolute top-4 right-4 flex gap-2">
+        <div className="absolute top-4 right-4 flex gap-4 items-center">
+          <div className="bg-black/70 px-4 py-2 rounded-lg flex gap-4">
+            <div className="flex items-center gap-2 text-white">
+              <Users size={16} />
+              <span>{room?.viewer_count ?? 0} viewers</span>
+            </div>
+            <div className="flex items-center gap-2 text-cyan-400">
+              <Heart size={16} />
+              <span>{tips.length} tips</span>
+            </div>
+          </div>
           <button className="bg-cyan-500/20 hover:bg-cyan-500/40 p-2 rounded-lg text-cyan-400">
             <Share2 size={20} />
           </button>
-          <button className="bg-gray-700/40 hover:bg-gray-700/60 p-2 rounded-lg text-gray-300">
-            <Settings size={20} />
-          </button>
         </div>
+
+        {room?.title && (
+          <div className="absolute bottom-4 left-4 bg-black/70 px-4 py-2 rounded-lg text-white font-semibold">
+            {room.title}
+          </div>
+        )}
       </div>
 
       {/* Chat & Tips Section */}
       <div className="h-80 bg-gray-950 border-t border-cyan-500/20 flex flex-col md:flex-row">
-        {/* Chat */}
         <div className="flex-1 flex flex-col border-r border-cyan-500/20">
-          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {messages.map((msg, i) => (
-              <div key={i} className="text-sm">
-                <span className="text-cyan-400 font-semibold">{msg.user?.username || 'User'}:</span>
+            {messages.map((msg) => (
+              <div key={msg.id} className="text-sm">
+                <span className="text-cyan-400 font-semibold">{msg.username || 'User'}:</span>
                 <span className="text-gray-300 ml-2">{msg.content}</span>
               </div>
             ))}
             <div ref={messageEndRef} />
           </div>
 
-          {/* Input */}
           <div className="border-t border-gray-800 p-3 flex gap-2">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
               placeholder="Send a message..."
               className="flex-1 bg-gray-900 text-white rounded px-3 py-2 text-sm border border-gray-800 focus:border-cyan-500 outline-none"
             />
@@ -144,9 +239,9 @@ export default function LiveRoomPage({ session, roomId }: LiveRoomPageProps) {
           </div>
         </div>
 
-        {/* Tips Menu */}
         <div className="w-full md:w-48 p-3 flex flex-col gap-2 border-t md:border-t-0 md:border-l border-gray-800">
           <div className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-2">Quick Tips</div>
+          {tipError && <div className="text-xs text-red-400 mb-1">{tipError}</div>}
           {TIP_AMOUNTS.map((tip) => (
             <button
               key={tip.amount}

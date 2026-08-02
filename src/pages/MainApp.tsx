@@ -1,15 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabaseClient'
-import { LogOut, Home, Radio, BarChart3, Film, User, Heart } from 'lucide-react'
+import { LogOut, Home, Radio, BarChart3, Film, User, Heart, ShieldCheck } from 'lucide-react'
 import HomePage from './HomePage'
 import StreamSetupPage from './StreamSetupPage'
 import TipPage from './TipPage'
 import AnalyticsDashboard from './AnalyticsDashboard'
 import VODLibrary from './VODLibrary'
 import ProfilePage from './ProfilePage'
+import LiveRoomPage from './LiveRoomPage'
+import AdminDashboard from './AdminDashboard'
 
-type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile'
+type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin'
 
 interface MainAppProps {
   session: Session
@@ -17,20 +19,49 @@ interface MainAppProps {
 
 export default function MainApp({ session }: MainAppProps) {
   const [currentPage, setCurrentPage] = useState<Page>('home')
+  const [activeRoomId, setActiveRoomId] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const user = session.user
+
+  useEffect(() => {
+    const checkAdmin = async () => {
+      const { data } = await supabase.from('users').select('is_admin').eq('id', user.id).single()
+      setIsAdmin(!!data?.is_admin)
+    }
+    checkAdmin()
+  }, [user.id])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
   }
 
-  const navItems = [
+  const openRoom = (roomId: string) => {
+    setActiveRoomId(roomId)
+    setCurrentPage('live')
+  }
+
+  const navItems: { id: Page; label: string; icon: typeof Home }[] = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'setup', label: 'Go Live', icon: Radio },
     { id: 'tips', label: 'Tips', icon: Heart },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'vods', label: 'Videos', icon: Film },
     { id: 'profile', label: 'Profile', icon: User },
+    ...(isAdmin ? [{ id: 'admin' as Page, label: 'Admin', icon: ShieldCheck }] : []),
   ]
+
+  if (currentPage === 'live' && activeRoomId) {
+    return (
+      <LiveRoomPage
+        session={session}
+        roomId={activeRoomId}
+        onBack={() => {
+          setCurrentPage('home')
+          setActiveRoomId(null)
+        }}
+      />
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
@@ -40,10 +71,10 @@ export default function MainApp({ session }: MainAppProps) {
           {navItems.map(({ id, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setCurrentPage(id as Page)}
+              onClick={() => setCurrentPage(id)}
               className={`flex-1 py-3 flex justify-center transition min-w-max ${
-                currentPage === id 
-                  ? 'text-pink-400 border-t-2 border-pink-500 drop-shadow-lg drop-shadow-pink-500' 
+                currentPage === id
+                  ? 'text-pink-400 border-t-2 border-pink-500 drop-shadow-lg drop-shadow-pink-500'
                   : 'text-gray-400 hover:text-cyan-300'
               }`}
             >
@@ -66,7 +97,7 @@ export default function MainApp({ session }: MainAppProps) {
           {navItems.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
-              onClick={() => setCurrentPage(id as Page)}
+              onClick={() => setCurrentPage(id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
                 currentPage === id
                   ? 'bg-gradient-to-r from-pink-500 to-cyan-500 text-white font-semibold shadow-lg shadow-pink-500/50'
@@ -93,12 +124,13 @@ export default function MainApp({ session }: MainAppProps) {
 
       {/* Main Content */}
       <div className="md:ml-64 pb-20 md:pb-0">
-        {currentPage === 'home' && <HomePage />}
+        {currentPage === 'home' && <HomePage onSelectStream={openRoom} />}
         {currentPage === 'setup' && <StreamSetupPage />}
         {currentPage === 'tips' && <TipPage />}
         {currentPage === 'analytics' && <AnalyticsDashboard userId={user.id} />}
         {currentPage === 'vods' && <VODLibrary userId={user.id} />}
         {currentPage === 'profile' && <ProfilePage />}
+        {currentPage === 'admin' && isAdmin && <AdminDashboard />}
       </div>
     </div>
   )

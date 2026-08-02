@@ -1,19 +1,16 @@
 /**
- * Paddle Integration for Neon Chat
- * Handles payments for tips and token purchases
+ * Stripe Checkout helpers for tips and token purchases.
+ * Calls /api/stripe-create-checkout, which builds the session with
+ * dynamic price_data — no pre-created Stripe Price IDs to manage.
  */
-
-// Paddle configuration
-export const PADDLE_CLIENT_TOKEN = import.meta.env.VITE_PADDLE_CLIENT_TOKEN || ''
-export const PADDLE_VENDOR_ID = import.meta.env.VITE_PADDLE_VENDOR_ID || ''
 
 // Tip products
 export const TIP_PRODUCTS = {
-  say_hi: { id: 'tip_1', amount: 100, emoji: '💬', label: 'Say Hi', usd: 1 },
-  wave: { id: 'tip_5', amount: 500, emoji: '👋', label: 'Wave', usd: 5 },
-  gift: { id: 'tip_10', amount: 1000, emoji: '🎁', label: 'Gift', usd: 10 },
-  love: { id: 'tip_25', amount: 2500, emoji: '❤️', label: 'Love', usd: 25 },
-  fire: { id: 'tip_50', amount: 5000, emoji: '🔥', label: 'Fire', usd: 50 },
+  say_hi: { amount: 1, emoji: '💬', label: 'Say Hi' },
+  wave: { amount: 5, emoji: '👋', label: 'Wave' },
+  gift: { amount: 10, emoji: '🎁', label: 'Gift' },
+  love: { amount: 25, emoji: '❤️', label: 'Love' },
+  fire: { amount: 50, emoji: '🔥', label: 'Fire' },
 }
 
 // Token packages (prices in cents)
@@ -27,30 +24,36 @@ export const TOKEN_PACKAGES = [
 ]
 
 /**
- * Create a Paddle Checkout for tipping
+ * Create a Stripe Checkout session for tipping a creator directly
+ * (bypassing the token balance). Redirects the browser to Stripe.
  */
 export async function createTipCheckout(
   creatorId: string,
-  tipAmount: number,
+  tipAmountUsd: number,
   userId: string
 ): Promise<{ url: string | null }> {
-  const response = await fetch('/api/paddle-create-tip-checkout', {
+  const response = await fetch('/api/stripe-create-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
+      kind: 'tip',
+      userId,
       creatorId,
-      amount: tipAmount * 100, // Convert to cents
-      tierName: getTierNameForAmount(tipAmount),
+      amountUsdCents: Math.round(tipAmountUsd * 100),
+      label: getTierNameForAmount(tipAmountUsd),
     }),
   })
 
-  if (!response.ok) throw new Error('Failed to create checkout')
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to create checkout')
+  }
   const data = await response.json()
   return { url: data.checkoutUrl }
 }
 
 /**
- * Create a Paddle Checkout for token purchase
+ * Create a Stripe Checkout session for buying a token package.
  */
 export async function createTokenCheckout(
   userId: string,
@@ -59,24 +62,25 @@ export async function createTokenCheckout(
   const pkg = TOKEN_PACKAGES[packageIndex]
   if (!pkg) throw new Error('Invalid package')
 
-  const response = await fetch('/api/paddle-create-tip-checkout', {
+  const response = await fetch('/api/stripe-create-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      creatorId: userId,
-      amount: pkg.priceCents,
-      tierName: `${pkg.tokens} Tokens`,
+      kind: 'tokens',
+      userId,
+      amountUsdCents: pkg.priceCents,
+      tokens: pkg.tokens + pkg.bonus,
     }),
   })
 
-  if (!response.ok) throw new Error('Failed to create checkout')
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data.error || 'Failed to create checkout')
+  }
   const data = await response.json()
   return { url: data.checkoutUrl }
 }
 
-/**
- * Helper function to map tip amount to tier name
- */
 function getTierNameForAmount(amount: number): string {
   const tierMap: { [key: number]: string } = {
     1: 'Say Hi',

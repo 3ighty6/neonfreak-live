@@ -1,39 +1,37 @@
-import { useState } from 'react'
-import { Heart, Zap } from 'lucide-react'
-import { TIP_PRODUCTS, TOKEN_PACKAGES, calculateTokens, createTipCheckout, createTokenCheckout } from '../lib/stripe'
+import { useState, useEffect } from 'react'
+import { Zap, Loader2 } from 'lucide-react'
+import { TOKEN_PACKAGES, calculateTokens, createTokenCheckout } from '../lib/stripe'
+import { supabase } from '../supabaseClient'
 
 export default function TipPage() {
   const [loading, setLoading] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [balance, setBalance] = useState<number | null>(null)
+  const [error, setError] = useState('')
 
-  const handleTip = async (tipKey: keyof typeof TIP_PRODUCTS) => {
-    const tip = TIP_PRODUCTS[tipKey]
-    setLoading(tipKey)
-    try {
-      // In real app, would get creatorId and userId from context
-      const creatorId = 'example-creator'
-      const userId = 'current-user'
-      
-      const { url } = await createTipCheckout(creatorId, tip.amount, userId)
-      if (url) window.location.href = url
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Failed to process tip')
-    } finally {
-      setLoading(null)
+  useEffect(() => {
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      setUserId(user.id)
+      const { data } = await supabase.from('users').select('token_balance').eq('id', user.id).single()
+      setBalance(data?.token_balance ?? 0)
     }
-  }
+    load()
+  }, [])
 
   const handleTokenPurchase = async (packageIndex: number) => {
+    if (!userId) {
+      setError('You need to be signed in to buy tokens')
+      return
+    }
+    setError('')
     setLoading(`token-${packageIndex}`)
     try {
-      // In real app, would get userId from context
-      const userId = 'current-user'
-      
       const { url } = await createTokenCheckout(userId, packageIndex)
       if (url) window.location.href = url
-    } catch (error) {
-      console.error('Error:', error)
-      alert('Failed to process payment')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process payment')
     } finally {
       setLoading(null)
     }
@@ -43,45 +41,27 @@ export default function TipPage() {
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-bold mb-2 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
-          Support Your Favorite Creators
+          Get Tokens
         </h1>
-        <p className="text-gray-400 mb-8">Send tips and purchase tokens with Paddle</p>
+        <p className="text-gray-400 mb-2">Buy tokens to tip creators during their streams</p>
+        {balance !== null && (
+          <p className="text-cyan-400 font-semibold mb-8">Your balance: {balance} tokens</p>
+        )}
 
-        {/* Quick Tips */}
-        <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-            <Heart className="text-red-500" size={28} />
-            Send a Tip
-          </h2>
-          <p className="text-gray-400 mb-6">Show your love with quick tips during streams:</p>
-
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-            {Object.entries(TIP_PRODUCTS).map(([key, tip]) => (
-              <button
-                key={key}
-                onClick={() => handleTip(key as keyof typeof TIP_PRODUCTS)}
-                disabled={loading === key}
-                className="bg-gradient-to-b from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 disabled:opacity-50 rounded-lg p-4 text-center transition transform hover:scale-105"
-              >
-                <div className="text-3xl mb-2">{tip.emoji}</div>
-                <div className="text-sm font-semibold mb-1">{tip.label}</div>
-                <div className="text-lg font-bold">${tip.usd}</div>
-              </button>
-            ))}
+        {error && (
+          <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded text-red-300 text-sm">
+            {error}
           </div>
+        )}
 
-          <div className="mt-6 p-4 bg-purple-500/10 border border-purple-500/20 rounded text-sm text-gray-300">
-            <strong>💡 Pro tip:</strong> Tips go directly to creators! 70% of your tip goes to them, 30% supports Neon Chat.
-          </div>
-        </div>
-
-        {/* Token Packages */}
         <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6">
           <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
             <Zap className="text-yellow-400" size={28} />
-            Get Tokens
+            Token Packages
           </h2>
-          <p className="text-gray-400 mb-6">Purchase tokens to unlock premium features:</p>
+          <p className="text-gray-400 mb-6">
+            Tokens are spent tipping creators live, from inside their stream.
+          </p>
 
           <div className="grid md:grid-cols-2 gap-4">
             {TOKEN_PACKAGES.map((pkg, idx) => (
@@ -122,16 +102,22 @@ export default function TipPage() {
                 <button
                   onClick={() => handleTokenPurchase(idx)}
                   disabled={loading === `token-${idx}`}
-                  className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-2 rounded font-semibold transition"
+                  className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-2 rounded font-semibold transition flex items-center justify-center gap-2"
                 >
-                  {loading === `token-${idx}` ? 'Processing...' : 'Buy Now'}
+                  {loading === `token-${idx}` ? (
+                    <>
+                      <Loader2 className="animate-spin" size={18} /> Processing...
+                    </>
+                  ) : (
+                    'Buy Now'
+                  )}
                 </button>
               </div>
             ))}
           </div>
 
           <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/20 rounded text-sm text-gray-300">
-            <strong>🔒 Secure:</strong> Powered by Paddle, a secure global payment processor. All transactions are encrypted and safe.
+            <strong>🔒 Secure:</strong> Payments are processed by Stripe. Card details never touch our servers.
           </div>
         </div>
       </div>

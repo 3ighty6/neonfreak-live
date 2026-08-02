@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Users, TrendingUp, Shield, AlertCircle } from 'lucide-react'
+import { supabase } from '../supabaseClient'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -9,17 +10,24 @@ export default function AdminDashboard() {
     pendingReports: 0,
   })
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await fetch('/api/admin/stats')
+        const { data: { session } } = await supabase.auth.getSession()
+        const response = await fetch('/api/admin/stats', {
+          headers: session ? { Authorization: `Bearer ${session.access_token}` } : {},
+        })
+        const data = await response.json()
         if (response.ok) {
-          const data = await response.json()
           setStats(data)
+        } else {
+          setError(data.error || 'Failed to load stats')
         }
-      } catch (error) {
-        console.error('Failed to fetch stats:', error)
+      } catch (err) {
+        console.error('Failed to fetch stats:', err)
+        setError('Failed to load stats')
       } finally {
         setLoading(false)
       }
@@ -38,6 +46,8 @@ export default function AdminDashboard() {
 
         {loading ? (
           <div className="text-center text-gray-400">Loading statistics...</div>
+        ) : error ? (
+          <div className="bg-red-500/10 border border-red-500/30 rounded p-4 text-red-300">{error}</div>
         ) : (
           <>
             {/* Stats Grid */}
