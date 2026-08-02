@@ -71,7 +71,11 @@ export default function HomePage({
 
   const filteredStreams = streams.filter(stream => {
     const matchesCategory = !selectedCategory || stream.category_id === selectedCategory
-    const matchesSearch = !searchQuery || stream.title.toLowerCase().includes(searchQuery.toLowerCase())
+    const query = searchQuery.toLowerCase()
+    const matchesSearch =
+      !query ||
+      stream.title.toLowerCase().includes(query) ||
+      (stream.users?.username || '').toLowerCase().includes(query)
     const matchesFollowing = !followingOnly || followedIds.has(stream.streamer_id)
     return matchesCategory && matchesSearch && matchesFollowing
   })

@@ -141,7 +141,7 @@ export default function MainApp({ session }: MainAppProps) {
         {currentPage === 'setup' && <StreamSetupPage />}
         {currentPage === 'tips' && <TipPage />}
         {currentPage === 'analytics' && <AnalyticsDashboard userId={user.id} />}
-        {currentPage === 'vods' && <VODLibrary userId={user.id} />}
+        {currentPage === 'vods' && <VODLibrary session={session} userId={user.id} />}
         {currentPage === 'profile' && <ProfilePage />}
         {currentPage === 'admin' && isAdmin && <AdminDashboard />}
       </div>
