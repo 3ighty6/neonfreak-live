@@ -62,7 +62,7 @@ export default function StreamSetupPage() {
 
       const data = await response.json()
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to create stream')
+        throw new Error(data.details || data.error || 'Failed to create stream')
       }
 
       setRtmpUrl(data.rtmpServerUrl || '')

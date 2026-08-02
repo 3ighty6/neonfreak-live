@@ -33,6 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!muxRes.ok) {
       const error = await muxRes.text()
+      console.error(`Mux API failed (${muxRes.status}):`, error)
       return res.status(muxRes.status).json({ error: 'Mux API failed', details: error })
     }
 
