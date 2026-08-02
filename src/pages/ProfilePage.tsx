@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Camera, Mail, Loader2, Check } from 'lucide-react'
+import { Camera, Mail, Loader2, Check, Lock } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import type { User } from '../types'
 
@@ -13,6 +13,11 @@ export default function ProfilePage() {
   const [bio, setBio] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [error, setError] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [passwordMessage, setPasswordMessage] = useState('')
+  const [passwordError, setPasswordError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -125,6 +130,33 @@ export default function ProfilePage() {
     }
 
     setProfile({ ...profile, avatar_url: urlData.publicUrl })
+  }
+
+  const handleChangePassword = async () => {
+    setPasswordError('')
+    setPasswordMessage('')
+
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters')
+      return
+    }
+    if (newPassword !== confirmNewPassword) {
+      setPasswordError('Passwords do not match')
+      return
+    }
+
+    setChangingPassword(true)
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+    setChangingPassword(false)
+
+    if (updateError) {
+      setPasswordError(updateError.message)
+      return
+    }
+
+    setPasswordMessage('✅ Password updated')
+    setNewPassword('')
+    setConfirmNewPassword('')
   }
 
   if (loading) {
@@ -243,6 +275,56 @@ export default function ProfilePage() {
                 </button>
               </>
             )}
+          </div>
+        </div>
+
+        {/* Change Password */}
+        <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-6">
+          <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+            <Lock size={18} className="text-cyan-400" />
+            Change Password
+          </h2>
+
+          {passwordError && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded text-red-300 text-sm">
+              {passwordError}
+            </div>
+          )}
+          {passwordMessage && (
+            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/30 rounded text-green-300 text-sm">
+              {passwordMessage}
+            </div>
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm text-gray-400 block mb-2">New Password</label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="At least 8 characters"
+                className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-white"
+              />
+            </div>
+            <div>
+              <label className="text-sm text-gray-400 block mb-2">Confirm New Password</label>
+              <input
+                type="password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-white"
+              />
+            </div>
+            <button
+              onClick={handleChangePassword}
+              disabled={changingPassword || !newPassword}
+              className="bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white px-4 py-2 rounded font-semibold transition flex items-center gap-2"
+            >
+              {changingPassword ? <Loader2 className="animate-spin" size={18} /> : null}
+              {changingPassword ? 'Updating...' : 'Update Password'}
+            </button>
           </div>
         </div>
 
