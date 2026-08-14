@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Users, TrendingUp, Shield, AlertCircle, Check, X, BadgeCheck } from 'lucide-react'
+import { Users, TrendingUp, Shield, AlertCircle, Check, X, BadgeCheck, Tag, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 
 interface UserRow {
@@ -22,11 +22,21 @@ interface ReportRow {
   reported: { username: string } | null
 }
 
+interface CategoryRow {
+  id: string
+  name: string
+  description: string | null
+  icon: string | null
+}
+
 export default function AdminDashboard() {
-  const [tab, setTab] = useState<'overview' | 'users' | 'reports'>('overview')
+  const [tab, setTab] = useState<'overview' | 'users' | 'reports' | 'categories'>('overview')
   const [stats, setStats] = useState({ totalUsers: 0, activeStreams: 0, totalRevenue: 0, pendingReports: 0 })
   const [users, setUsers] = useState<UserRow[]>([])
   const [reports, setReports] = useState<ReportRow[]>([])
+  const [categories, setCategories] = useState<CategoryRow[]>([])
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newCategoryIcon, setNewCategoryIcon] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -60,9 +70,27 @@ export default function AdminDashboard() {
     setReports((data as any) || [])
   }
 
+  const fetchCategories = async () => {
+    const { data } = await supabase.from('categories').select('id, name, description, icon').order('name')
+    setCategories(data || [])
+  }
+
   useEffect(() => {
-    Promise.all([fetchStats(), fetchUsers(), fetchReports()]).finally(() => setLoading(false))
+    Promise.all([fetchStats(), fetchUsers(), fetchReports(), fetchCategories()]).finally(() => setLoading(false))
   }, [])
+
+  const addCategory = async () => {
+    if (!newCategoryName.trim()) return
+    await supabase.from('categories').insert({ name: newCategoryName.trim(), icon: newCategoryIcon.trim() || null })
+    setNewCategoryName('')
+    setNewCategoryIcon('')
+    fetchCategories()
+  }
+
+  const deleteCategory = async (id: string) => {
+    await supabase.from('categories').delete().eq('id', id)
+    fetchCategories()
+  }
 
   const toggleVerified = async (u: UserRow) => {
     await supabase.from('users').update({ is_verified: !u.is_verified }).eq('id', u.id)
@@ -90,7 +118,7 @@ export default function AdminDashboard() {
         <p className="text-gray-400 mb-6">Platform overview and management</p>
 
         <div className="flex gap-2 mb-8">
-          {(['overview', 'users', 'reports'] as const).map((t) => (
+          {(['overview', 'users', 'reports', 'categories'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -155,7 +183,7 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
-        ) : (
+        ) : tab === 'reports' ? (
           <div className="space-y-3">
             {reports.length === 0 ? (
               <div className="text-center py-12 text-gray-400">No reports yet.</div>
@@ -202,6 +230,49 @@ export default function AdminDashboard() {
                 </div>
               ))
             )}
+          </div>
+        ) : (
+          <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <Tag className="text-cyan-400" size={20} />
+              <h2 className="text-lg font-bold">Stream Categories</h2>
+            </div>
+
+            <div className="flex gap-2 mb-6">
+              <input
+                value={newCategoryIcon}
+                onChange={(e) => setNewCategoryIcon(e.target.value)}
+                placeholder="🎮"
+                maxLength={4}
+                className="w-16 bg-gray-800 border border-gray-700 rounded px-2 py-2 text-center"
+              />
+              <input
+                value={newCategoryName}
+                onChange={(e) => setNewCategoryName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && addCategory()}
+                placeholder="New category name"
+                className="flex-1 bg-gray-800 border border-gray-700 rounded px-3 py-2"
+              />
+              <button
+                onClick={addCategory}
+                className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold flex items-center gap-1 transition"
+              >
+                <Plus size={16} /> Add
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              {categories.map((c) => (
+                <div key={c.id} className="flex items-center justify-between bg-gray-800 rounded px-4 py-2.5">
+                  <span>
+                    {c.icon} {c.name}
+                  </span>
+                  <button onClick={() => deleteCategory(c.id)} className="text-gray-500 hover:text-red-400 transition">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
