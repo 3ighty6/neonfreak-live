@@ -1,6 +1,14 @@
 import { Users, Heart } from 'lucide-react'
 
-export default function LiveStreamCard({ stream, onClick }: { stream: any; onClick?: () => void }) {
+export default function LiveStreamCard({
+  stream,
+  onClick,
+  onCreatorClick,
+}: {
+  stream: any
+  onClick?: () => void
+  onCreatorClick?: (creatorId: string) => void
+}) {
   return (
     <div
       onClick={onClick}
@@ -24,7 +32,17 @@ export default function LiveStreamCard({ stream, onClick }: { stream: any; onCli
       {/* Info */}
       <div className="bg-black/50 p-3">
         <h3 className="font-semibold text-white line-clamp-2 mb-2">{stream.title}</h3>
-        <p className="text-sm text-gray-400 mb-3">{stream.users?.username}</p>
+        <p
+          onClick={(e) => {
+            if (onCreatorClick && stream.streamer_id) {
+              e.stopPropagation()
+              onCreatorClick(stream.streamer_id)
+            }
+          }}
+          className="text-sm text-gray-400 mb-3 hover:text-cyan-400 transition w-fit"
+        >
+          {stream.users?.username}
+        </p>
         
         <div className="flex items-center justify-between text-sm text-gray-400">
           <div className="flex items-center gap-1">

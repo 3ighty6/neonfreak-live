@@ -3,7 +3,7 @@ import { Camera, Mail, Loader2, Check, Lock } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import type { User } from '../types'
 
-export default function ProfilePage() {
+export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfile?: () => void }) {
   const [profile, setProfile] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -178,9 +178,19 @@ export default function ProfilePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-white p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
-          Profile
-        </h1>
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
+            Profile
+          </h1>
+          {onViewPublicProfile && (
+            <button
+              onClick={onViewPublicProfile}
+              className="text-sm text-cyan-400 hover:text-cyan-300 border border-cyan-500/30 rounded px-3 py-1.5 transition"
+            >
+              View Public Profile
+            </button>
+          )}
+        </div>
 
         {error && (
           <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded text-red-300 text-sm">

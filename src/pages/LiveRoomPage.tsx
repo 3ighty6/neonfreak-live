@@ -9,6 +9,7 @@ interface LiveRoomPageProps {
   session: Session
   roomId: string
   onBack?: () => void
+  onOpenCreator?: (creatorId: string) => void
 }
 
 interface RoomInfo {
@@ -18,6 +19,7 @@ interface RoomInfo {
   hls_url: string | null
   is_live: boolean
   viewer_count: number
+  users?: { username: string }
 }
 
 interface ChatMessage {
@@ -27,7 +29,7 @@ interface ChatMessage {
   username?: string
 }
 
-export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPageProps) {
+export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }: LiveRoomPageProps) {
   const [room, setRoom] = useState<RoomInfo | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [newMessage, setNewMessage] = useState('')
@@ -68,11 +70,11 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
     const loadRoom = async () => {
       const { data } = await supabase
         .from('rooms')
-        .select('id, title, streamer_id, hls_url, is_live, viewer_count')
+        .select('id, title, streamer_id, hls_url, is_live, viewer_count, users:streamer_id(username)')
         .eq('id', roomId)
         .single()
       if (data) {
-        setRoom(data)
+        setRoom(data as unknown as RoomInfo)
         const { data: followRow } = await supabase
           .from('followers')
           .select('id')
@@ -316,8 +318,16 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
         </div>
 
         {room?.title && (
-          <div className="absolute bottom-4 left-4 bg-black/70 px-4 py-2 rounded-lg text-white font-semibold">
-            {room.title}
+          <div className="absolute bottom-4 left-4 bg-black/70 px-4 py-2 rounded-lg text-white">
+            <div className="font-semibold">{room.title}</div>
+            {room.users?.username && (
+              <button
+                onClick={() => onOpenCreator?.(room.streamer_id)}
+                className="text-sm text-cyan-400 hover:text-cyan-300 transition"
+              >
+                {room.users.username}
+              </button>
+            )}
           </div>
         )}
       </div>

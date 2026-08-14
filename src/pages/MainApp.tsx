@@ -10,9 +10,10 @@ import VODLibrary from './VODLibrary'
 import ProfilePage from './ProfilePage'
 import LiveRoomPage from './LiveRoomPage'
 import AdminDashboard from './AdminDashboard'
+import CreatorProfilePage from './CreatorProfilePage'
 import Footer from '../components/Footer'
 
-type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin'
+type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin' | 'creator'
 
 interface MainAppProps {
   session: Session
@@ -28,6 +29,7 @@ export default function MainApp({ session }: MainAppProps) {
     return params.get('room')
   })
   const [isAdmin, setIsAdmin] = useState(false)
+  const [activeCreatorId, setActiveCreatorId] = useState<string | null>(null)
 
   useEffect(() => {
     // Clean the checkout/room params out of the visible URL once read
@@ -54,6 +56,11 @@ export default function MainApp({ session }: MainAppProps) {
     setCurrentPage('live')
   }
 
+  const openCreator = (creatorId: string) => {
+    setActiveCreatorId(creatorId)
+    setCurrentPage('creator')
+  }
+
   const navItems: { id: Page; label: string; icon: typeof Home }[] = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'setup', label: 'Go Live', icon: Radio },
@@ -73,6 +80,21 @@ export default function MainApp({ session }: MainAppProps) {
           setCurrentPage('home')
           setActiveRoomId(null)
         }}
+        onOpenCreator={openCreator}
+      />
+    )
+  }
+
+  if (currentPage === 'creator' && activeCreatorId) {
+    return (
+      <CreatorProfilePage
+        session={session}
+        creatorId={activeCreatorId}
+        onBack={() => {
+          setCurrentPage('home')
+          setActiveCreatorId(null)
+        }}
+        onOpenSetup={() => setCurrentPage('setup')}
       />
     )
   }
@@ -138,12 +160,12 @@ export default function MainApp({ session }: MainAppProps) {
 
       {/* Main Content */}
       <div className="md:ml-64 pb-20 md:pb-0">
-        {currentPage === 'home' && <HomePage session={session} onSelectStream={openRoom} />}
+        {currentPage === 'home' && <HomePage session={session} onSelectStream={openRoom} onSelectCreator={openCreator} />}
         {currentPage === 'setup' && <StreamSetupPage />}
         {currentPage === 'tips' && <TipPage />}
         {currentPage === 'analytics' && <AnalyticsDashboard userId={user.id} />}
         {currentPage === 'vods' && <VODLibrary session={session} userId={user.id} />}
-        {currentPage === 'profile' && <ProfilePage />}
+        {currentPage === 'profile' && <ProfilePage onViewPublicProfile={() => openCreator(user.id)} />}
         {currentPage === 'admin' && isAdmin && <AdminDashboard />}
         <Footer />
       </div>

@@ -16,9 +16,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ balance: 0, error: 'Config missing' })
     }
 
-    // Use Supabase REST API instead of client library
+    // users.token_balance is the real, actively-used balance column.
+    // (user_token_balance is a legacy table nothing else in the app
+    // writes to -- querying it always silently returned 0.)
     const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/user_token_balance?user_id=eq.${userId}&select=balance`,
+      `${SUPABASE_URL}/rest/v1/users?id=eq.${userId}&select=token_balance`,
       {
         method: 'GET',
         headers: {
@@ -31,12 +33,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (!response.ok) {
       console.error('Supabase error:', response.status, await response.text())
-      // Return default balance if table doesn't exist yet
       return res.json({ balance: 0, userId })
     }
 
     const data = await response.json()
-    const balance = data[0]?.balance || 0
+    const balance = data[0]?.token_balance || 0
 
     res.json({ balance, userId })
   } catch (error) {

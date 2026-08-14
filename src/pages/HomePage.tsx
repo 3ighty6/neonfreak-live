@@ -7,9 +7,11 @@ import LiveStreamCard from '../components/LiveStreamCard'
 export default function HomePage({
   session,
   onSelectStream,
+  onSelectCreator,
 }: {
   session: Session
   onSelectStream?: (roomId: string) => void
+  onSelectCreator?: (creatorId: string) => void
 }) {
   const [streams, setStreams] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -180,7 +182,12 @@ export default function HomePage({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredStreams.map(stream => (
-            <LiveStreamCard key={stream.id} stream={stream} onClick={() => onSelectStream?.(stream.id)} />
+            <LiveStreamCard
+              key={stream.id}
+              stream={stream}
+              onClick={() => onSelectStream?.(stream.id)}
+              onCreatorClick={onSelectCreator}
+            />
           ))}
         </div>
       )}
