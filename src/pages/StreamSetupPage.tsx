@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { Copy, Check, Video, AlertCircle, Radio, Square, Camera, Cable } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 
-// WHIP relay running on Railway (MediaMTX) — forwards browser camera
-// streams to Mux's RTMP ingest using the Mux stream key as the routing
-// path. See 3ighty6/ralph-sons-digital-platform for the relay itself.
-const WHIP_RELAY_URL = 'https://whip-relay-v3-production.up.railway.app'
+// WebSocket relay running on Railway — the browser records with
+// MediaRecorder and pushes chunks here, and the relay transcodes and
+// forwards to Mux's RTMP ingest.
+// See 3ighty6/ralph-sons-digital-platform for the relay itself.
+const WS_RELAY_URL = 'wss://whip-relay-v3-production.up.railway.app'
 
 export default function StreamSetupPage() {
   const [copied, setCopied] = useState<string | null>(null)
@@ -21,8 +22,9 @@ export default function StreamSetupPage() {
   const [broadcasting, setBroadcasting] = useState(false)
   const [cameraStarting, setCameraStarting] = useState(false)
   const videoPreviewRef = useRef<HTMLVideoElement>(null)
-  const peerConnectionRef = useRef<RTCPeerConnection | null>(null)
-  const whipSessionUrlRef = useRef<string | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const mediaStreamRef = useRef<MediaStream | null>(null)
+  const websocketRef = useRef<WebSocket | null>(null)
 
   // Resume an in-progress / already-live room on load, so refreshing this
   // page doesn't orphan your stream key.
@@ -116,79 +118,95 @@ export default function StreamSetupPage() {
         video: { width: 1280, height: 720 },
         audio: true,
       })
+      mediaStreamRef.current = stream
 
       if (videoPreviewRef.current) {
         videoPreviewRef.current.srcObject = stream
       }
 
-      const pc = new RTCPeerConnection()
-      peerConnectionRef.current = pc
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream))
+      // Pick a container/codec the browser actually supports. Chrome and
+      // Firefox differ here, and Safari only recently gained MediaRecorder
+      // WebM support, so probe rather than assume.
+      const candidates = [
+        'video/webm;codecs=vp8,opus',
+        'video/webm;codecs=vp9,opus',
+        'video/webm',
+        'video/mp4',
+      ]
+      const mimeType = candidates.find((t) => MediaRecorder.isTypeSupported(t))
+      if (!mimeType) {
+        throw new Error("Your browser can't record video for streaming. Try Chrome, or use OBS instead.")
+      }
 
-      // Prefer H.264 so the relay can remux to RTMP with -c copy (no
-      // server-side transcoding needed). Falls back silently if a
-      // browser doesn't support codec preference selection.
-      const videoTransceiver = pc.getTransceivers().find((t) => t.sender.track?.kind === 'video')
-      if (videoTransceiver && 'setCodecPreferences' in videoTransceiver) {
-        const codecs = RTCRtpSender.getCapabilities('video')?.codecs || []
-        const h264Codecs = codecs.filter((c) => c.mimeType.toLowerCase() === 'video/h264')
-        if (h264Codecs.length > 0) {
-          videoTransceiver.setCodecPreferences(h264Codecs)
+      const wsUrl = `${WS_RELAY_URL}/publish?key=${encodeURIComponent(rtmpKey)}`
+      const ws = new WebSocket(wsUrl)
+      ws.binaryType = 'arraybuffer'
+      websocketRef.current = ws
+
+      await new Promise<void>((resolve, reject) => {
+        const timeout = setTimeout(() => reject(new Error('Relay connection timed out. Try again in a moment.')), 15000)
+        ws.onopen = () => {
+          clearTimeout(timeout)
+          resolve()
+        }
+        ws.onerror = () => {
+          clearTimeout(timeout)
+          reject(new Error('Could not reach the streaming relay. Try again, or use OBS.'))
+        }
+      })
+
+      const recorder = new MediaRecorder(stream, {
+        mimeType,
+        videoBitsPerSecond: 2500000,
+        audioBitsPerSecond: 128000,
+      })
+      mediaRecorderRef.current = recorder
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0 && ws.readyState === WebSocket.OPEN) {
+          ws.send(e.data)
         }
       }
 
-      const offer = await pc.createOffer()
-      await pc.setLocalDescription(offer)
-
-      // Wait for ICE gathering so the offer includes candidates (WHIP is
-      // a single-shot POST, no trickle ICE negotiation afterward)
-      await new Promise<void>((resolve) => {
-        if (pc.iceGatheringState === 'complete') return resolve()
-        const check = () => {
-          if (pc.iceGatheringState === 'complete') {
-            pc.removeEventListener('icegatheringstatechange', check)
-            resolve()
-          }
+      ws.onclose = () => {
+        if (mediaRecorderRef.current?.state === 'recording') {
+          setError('Lost connection to the streaming relay.')
+          stopBrowserBroadcast()
         }
-        pc.addEventListener('icegatheringstatechange', check)
-      })
-
-      const whipUrl = `${WHIP_RELAY_URL}/${rtmpKey}/whip`
-      const response = await fetch(whipUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/sdp' },
-        body: pc.localDescription?.sdp,
-      })
-
-      if (!response.ok) {
-        throw new Error(`Relay rejected connection (${response.status}). It may still be warming up — try again in a moment.`)
       }
 
-      whipSessionUrlRef.current = response.headers.get('Location')
-      const answerSdp = await response.text()
-      await pc.setRemoteDescription({ type: 'answer', sdp: answerSdp })
+      // 1s chunks: small enough to keep latency down, large enough that
+      // each chunk carries a usable cluster for ffmpeg.
+      recorder.start(1000)
 
       setBroadcasting(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
-      peerConnectionRef.current?.close()
-      peerConnectionRef.current = null
+      mediaStreamRef.current?.getTracks().forEach((t) => t.stop())
+      mediaStreamRef.current = null
+      websocketRef.current?.close()
+      websocketRef.current = null
     } finally {
       setCameraStarting(false)
     }
   }
 
   const stopBrowserBroadcast = () => {
-    const videoEl = videoPreviewRef.current
-    const stream = videoEl?.srcObject as MediaStream | null
-    stream?.getTracks().forEach((t) => t.stop())
-    if (videoEl) videoEl.srcObject = null
+    if (mediaRecorderRef.current?.state === 'recording') {
+      mediaRecorderRef.current.stop()
+    }
+    mediaRecorderRef.current = null
 
-    peerConnectionRef.current?.close()
-    peerConnectionRef.current = null
+    mediaStreamRef.current?.getTracks().forEach((t) => t.stop())
+    mediaStreamRef.current = null
+
+    if (videoPreviewRef.current) videoPreviewRef.current.srcObject = null
+
+    websocketRef.current?.close()
+    websocketRef.current = null
+
     setBroadcasting(false)
   }
-
 
   const endStream = async () => {
     if (!roomId) return
