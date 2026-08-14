@@ -3,7 +3,7 @@ import { Session } from '@supabase/supabase-js'
 import Hls from 'hls.js'
 import { supabase } from '../supabaseClient'
 import { TOKEN_PACKAGES, createTokenCheckout } from '../lib/stripe'
-import { Send, Heart, HeartOff, Users, Share2, ArrowLeft, ShoppingCart } from 'lucide-react'
+import { Send, Heart, HeartOff, Users, Share2, ArrowLeft, ShoppingCart, Flag, X } from 'lucide-react'
 
 interface LiveRoomPageProps {
   session: Session
@@ -39,6 +39,11 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
   const [followLoading, setFollowLoading] = useState(false)
   const [showBuyPrompt, setShowBuyPrompt] = useState(false)
   const [buyLoading, setBuyLoading] = useState<number | null>(null)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [reportReason, setReportReason] = useState('')
+  const [reportDetails, setReportDetails] = useState('')
+  const [reportSubmitting, setReportSubmitting] = useState(false)
+  const [reportSubmitted, setReportSubmitted] = useState(false)
   const messageEndRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
@@ -97,6 +102,28 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
       setIsFollowing(true)
     }
     setFollowLoading(false)
+  }
+
+  const submitReport = async () => {
+    if (!room || !reportReason) return
+    setReportSubmitting(true)
+    const { error: reportError } = await supabase.from('reports').insert({
+      reporter_id: session.user.id,
+      reported_user_id: room.streamer_id,
+      room_id: roomId,
+      reason: reportReason,
+      details: reportDetails.trim() || null,
+    })
+    setReportSubmitting(false)
+    if (!reportError) {
+      setReportSubmitted(true)
+      setTimeout(() => {
+        setShowReportModal(false)
+        setReportSubmitted(false)
+        setReportReason('')
+        setReportDetails('')
+      }, 1500)
+    }
   }
 
   const handleBuyTokens = async (packageIndex: number) => {
@@ -277,6 +304,15 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
           <button className="bg-cyan-500/20 hover:bg-cyan-500/40 p-2 rounded-lg text-cyan-400">
             <Share2 size={20} />
           </button>
+          {room && room.streamer_id !== session.user.id && (
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="bg-red-500/20 hover:bg-red-500/40 p-2 rounded-lg text-red-400"
+              title="Report this stream"
+            >
+              <Flag size={20} />
+            </button>
+          )}
         </div>
 
         {room?.title && (
@@ -375,6 +411,58 @@ export default function LiveRoomPage({ session, roomId, onBack }: LiveRoomPagePr
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-red-500/30 rounded-lg w-full max-w-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Flag className="text-red-400" size={20} />
+                <h2 className="text-lg font-bold">Report this stream</h2>
+              </div>
+              <button onClick={() => setShowReportModal(false)} className="text-gray-400 hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+
+            {reportSubmitted ? (
+              <div className="text-center py-6 text-green-400">Report submitted. Thank you.</div>
+            ) : (
+              <>
+                <div className="space-y-2 mb-4">
+                  {['Underage concern', 'Non-consensual content', 'Harassment', 'Spam or scam', 'Other'].map((reason) => (
+                    <button
+                      key={reason}
+                      onClick={() => setReportReason(reason)}
+                      className={`w-full text-left px-3 py-2 rounded text-sm transition ${
+                        reportReason === reason
+                          ? 'bg-red-500/20 border border-red-500/50 text-red-300'
+                          : 'bg-gray-800 border border-gray-700 text-gray-300 hover:bg-gray-700'
+                      }`}
+                    >
+                      {reason}
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={reportDetails}
+                  onChange={(e) => setReportDetails(e.target.value)}
+                  placeholder="Additional details (optional)"
+                  rows={3}
+                  className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white mb-4"
+                />
+                <button
+                  onClick={submitReport}
+                  disabled={!reportReason || reportSubmitting}
+                  className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-2 rounded font-semibold transition"
+                >
+                  {reportSubmitting ? 'Submitting...' : 'Submit Report'}
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}

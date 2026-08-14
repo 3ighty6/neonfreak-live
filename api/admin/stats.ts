@@ -47,10 +47,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(403).json({ error: 'Admin access required' })
     }
 
-    const [{ count: totalUsers }, { count: activeStreams }, { data: tipTotals }] = await Promise.all([
+    const [{ count: totalUsers }, { count: activeStreams }, { data: tipTotals }, { count: pendingReports }] = await Promise.all([
       supabase.from('users').select('*', { count: 'exact', head: true }),
       supabase.from('rooms').select('*', { count: 'exact', head: true }).eq('is_live', true),
       supabase.from('tips').select('amount'),
+      supabase.from('reports').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
     ])
 
     const totalRevenue = (tipTotals || []).reduce((sum: number, t: any) => sum + Number(t.amount || 0), 0)
@@ -59,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       totalUsers: totalUsers ?? 0,
       activeStreams: activeStreams ?? 0,
       totalRevenue,
-      pendingReports: 0, // no reports/moderation table exists yet
+      pendingReports: pendingReports ?? 0,
     })
   } catch (error) {
     console.error('Stats error:', error)
