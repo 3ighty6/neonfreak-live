@@ -19,7 +19,7 @@ interface RoomInfo {
   hls_url: string | null
   is_live: boolean
   viewer_count: number
-  users?: { username: string }
+  users?: { username: string; is_ai_creator?: boolean }
 }
 
 interface ChatMessage {
@@ -70,7 +70,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
     const loadRoom = async () => {
       const { data } = await supabase
         .from('rooms')
-        .select('id, title, streamer_id, hls_url, is_live, viewer_count, users:streamer_id(username)')
+        .select('id, title, streamer_id, hls_url, is_live, viewer_count, users:streamer_id(username, is_ai_creator)')
         .eq('id', roomId)
         .single()
       if (data) {
@@ -323,9 +323,12 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
             {room.users?.username && (
               <button
                 onClick={() => onOpenCreator?.(room.streamer_id)}
-                className="text-sm text-cyan-400 hover:text-cyan-300 transition"
+                className="text-sm text-cyan-400 hover:text-cyan-300 transition flex items-center gap-1.5"
               >
                 {room.users.username}
+                {room.users.is_ai_creator && (
+                  <span className="bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">AI</span>
+                )}
               </button>
             )}
           </div>

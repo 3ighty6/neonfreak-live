@@ -11,6 +11,8 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
   const [isEditing, setIsEditing] = useState(false)
   const [username, setUsername] = useState('')
   const [bio, setBio] = useState('')
+  const [isAiCreator, setIsAiCreator] = useState(false)
+  const [aiDisclosure, setAiDisclosure] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [error, setError] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -44,6 +46,8 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
       setProfile(data)
       setUsername(data.username || '')
       setBio(data.bio || '')
+      setIsAiCreator(!!data.is_ai_creator)
+      setAiDisclosure(data.ai_disclosure || '')
     }
     setLoading(false)
   }
@@ -58,6 +62,8 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
       .update({
         username: username.trim(),
         bio: bio.trim(),
+        is_ai_creator: isAiCreator,
+        ai_disclosure: isAiCreator ? aiDisclosure.trim() || 'This profile features AI-generated content.' : null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', profile.id)
@@ -69,7 +75,7 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
       return
     }
 
-    setProfile({ ...profile, username: username.trim(), bio: bio.trim() })
+    setProfile({ ...profile, username: username.trim(), bio: bio.trim(), is_ai_creator: isAiCreator, ai_disclosure: aiDisclosure.trim() || null })
     setIsEditing(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -79,6 +85,8 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
     if (profile) {
       setUsername(profile.username || '')
       setBio(profile.bio || '')
+      setIsAiCreator(!!profile.is_ai_creator)
+      setAiDisclosure(profile.ai_disclosure || '')
     }
     setIsEditing(false)
     setError('')
@@ -247,6 +255,31 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
                 rows={3}
                 className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-white disabled:opacity-50"
               />
+            </div>
+
+            <div className="bg-gray-800/50 border border-gray-700 rounded p-4">
+              <label className="flex items-center gap-2 text-sm font-semibold mb-2">
+                <input
+                  type="checkbox"
+                  checked={isAiCreator}
+                  onChange={(e) => setIsAiCreator(e.target.checked)}
+                  disabled={!isEditing}
+                />
+                I'm an AI creator (content is AI-generated)
+              </label>
+              <p className="text-xs text-gray-500 mb-3">
+                Required disclosure — an "AI" badge will show on your profile and content wherever it appears.
+              </p>
+              {isAiCreator && (
+                <textarea
+                  value={aiDisclosure}
+                  onChange={(e) => setAiDisclosure(e.target.value)}
+                  disabled={!isEditing}
+                  placeholder="e.g. This profile features AI-generated content created using [tool/method]."
+                  rows={2}
+                  className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-white disabled:opacity-50"
+                />
+              )}
             </div>
 
             <div>

@@ -39,9 +39,12 @@ export default function LiveStreamCard({
               onCreatorClick(stream.streamer_id)
             }
           }}
-          className="text-sm text-gray-400 mb-3 hover:text-cyan-400 transition w-fit"
+          className="text-sm text-gray-400 mb-3 hover:text-cyan-400 transition w-fit flex items-center gap-1.5"
         >
           {stream.users?.username}
+          {stream.users?.is_ai_creator && (
+            <span className="bg-purple-600 text-white text-[10px] px-1.5 py-0.5 rounded-full font-semibold">AI</span>
+          )}
         </p>
         
         <div className="flex items-center justify-between text-sm text-gray-400">

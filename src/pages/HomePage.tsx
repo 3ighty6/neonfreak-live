@@ -47,7 +47,7 @@ export default function HomePage({
         .from('rooms')
         .select(`
           *,
-          users:streamer_id(username, avatar_url, is_verified)
+          users:streamer_id(username, avatar_url, is_verified, is_ai_creator)
         `)
         .eq('is_live', true)
         .order('viewer_count', { ascending: false })

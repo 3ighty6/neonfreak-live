@@ -16,6 +16,8 @@ interface Profile {
   total_earnings: number
   is_verified: boolean
   is_streamer: boolean
+  is_ai_creator?: boolean
+  ai_disclosure?: string | null
 }
 
 interface VideoRow {
@@ -53,7 +55,7 @@ export default function CreatorProfilePage({
     const [{ data: profileData }, { data: videoData }, { data: roomData }] = await Promise.all([
       supabase
         .from('users')
-        .select('id, username, bio, avatar_url, followers_count, following_count, total_earnings, is_verified, is_streamer')
+        .select('id, username, bio, avatar_url, followers_count, following_count, total_earnings, is_verified, is_streamer, is_ai_creator, ai_disclosure')
         .eq('id', creatorId)
         .single(),
       supabase
@@ -143,7 +145,15 @@ export default function CreatorProfilePage({
                 {profile.is_verified && (
                   <div className="bg-cyan-600 px-3 py-1 rounded-full text-xs font-semibold">✓ Verified</div>
                 )}
+                {profile.is_ai_creator && (
+                  <div className="bg-purple-600 px-3 py-1 rounded-full text-xs font-semibold" title={profile.ai_disclosure || undefined}>
+                    🤖 AI Creator
+                  </div>
+                )}
               </div>
+              {profile.is_ai_creator && profile.ai_disclosure && (
+                <p className="text-xs text-purple-300 mb-2">{profile.ai_disclosure}</p>
+              )}
 
               <p className="text-gray-400 mb-4">{profile.bio || 'No bio yet.'}</p>
 
