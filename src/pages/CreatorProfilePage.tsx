@@ -4,6 +4,7 @@ import { Heart, HeartOff, Share2, Edit, Camera, Play, Lock } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import ProfileEditModal from '../components/ProfileEditModal'
 import TokenBalance from '../components/TokenBalance'
+import PhotoBundleShop from '../components/PhotoBundleShop'
 
 interface Profile {
   id: string
@@ -42,6 +43,7 @@ export default function CreatorProfilePage({
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [activeTab, setActiveTab] = useState<'videos' | 'bundles'>('videos')
   const [loading, setLoading] = useState(true)
 
   const isOwnProfile = session.user.id === creatorId
@@ -212,42 +214,59 @@ export default function CreatorProfilePage({
 
         <div className="mb-6 border-b border-gray-700">
           <div className="flex gap-8">
-            <div className="py-4 px-2 font-semibold text-cyan-400 border-b-2 border-cyan-400">Videos</div>
+            {(['videos', 'bundles'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={`py-4 px-2 font-semibold transition capitalize ${
+                  activeTab === t ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                {t === 'bundles' ? 'Photo Bundles' : 'Videos'}
+              </button>
+            ))}
           </div>
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {videos.length === 0 ? (
-            <div className="col-span-full text-center py-12 text-gray-400">No videos yet</div>
-          ) : (
-            videos.map((video) => (
-              <div key={video.id} className="bg-gray-900 rounded-lg overflow-hidden border border-gray-800">
-                <div className="relative aspect-video bg-gray-800 flex items-center justify-center">
-                  {video.thumbnail_url ? (
-                    <img src={video.thumbnail_url} className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <div className="text-3xl opacity-50">📹</div>
-                  )}
-                  {video.price_tokens > 0 ? (
-                    <Lock size={28} className="absolute inset-0 m-auto text-white/90" />
-                  ) : (
-                    <Play size={32} className="absolute inset-0 m-auto text-white/0 hover:text-white/90 transition" />
-                  )}
-                </div>
-                <div className="p-3">
-                  <p className="text-sm font-semibold truncate">{video.title}</p>
-                  <p className="text-xs text-gray-500">
-                    {video.price_tokens > 0 ? `${video.price_tokens} tokens` : 'Free'} · {video.view_count} views
-                  </p>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        {activeTab === 'videos' && (
+          <>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {videos.length === 0 ? (
+                <div className="col-span-full text-center py-12 text-gray-400">No videos yet</div>
+              ) : (
+                videos.map((video) => (
+                  <div key={video.id} className="bg-gray-900 rounded-lg overflow-hidden border border-gray-800">
+                    <div className="relative aspect-video bg-gray-800 flex items-center justify-center">
+                      {video.thumbnail_url ? (
+                        <img src={video.thumbnail_url} className="w-full h-full object-cover" alt="" />
+                      ) : (
+                        <div className="text-3xl opacity-50">📹</div>
+                      )}
+                      {video.price_tokens > 0 ? (
+                        <Lock size={28} className="absolute inset-0 m-auto text-white/90" />
+                      ) : (
+                        <Play size={32} className="absolute inset-0 m-auto text-white/0 hover:text-white/90 transition" />
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <p className="text-sm font-semibold truncate">{video.title}</p>
+                      <p className="text-xs text-gray-500">
+                        {video.price_tokens > 0 ? `${video.price_tokens} tokens` : 'Free'} · {video.view_count} views
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+            <p className="text-xs text-gray-600 mt-4">
+              Open the Videos tab in the main nav to watch or unlock — full playback lives there.
+            </p>
+          </>
+        )}
 
-        <p className="text-xs text-gray-600 mt-4">
-          Open the Videos tab in the main nav to watch or unlock — full playback lives there.
-        </p>
+        {activeTab === 'bundles' && (
+          <PhotoBundleShop session={session} creatorId={creatorId} isOwnProfile={isOwnProfile} />
+        )}
       </div>
 
       <ProfileEditModal
