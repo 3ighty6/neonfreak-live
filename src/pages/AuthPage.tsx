@@ -391,6 +391,11 @@ export default function AuthPage() {
             </>
           )}
         </div>
+
+        <div className="flex justify-center gap-4 mt-6 text-xs text-gray-500">
+          <a href="/terms" className="hover:text-gray-300 transition">Terms of Service</a>
+          <a href="/privacy" className="hover:text-gray-300 transition">Privacy Policy</a>
+        </div>
       </div>
     </div>
   )

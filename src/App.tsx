@@ -5,6 +5,8 @@ import AuthPage from './pages/AuthPage'
 import MainApp from './pages/MainApp'
 import DiagnosticPage from './pages/DiagnosticPage'
 import AgeVerificationGate from './components/AgeVerificationGate'
+import PrivacyPolicy from './pages/legal/PrivacyPolicy'
+import TermsOfService from './pages/legal/TermsOfService'
 import './index.css'
 
 export default function App() {
@@ -48,6 +50,8 @@ export default function App() {
   // Check if user is trying to access special pages
   const isPitchDeck = window.location.pathname === '/pitch-deck'
   const isDiagnostic = window.location.pathname === '/diagnostic'
+  const isPrivacy = window.location.pathname === '/privacy'
+  const isTerms = window.location.pathname === '/terms'
 
   if (isPitchDeck) {
     // Redirect to static HTML file
@@ -57,6 +61,16 @@ export default function App() {
 
   if (isDiagnostic) {
     return <DiagnosticPage />
+  }
+
+  // Legal pages are viewable by anyone, logged in or not, verified or not --
+  // standard practice, and the age gate itself links here before you've
+  // agreed to anything.
+  if (isPrivacy) {
+    return <PrivacyPolicy />
+  }
+  if (isTerms) {
+    return <TermsOfService />
   }
 
   if (!ageVerified) {

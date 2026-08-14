@@ -10,6 +10,7 @@ import VODLibrary from './VODLibrary'
 import ProfilePage from './ProfilePage'
 import LiveRoomPage from './LiveRoomPage'
 import AdminDashboard from './AdminDashboard'
+import Footer from '../components/Footer'
 
 type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin'
 
@@ -144,6 +145,7 @@ export default function MainApp({ session }: MainAppProps) {
         {currentPage === 'vods' && <VODLibrary session={session} userId={user.id} />}
         {currentPage === 'profile' && <ProfilePage />}
         {currentPage === 'admin' && isAdmin && <AdminDashboard />}
+        <Footer />
       </div>
     </div>
   )
