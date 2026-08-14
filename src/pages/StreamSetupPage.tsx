@@ -5,7 +5,7 @@ import { supabase } from '../supabaseClient'
 // WHIP relay running on Railway (MediaMTX) — forwards browser camera
 // streams to Mux's RTMP ingest using the Mux stream key as the routing
 // path. See 3ighty6/ralph-sons-digital-platform for the relay itself.
-const WHIP_RELAY_URL = 'https://whip-relay-v2-production.up.railway.app'
+const WHIP_RELAY_URL = 'https://whip-relay-v3-production.up.railway.app'
 
 export default function StreamSetupPage() {
   const [copied, setCopied] = useState<string | null>(null)
