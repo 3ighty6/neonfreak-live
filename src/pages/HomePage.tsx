@@ -3,6 +3,7 @@ import { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabaseClient'
 import { Search, Users, TrendingUp, Radio, Heart } from 'lucide-react'
 import LiveStreamCard from '../components/LiveStreamCard'
+import DiscoverCreators from '../components/DiscoverCreators'
 
 export default function HomePage({
   session,
@@ -21,6 +22,7 @@ export default function HomePage({
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set())
   const [followingOnly, setFollowingOnly] = useState(false)
   const [tipsToday, setTipsToday] = useState(0)
+  const [allCreators, setAllCreators] = useState<any[]>([])
 
   useEffect(() => {
     const loadFollowed = async () => {
@@ -82,6 +84,18 @@ export default function HomePage({
         .select('*', { count: 'exact', head: true })
         .gte('created_at', todayStart.toISOString())
       setTipsToday(count || 0)
+
+      // Everyone with a discoverable footprint (streamed, or has
+      // videos/bundles/perks listed) -- not just who's live right now.
+      const { data: creators } = await supabase
+        .from('discoverable_creators')
+        .select('*')
+      setAllCreators(
+        (creators || [])
+          .filter((c) => c.id !== session.user.id)
+          .map((c) => ({ ...c, promotionTier: tierByUser.get(c.id) || null }))
+      )
+
       setLoading(false)
     }
 
@@ -219,6 +233,10 @@ export default function HomePage({
             />
           ))}
         </div>
+      )}
+
+      {!loading && !followingOnly && (
+        <DiscoverCreators creators={allCreators} onSelectCreator={onSelectCreator} />
       )}
     </div>
   )
