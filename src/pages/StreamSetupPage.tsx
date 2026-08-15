@@ -103,6 +103,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
           title: title.trim(),
           rtmp_key: data.rtmpStreamKey,
           hls_url: data.hlsUrl,
+          mux_stream_id: data.muxStreamId || null,
           is_live: true,
           started_at: new Date().toISOString(),
         })

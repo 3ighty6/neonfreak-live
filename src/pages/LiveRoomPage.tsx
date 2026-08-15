@@ -40,13 +40,13 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
   const [reportSubmitted, setReportSubmitted] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  const TIP_AMOUNTS = [
+  const [tipMenu, setTipMenu] = useState<{ amount: number; emoji: string; label: string }[]>([
     { amount: 1, emoji: '💬', label: 'Say Hi' },
     { amount: 5, emoji: '👋', label: 'Wave' },
     { amount: 10, emoji: '🎁', label: 'Gift' },
     { amount: 25, emoji: '❤️', label: 'Love' },
     { amount: 50, emoji: '🔥', label: 'Fire' },
-  ]
+  ])
 
   useEffect(() => {
     const loadBalance = async () => {
@@ -73,6 +73,15 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
           .eq('streamer_id', data.streamer_id)
           .maybeSingle()
         setIsFollowing(!!followRow)
+
+        const { data: menuItems } = await supabase
+          .from('tip_menu_items')
+          .select('amount_tokens, emoji, label')
+          .eq('user_id', data.streamer_id)
+          .order('sort_order')
+        if (menuItems && menuItems.length > 0) {
+          setTipMenu(menuItems.map((m) => ({ amount: m.amount_tokens, emoji: m.emoji, label: m.label })))
+        }
       }
     }
     loadRoom()
@@ -301,7 +310,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
             <div className="text-xs text-cyan-400 mb-2">Balance: {tokenBalance} tokens</div>
           )}
           {tipError && <div className="text-xs text-red-400 mb-1">{tipError}</div>}
-          {TIP_AMOUNTS.map((tip) => (
+          {tipMenu.map((tip) => (
             <button
               key={tip.amount}
               onClick={() => sendTip(tip.amount)}

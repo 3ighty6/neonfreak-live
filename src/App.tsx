@@ -7,6 +7,7 @@ import DiagnosticPage from './pages/DiagnosticPage'
 import AgeVerificationGate from './components/AgeVerificationGate'
 import PrivacyPolicy from './pages/legal/PrivacyPolicy'
 import TermsOfService from './pages/legal/TermsOfService'
+import OverlayPage from './pages/OverlayPage'
 import './index.css'
 
 export default function App() {
@@ -52,6 +53,7 @@ export default function App() {
   const isDiagnostic = window.location.pathname === '/diagnostic'
   const isPrivacy = window.location.pathname === '/privacy'
   const isTerms = window.location.pathname === '/terms'
+  const overlayMatch = window.location.pathname.match(/^\/overlay\/([a-zA-Z0-9-]+)$/)
 
   if (isPitchDeck) {
     // Redirect to static HTML file
@@ -61,6 +63,13 @@ export default function App() {
 
   if (isDiagnostic) {
     return <DiagnosticPage />
+  }
+
+  // OBS Browser Sources have no session and can't click through an age
+  // gate, so this bypasses both auth and age verification entirely --
+  // gated instead by the private overlay_token in the URL itself.
+  if (overlayMatch) {
+    return <OverlayPage token={overlayMatch[1]} />
   }
 
   // Legal pages are viewable by anyone, logged in or not, verified or not --

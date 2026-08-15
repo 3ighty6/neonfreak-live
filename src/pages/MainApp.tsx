@@ -3,7 +3,7 @@ import { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabaseClient'
 import { LogOut, Home, Radio, BarChart3, Film, User, Heart, ShieldCheck, MessageCircle } from 'lucide-react'
 import HomePage from './HomePage'
-import StreamSetupPage from './StreamSetupPage'
+import GoLiveWizard from './GoLiveWizard'
 import TipPage from './TipPage'
 import AnalyticsDashboard from './AnalyticsDashboard'
 import VODLibrary from './VODLibrary'
@@ -170,7 +170,7 @@ export default function MainApp({ session }: MainAppProps) {
       {/* Main Content */}
       <div className="md:ml-64 pb-20 md:pb-0">
         {currentPage === 'home' && <HomePage session={session} onSelectStream={openRoom} onSelectCreator={openCreator} />}
-        {currentPage === 'setup' && <StreamSetupPage session={session} />}
+        {currentPage === 'setup' && <GoLiveWizard session={session} />}
         {currentPage === 'tips' && <TipPage />}
         {currentPage === 'analytics' && <AnalyticsDashboard userId={user.id} />}
         {currentPage === 'vods' && <VODLibrary session={session} userId={user.id} />}
