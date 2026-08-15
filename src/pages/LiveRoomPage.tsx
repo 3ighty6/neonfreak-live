@@ -27,6 +27,7 @@ interface ChatMessage {
   user_id: string
   content: string
   username?: string
+  type?: 'chat' | 'tip' | 'follow'
 }
 
 export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }: LiveRoomPageProps) {
@@ -172,6 +173,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
             user_id: m.user_id,
             content: m.content,
             username: m.users?.username,
+            type: 'chat' as const,
           }))
         )
       }
@@ -223,7 +225,52 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
             .single()
           setMessages((prev) => [
             ...prev,
-            { id: row.id, user_id: row.user_id, content: row.content, username: userRow?.username },
+            { id: row.id, user_id: row.user_id, content: row.content, username: userRow?.username, type: 'chat' },
+          ])
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'tips', filter: `room_id=eq.${roomId}` },
+        async (payload) => {
+          const row = payload.new as any
+          const { data: userRow } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', row.sender_id)
+            .single()
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `tip-${row.id}`,
+              user_id: row.sender_id,
+              content: `tipped ${row.amount} tokens! 🎉`,
+              username: userRow?.username || 'Someone',
+              type: 'tip',
+            },
+          ])
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'followers', filter: `streamer_id=eq.${room?.streamer_id}` },
+        async (payload) => {
+          if (!room?.streamer_id) return
+          const row = payload.new as any
+          const { data: userRow } = await supabase
+            .from('users')
+            .select('username')
+            .eq('id', row.follower_id)
+            .single()
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `follow-${row.id}`,
+              user_id: row.follower_id,
+              content: 'started following! 💜',
+              username: userRow?.username || 'Someone',
+              type: 'follow',
+            },
           ])
         }
       )
@@ -232,7 +279,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
     return () => {
       subscription.unsubscribe()
     }
-  }, [roomId])
+  }, [roomId, room?.streamer_id])
 
   useEffect(() => {
     messageEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -368,8 +415,28 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
         <div className="flex-1 flex flex-col border-r border-cyan-500/20">
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {messages.map((msg) => (
-              <div key={msg.id} className="text-sm">
-                <span className="text-cyan-400 font-semibold">{msg.username || 'User'}:</span>
+              <div
+                key={msg.id}
+                className={`text-sm ${
+                  msg.type === 'tip'
+                    ? 'bg-purple-500/10 border border-purple-500/20 rounded px-2 py-1'
+                    : msg.type === 'follow'
+                      ? 'bg-pink-500/10 border border-pink-500/20 rounded px-2 py-1'
+                      : ''
+                }`}
+              >
+                <span
+                  className={
+                    msg.type === 'tip'
+                      ? 'text-purple-400 font-semibold'
+                      : msg.type === 'follow'
+                        ? 'text-pink-400 font-semibold'
+                        : 'text-cyan-400 font-semibold'
+                  }
+                >
+                  {msg.username || 'User'}
+                  {msg.type === 'chat' ? ':' : ''}
+                </span>
                 <span className="text-gray-300 ml-2">{msg.content}</span>
               </div>
             ))}
