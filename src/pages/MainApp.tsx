@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabaseClient'
-import { LogOut, Home, Radio, BarChart3, Film, User, Heart, ShieldCheck } from 'lucide-react'
+import { LogOut, Home, Radio, BarChart3, Film, User, Heart, ShieldCheck, MessageCircle } from 'lucide-react'
 import HomePage from './HomePage'
 import StreamSetupPage from './StreamSetupPage'
 import TipPage from './TipPage'
@@ -11,9 +11,10 @@ import ProfilePage from './ProfilePage'
 import LiveRoomPage from './LiveRoomPage'
 import AdminDashboard from './AdminDashboard'
 import CreatorProfilePage from './CreatorProfilePage'
+import MessagesPage from './MessagesPage'
 import Footer from '../components/Footer'
 
-type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin' | 'creator'
+type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin' | 'creator' | 'messages'
 
 interface MainAppProps {
   session: Session
@@ -30,6 +31,7 @@ export default function MainApp({ session }: MainAppProps) {
   })
   const [isAdmin, setIsAdmin] = useState(false)
   const [activeCreatorId, setActiveCreatorId] = useState<string | null>(null)
+  const [messagesTargetUserId, setMessagesTargetUserId] = useState<string | null>(null)
 
   useEffect(() => {
     // Clean the checkout/room params out of the visible URL once read
@@ -61,9 +63,15 @@ export default function MainApp({ session }: MainAppProps) {
     setCurrentPage('creator')
   }
 
+  const openMessages = (otherUserId?: string) => {
+    setMessagesTargetUserId(otherUserId || null)
+    setCurrentPage('messages')
+  }
+
   const navItems: { id: Page; label: string; icon: typeof Home }[] = [
     { id: 'home', label: 'Home', icon: Home },
     { id: 'setup', label: 'Go Live', icon: Radio },
+    { id: 'messages', label: 'Messages', icon: MessageCircle },
     { id: 'tips', label: 'Tips', icon: Heart },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'vods', label: 'Videos', icon: Film },
@@ -95,6 +103,7 @@ export default function MainApp({ session }: MainAppProps) {
           setActiveCreatorId(null)
         }}
         onOpenSetup={() => setCurrentPage('setup')}
+        onOpenMessages={openMessages}
       />
     )
   }
@@ -166,6 +175,7 @@ export default function MainApp({ session }: MainAppProps) {
         {currentPage === 'analytics' && <AnalyticsDashboard userId={user.id} />}
         {currentPage === 'vods' && <VODLibrary session={session} userId={user.id} />}
         {currentPage === 'profile' && <ProfilePage onViewPublicProfile={() => openCreator(user.id)} />}
+        {currentPage === 'messages' && <MessagesPage session={session} initialOtherUserId={messagesTargetUserId} />}
         {currentPage === 'admin' && isAdmin && <AdminDashboard />}
         <Footer />
       </div>

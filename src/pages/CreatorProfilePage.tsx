@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Session } from '@supabase/supabase-js'
-import { Heart, HeartOff, Share2, Edit, Camera, Play, Lock } from 'lucide-react'
+import { Heart, HeartOff, Share2, Edit, Camera, Play, Lock, MessageCircle } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import ProfileEditModal from '../components/ProfileEditModal'
 import TokenBalance from '../components/TokenBalance'
@@ -33,11 +33,13 @@ export default function CreatorProfilePage({
   creatorId,
   onBack,
   onOpenSetup,
+  onOpenMessages,
 }: {
   session: Session
   creatorId: string
   onBack?: () => void
   onOpenSetup?: () => void
+  onOpenMessages?: (otherUserId: string) => void
 }) {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [videos, setVideos] = useState<VideoRow[]>([])
@@ -202,6 +204,15 @@ export default function CreatorProfilePage({
                   >
                     {isFollowing ? <HeartOff size={18} /> : <Heart size={18} />}
                     {isFollowing ? 'Following' : 'Follow'}
+                  </button>
+                )}
+                {!isOwnProfile && (
+                  <button
+                    onClick={() => onOpenMessages?.(creatorId)}
+                    className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+                  >
+                    <MessageCircle size={18} />
+                    Message
                   </button>
                 )}
                 <button
