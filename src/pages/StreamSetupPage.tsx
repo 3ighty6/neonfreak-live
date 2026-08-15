@@ -16,8 +16,12 @@ export default function StreamSetupPage({ session }: { session: Session }) {
   const [rtmpUrl, setRtmpUrl] = useState('')
   const [rtmpKey, setRtmpKey] = useState('')
   const [hlsUrl, setHlsUrl] = useState('')
+  const [muxStreamId, setMuxStreamId] = useState('')
   const [roomId, setRoomId] = useState<string | null>(null)
   const [isLive, setIsLive] = useState(false)
+  const [testingConnection, setTestingConnection] = useState(false)
+  const [connectionConfirmed, setConnectionConfirmed] = useState(false)
+  const connectionPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [method, setMethod] = useState<'choose' | 'browser' | 'obs'>('choose')
@@ -94,8 +98,13 @@ export default function StreamSetupPage({ session }: { session: Session }) {
       setRtmpUrl(data.rtmpServerUrl || '')
       setRtmpKey(data.rtmpStreamKey || '')
       setHlsUrl(data.hlsUrl || '')
+      setMuxStreamId(data.muxStreamId || '')
 
-      // Persist it so it actually shows up on the homepage / discovery feed.
+      // Persist it so it actually shows up on the homepage / discovery feed --
+      // but NOT live yet. is_live only flips true once Mux confirms real
+      // media is actually arriving (see confirmGoLive), not the instant
+      // credentials are generated. Without this, viewers could land on a
+      // room showing LIVE with nothing behind it.
       const { data: room, error: insertError } = await supabase
         .from('rooms')
         .insert({
@@ -104,7 +113,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
           rtmp_key: data.rtmpStreamKey,
           hls_url: data.hlsUrl,
           mux_stream_id: data.muxStreamId || null,
-          is_live: true,
+          is_live: false,
           started_at: new Date().toISOString(),
         })
         .select()
@@ -113,13 +122,60 @@ export default function StreamSetupPage({ session }: { session: Session }) {
       if (insertError) throw insertError
 
       setRoomId(room.id)
-      setIsLive(true)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }
   }
+
+  // Flips the room live for real, once Mux confirms media is actually
+  // arriving -- not just that credentials were generated or a socket
+  // opened. Called by the polling loop below, or manually if a streamer
+  // hits "I'm ready" before the poll catches up.
+  const confirmGoLive = async () => {
+    if (!roomId) return
+    const { error: updateError } = await supabase.from('rooms').update({ is_live: true }).eq('id', roomId)
+    if (!updateError) {
+      setIsLive(true)
+      setConnectionConfirmed(true)
+    }
+    if (connectionPollRef.current) {
+      clearInterval(connectionPollRef.current)
+      connectionPollRef.current = null
+    }
+    setTestingConnection(false)
+  }
+
+  const startConnectionTest = () => {
+    if (!muxStreamId || connectionPollRef.current) return
+    setTestingConnection(true)
+    connectionPollRef.current = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/mux-stream-status?muxStreamId=${encodeURIComponent(muxStreamId)}`)
+        const data = await res.json()
+        if (data.active) {
+          confirmGoLive()
+        }
+      } catch {
+        // transient network hiccup -- next poll tick will retry
+      }
+    }, 3000)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (connectionPollRef.current) clearInterval(connectionPollRef.current)
+    }
+  }, [])
+
+  // OBS has no JS event telling us when the streamer actually starts
+  // pushing -- start polling Mux the moment credentials are ready.
+  useEffect(() => {
+    if (method === 'obs' && rtmpKey && muxStreamId && !isLive && !testingConnection) {
+      startConnectionTest()
+    }
+  }, [method, rtmpKey, muxStreamId, isLive])
 
   const startBrowserBroadcast = async () => {
     setError('')
@@ -191,6 +247,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
       recorder.start(1000)
 
       setBroadcasting(true)
+      startConnectionTest()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
       mediaStreamRef.current?.getTracks().forEach((t) => t.stop())
@@ -225,6 +282,10 @@ export default function StreamSetupPage({ session }: { session: Session }) {
     setError('')
     try {
       if (broadcasting) stopBrowserBroadcast()
+      if (connectionPollRef.current) {
+        clearInterval(connectionPollRef.current)
+        connectionPollRef.current = null
+      }
 
       const { error: updateError } = await supabase
         .from('rooms')
@@ -234,10 +295,13 @@ export default function StreamSetupPage({ session }: { session: Session }) {
       if (updateError) throw updateError
 
       setIsLive(false)
+      setTestingConnection(false)
+      setConnectionConfirmed(false)
       setRoomId(null)
       setRtmpUrl('')
       setRtmpKey('')
       setHlsUrl('')
+      setMuxStreamId('')
       setMethod('choose')
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -328,11 +392,16 @@ export default function StreamSetupPage({ session }: { session: Session }) {
                 <Camera className="text-cyan-400" size={24} />
                 <h2 className="text-2xl font-bold">Camera Broadcast</h2>
               </div>
-              {broadcasting && (
+              {isLive ? (
                 <span className="flex items-center gap-2 text-red-400 text-sm font-bold">
                   <Radio size={16} className="animate-pulse" /> LIVE — visible on homepage
                 </span>
-              )}
+              ) : broadcasting && testingConnection ? (
+                <span className="flex items-center gap-2 text-yellow-400 text-sm font-bold">
+                  <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                  Confirming connection...
+                </span>
+              ) : null}
             </div>
 
             <video
@@ -377,11 +446,16 @@ export default function StreamSetupPage({ session }: { session: Session }) {
                 <Video className="text-cyan-400" size={24} />
                 <h2 className="text-2xl font-bold">OBS Studio Setup</h2>
               </div>
-              {isLive && (
+              {isLive ? (
                 <span className="flex items-center gap-2 text-red-400 text-sm font-bold">
                   <Radio size={16} className="animate-pulse" /> LIVE — visible on homepage
                 </span>
-              )}
+              ) : testingConnection ? (
+                <span className="flex items-center gap-2 text-yellow-400 text-sm font-bold">
+                  <span className="w-2 h-2 rounded-full bg-yellow-400 animate-pulse" />
+                  Waiting for OBS to connect...
+                </span>
+              ) : null}
             </div>
 
             <div className="space-y-4">

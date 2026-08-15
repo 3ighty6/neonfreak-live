@@ -126,6 +126,12 @@ export default function MainApp({ session }: MainAppProps) {
               <Icon size={24} />
             </button>
           ))}
+          <button
+            onClick={handleLogout}
+            className="flex-1 py-3 flex justify-center transition min-w-max text-gray-400 hover:text-pink-400"
+          >
+            <LogOut size={24} />
+          </button>
         </div>
       </div>
 
