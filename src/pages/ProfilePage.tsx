@@ -3,6 +3,7 @@ import { Camera, Mail, Loader2, Check, Lock } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import type { User } from '../types'
 import EarningsPayouts from '../components/EarningsPayouts'
+import IdVerification from '../components/IdVerification'
 
 export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfile?: () => void }) {
   const [profile, setProfile] = useState<User | null>(null)
@@ -371,6 +372,9 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
             </button>
           </div>
         </div>
+
+        {/* Identity Verification */}
+        <IdVerification userId={profile.id} />
 
         {/* Earnings & Payouts */}
         <EarningsPayouts userId={profile.id} />

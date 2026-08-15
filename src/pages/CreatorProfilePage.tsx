@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient'
 import ProfileEditModal from '../components/ProfileEditModal'
 import TokenBalance from '../components/TokenBalance'
 import PhotoBundleShop from '../components/PhotoBundleShop'
+import CreatorPerks from '../components/CreatorPerks'
 
 interface Profile {
   id: string
@@ -47,7 +48,7 @@ export default function CreatorProfilePage({
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
-  const [activeTab, setActiveTab] = useState<'videos' | 'bundles'>('videos')
+  const [activeTab, setActiveTab] = useState<'videos' | 'bundles' | 'perks'>('videos')
   const [loading, setLoading] = useState(true)
 
   const isOwnProfile = session.user.id === creatorId
@@ -235,7 +236,7 @@ export default function CreatorProfilePage({
 
         <div className="mb-6 border-b border-gray-700">
           <div className="flex gap-8">
-            {(['videos', 'bundles'] as const).map((t) => (
+            {(['videos', 'bundles', 'perks'] as const).map((t) => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
@@ -243,7 +244,7 @@ export default function CreatorProfilePage({
                   activeTab === t ? 'text-cyan-400 border-b-2 border-cyan-400' : 'text-gray-400 hover:text-gray-300'
                 }`}
               >
-                {t === 'bundles' ? 'Photo Bundles' : 'Videos'}
+                {t === 'bundles' ? 'Photo Bundles' : t === 'perks' ? 'Perks & Extras' : 'Videos'}
               </button>
             ))}
           </div>
@@ -287,6 +288,10 @@ export default function CreatorProfilePage({
 
         {activeTab === 'bundles' && (
           <PhotoBundleShop session={session} creatorId={creatorId} isOwnProfile={isOwnProfile} />
+        )}
+
+        {activeTab === 'perks' && (
+          <CreatorPerks session={session} creatorId={creatorId} isOwnProfile={isOwnProfile} />
         )}
       </div>
 

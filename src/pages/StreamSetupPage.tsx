@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Session } from '@supabase/supabase-js'
-import { Copy, Check, Video, AlertCircle, Radio, Square, Camera, Cable } from 'lucide-react'
+import { Copy, Check, Video, AlertCircle, Radio, Square, Camera, Cable, ShieldAlert } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import RoomChat from '../components/RoomChat'
 
@@ -22,6 +22,17 @@ export default function StreamSetupPage({ session }: { session: Session }) {
   const [testingConnection, setTestingConnection] = useState(false)
   const [connectionConfirmed, setConnectionConfirmed] = useState(false)
   const connectionPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [verificationStatus, setVerificationStatus] = useState<string | null>(null)
+
+  useEffect(() => {
+    const checkVerification = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data } = await supabase.from('users').select('id_verification_status').eq('id', user.id).single()
+      setVerificationStatus(data?.id_verification_status || 'unverified')
+    }
+    checkVerification()
+  }, [])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [method, setMethod] = useState<'choose' | 'browser' | 'obs'>('choose')
@@ -325,8 +336,33 @@ export default function StreamSetupPage({ session }: { session: Session }) {
           </div>
         )}
 
+        {/* Identity verification gate -- required before going live at all */}
+        {verificationStatus !== null && verificationStatus !== 'approved' && !rtmpKey && (
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-6 mb-6 text-center">
+            <ShieldAlert className="mx-auto text-yellow-400 mb-3" size={32} />
+            <h2 className="text-lg font-bold mb-2">Verify your identity to go live</h2>
+            <p className="text-gray-400 text-sm mb-4">
+              {verificationStatus === 'pending'
+                ? "Your verification is under review. You'll be able to go live once it's approved."
+                : 'Required before streaming or selling content — confirms real people, real ages. Takes a couple minutes.'}
+            </p>
+            {verificationStatus !== 'pending' && (
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault()
+                  window.dispatchEvent(new CustomEvent('navigate-to-profile'))
+                }}
+                className="inline-block bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+              >
+                Verify Now
+              </a>
+            )}
+          </div>
+        )}
+
         {/* Choose streaming method */}
-        {method === 'choose' && !rtmpKey && (
+        {verificationStatus === 'approved' && method === 'choose' && !rtmpKey && (
           <div className="grid md:grid-cols-2 gap-4 mb-6">
             <button
               onClick={() => {

@@ -42,6 +42,12 @@ export default function MainApp({ session }: MainAppProps) {
   const user = session.user
 
   useEffect(() => {
+    const handler = () => setCurrentPage('profile')
+    window.addEventListener('navigate-to-profile', handler)
+    return () => window.removeEventListener('navigate-to-profile', handler)
+  }, [])
+
+  useEffect(() => {
     const checkAdmin = async () => {
       const { data } = await supabase.from('users').select('is_admin').eq('id', user.id).single()
       setIsAdmin(!!data?.is_admin)

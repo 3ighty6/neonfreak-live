@@ -29,6 +29,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
   const [tipError, setTipError] = useState('')
   const [tokenBalance, setTokenBalance] = useState<number | null>(null)
   const [tipping, setTipping] = useState(false)
+  const [customTipAmount, setCustomTipAmount] = useState('')
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [showBuyPrompt, setShowBuyPrompt] = useState(false)
@@ -321,6 +322,33 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
               <span>{tip.amount} tokens</span>
             </button>
           ))}
+
+          <div className="border-t border-gray-800 pt-2 mt-1">
+            <div className="text-xs text-gray-500 mb-1.5">Custom amount</div>
+            <div className="flex gap-1">
+              <input
+                type="number"
+                min={1}
+                value={customTipAmount}
+                onChange={(e) => setCustomTipAmount(e.target.value)}
+                placeholder="Tokens"
+                className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1.5 text-sm text-white"
+              />
+              <button
+                onClick={() => {
+                  const amt = parseInt(customTipAmount, 10)
+                  if (amt > 0) {
+                    sendTip(amt)
+                    setCustomTipAmount('')
+                  }
+                }}
+                disabled={tipping || !customTipAmount || parseInt(customTipAmount, 10) <= 0}
+                className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-3 py-1.5 rounded text-sm font-semibold transition"
+              >
+                Send
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -30,11 +30,13 @@ interface CategoryRow {
 }
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState<'overview' | 'users' | 'reports' | 'categories'>('overview')
+  const [tab, setTab] = useState<'overview' | 'users' | 'reports' | 'categories' | 'identity'>('overview')
   const [stats, setStats] = useState({ totalUsers: 0, activeStreams: 0, totalRevenue: 0, pendingReports: 0 })
   const [users, setUsers] = useState<UserRow[]>([])
   const [reports, setReports] = useState<ReportRow[]>([])
   const [categories, setCategories] = useState<CategoryRow[]>([])
+  const [verifications, setVerifications] = useState<any[]>([])
+  const [verificationUrls, setVerificationUrls] = useState<Record<string, { id: string; selfie: string }>>({})
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryIcon, setNewCategoryIcon] = useState('')
   const [loading, setLoading] = useState(true)
@@ -75,8 +77,40 @@ export default function AdminDashboard() {
     setCategories(data || [])
   }
 
+  const fetchVerifications = async () => {
+    const { data } = await supabase
+      .from('id_verification_submissions')
+      .select('id, user_id, id_document_path, selfie_path, status, created_at, users:user_id(username, email)')
+      .eq('status', 'pending')
+      .order('created_at')
+    setVerifications(data || [])
+
+    const urls: Record<string, { id: string; selfie: string }> = {}
+    for (const v of data || []) {
+      const [idSigned, selfieSigned] = await Promise.all([
+        supabase.storage.from('id-verification').createSignedUrl(v.id_document_path, 600),
+        supabase.storage.from('id-verification').createSignedUrl(v.selfie_path, 600),
+      ])
+      urls[v.id] = { id: idSigned.data?.signedUrl || '', selfie: selfieSigned.data?.signedUrl || '' }
+    }
+    setVerificationUrls(urls)
+  }
+
+  const reviewVerification = async (submission: any, approve: boolean) => {
+    const { data: { session } } = await supabase.auth.getSession()
+    await supabase
+      .from('id_verification_submissions')
+      .update({ status: approve ? 'approved' : 'rejected', reviewed_by: session?.user.id, reviewed_at: new Date().toISOString() })
+      .eq('id', submission.id)
+    await supabase
+      .from('users')
+      .update({ id_verification_status: approve ? 'approved' : 'rejected' })
+      .eq('id', submission.user_id)
+    fetchVerifications()
+  }
+
   useEffect(() => {
-    Promise.all([fetchStats(), fetchUsers(), fetchReports(), fetchCategories()]).finally(() => setLoading(false))
+    Promise.all([fetchStats(), fetchUsers(), fetchReports(), fetchCategories(), fetchVerifications()]).finally(() => setLoading(false))
   }, [])
 
   const addCategory = async () => {
@@ -118,7 +152,7 @@ export default function AdminDashboard() {
         <p className="text-gray-400 mb-6">Platform overview and management</p>
 
         <div className="flex gap-2 mb-8">
-          {(['overview', 'users', 'reports', 'categories'] as const).map((t) => (
+          {(['overview', 'users', 'reports', 'categories', 'identity'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -130,6 +164,11 @@ export default function AdminDashboard() {
               {t === 'reports' && pendingReports.length > 0 && (
                 <span className="ml-2 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
                   {pendingReports.length}
+                </span>
+              )}
+              {t === 'identity' && verifications.length > 0 && (
+                <span className="ml-2 bg-yellow-500 text-black text-xs px-1.5 py-0.5 rounded-full">
+                  {verifications.length}
                 </span>
               )}
             </button>
@@ -231,7 +270,7 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
-        ) : (
+        ) : tab === 'categories' ? (
           <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6">
             <div className="flex items-center gap-2 mb-4">
               <Tag className="text-cyan-400" size={20} />
@@ -273,6 +312,58 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {verifications.length === 0 ? (
+              <div className="text-center py-12 text-gray-400">No pending verifications.</div>
+            ) : (
+              verifications.map((v) => (
+                <div key={v.id} className="bg-gray-900 border border-yellow-500/20 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <span className="font-semibold">{v.users?.username || 'Unknown'}</span>
+                      <span className="text-gray-500 text-sm ml-2">{v.users?.email}</span>
+                    </div>
+                    <span className="text-xs text-gray-600">{new Date(v.created_at).toLocaleString()}</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">ID Document</div>
+                      {verificationUrls[v.id]?.id ? (
+                        <img src={verificationUrls[v.id].id} alt="ID document" className="w-full rounded border border-gray-800" />
+                      ) : (
+                        <div className="text-xs text-gray-600">Loading...</div>
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Selfie</div>
+                      {verificationUrls[v.id]?.selfie ? (
+                        <img src={verificationUrls[v.id].selfie} alt="Selfie" className="w-full rounded border border-gray-800" />
+                      ) : (
+                        <div className="text-xs text-gray-600">Loading...</div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => reviewVerification(v, true)}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-semibold flex items-center justify-center gap-1 transition"
+                    >
+                      <Check size={14} /> Approve
+                    </button>
+                    <button
+                      onClick={() => reviewVerification(v, false)}
+                      className="flex-1 bg-red-700 hover:bg-red-800 text-white px-3 py-2 rounded text-sm font-semibold flex items-center justify-center gap-1 transition"
+                    >
+                      <X size={14} /> Reject
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
       </div>
