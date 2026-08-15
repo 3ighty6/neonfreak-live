@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Camera, Mail, Loader2, Check, Lock } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import type { User } from '../types'
+import EarningsPayouts from '../components/EarningsPayouts'
 
 export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfile?: () => void }) {
   const [profile, setProfile] = useState<User | null>(null)
@@ -370,6 +371,9 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
             </button>
           </div>
         </div>
+
+        {/* Earnings & Payouts */}
+        <EarningsPayouts userId={profile.id} />
 
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-4">
