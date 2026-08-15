@@ -80,7 +80,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const { data: creator } = await supabase.from('users').select('total_earnings').eq('id', creatorId).single()
         await supabase
           .from('users')
-          .update({ total_earnings: Number(creator?.total_earnings || 0) + amountUsd * 0.7 })
+          .update({ total_earnings: Number(creator?.total_earnings || 0) + amountUsd * 0.85 })
           .eq('id', creatorId)
       } else if (kind === 'creator_subscription' && userId && tier && session.subscription && session.customer) {
         // Initial subscription record. Renewal/cancellation status is

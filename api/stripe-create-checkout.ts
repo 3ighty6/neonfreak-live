@@ -16,10 +16,13 @@ const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || ''
 const SITE_URL = process.env.SITE_URL || 'https://neonfreak-live.vercel.app'
 
 // Placeholder pricing -- a business decision, not an engineering one.
-// Adjust freely; nothing else depends on these specific numbers.
+// 3 tiers with a high-anchor top tier, per competitive research
+// (OnlyFans-style pricing psychology: a premium top tier lifts
+// perceived value and ARPU across lower tiers even when few buy it).
 const CREATOR_TIER_PRICES_USD_CENTS: Record<string, number> = {
   boost: 999, // $9.99/mo
   featured: 2499, // $24.99/mo
+  elite: 9999, // $99.99/mo -- high-anchor tier
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -39,7 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     tokens?: number
     label?: string
     returnRoomId?: string
-    tier?: 'boost' | 'featured'
+    tier?: 'boost' | 'featured' | 'elite'
   }
 
   if (!kind || !userId) {
@@ -73,7 +76,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               unit_amount: CREATOR_TIER_PRICES_USD_CENTS[tier!],
               recurring: { interval: 'month' },
               product_data: {
-                name: tier === 'featured' ? 'NeonLights Featured Creator' : 'NeonLights Boosted Creator',
+                name: tier === 'elite' ? 'NeonLights Elite Creator' : tier === 'featured' ? 'NeonLights Featured Creator' : 'NeonLights Boosted Creator',
               },
             },
             quantity: 1,

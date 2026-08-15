@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { Session } from '@supabase/supabase-js'
+import Hls from 'hls.js'
 import { Play, Trash2, Eye, Lock, Upload, X, Loader2, ShoppingCart } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { TOKEN_PACKAGES, createTokenCheckout } from '../lib/stripe'
+import TagAndEarn from '../components/TagAndEarn'
 
 interface VideoRow {
   id: string
@@ -11,6 +13,8 @@ interface VideoRow {
   description: string | null
   thumbnail_url: string | null
   video_path: string | null
+  mux_playback_id: string | null
+  is_private_show_recording?: boolean
   duration_seconds: number | null
   view_count: number
   is_public: boolean
@@ -20,7 +24,7 @@ interface VideoRow {
 }
 
 export default function VODLibrary({ session, userId }: { session: Session; userId: string }) {
-  const [tab, setTab] = useState<'all' | 'mine'>('all')
+  const [tab, setTab] = useState<'all' | 'mine' | 'tag'>('all')
   const [allVideos, setAllVideos] = useState<VideoRow[]>([])
   const [myVideos, setMyVideos] = useState<VideoRow[]>([])
   const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set())
@@ -68,7 +72,7 @@ export default function VODLibrary({ session, userId }: { session: Session; user
 
   const handleCardClick = async (video: VideoRow) => {
     setError('')
-    if (!video.video_path) {
+    if (!video.video_path && !video.mux_playback_id) {
       setError('This video has no file attached yet.')
       return
     }
@@ -76,9 +80,13 @@ export default function VODLibrary({ session, userId }: { session: Session; user
       setUnlockTarget(video)
       return
     }
+    if (video.mux_playback_id) {
+      setPlayingVideo({ row: video, url: `https://stream.mux.com/${video.mux_playback_id}.m3u8` })
+      return
+    }
     const { data, error: signError } = await supabase.storage
       .from('paid-videos')
-      .createSignedUrl(video.video_path, 3600)
+      .createSignedUrl(video.video_path!, 3600)
     if (signError || !data) {
       setError(signError?.message || 'Could not load this video')
       return
@@ -89,7 +97,8 @@ export default function VODLibrary({ session, userId }: { session: Session; user
   const confirmUnlock = async () => {
     if (!unlockTarget) return
     setError('')
-    const { data, error: rpcError } = await supabase.rpc('unlock_video', { p_video_id: unlockTarget.id })
+    const rpcName = unlockTarget.is_private_show_recording ? 'unlock_private_recording' : 'unlock_video'
+    const { data, error: rpcError } = await supabase.rpc(rpcName, { p_video_id: unlockTarget.id })
 
     if (rpcError) {
       if (rpcError.message.includes('Insufficient token balance')) {
@@ -106,6 +115,10 @@ export default function VODLibrary({ session, userId }: { session: Session; user
     const video = unlockTarget
     setUnlockTarget(null)
 
+    if (video.mux_playback_id) {
+      setPlayingVideo({ row: video, url: `https://stream.mux.com/${video.mux_playback_id}.m3u8` })
+      return
+    }
     const { data: signed } = await supabase.storage.from('paid-videos').createSignedUrl(video.video_path!, 3600)
     if (signed) setPlayingVideo({ row: video, url: signed.signedUrl })
   }
@@ -158,9 +171,19 @@ export default function VODLibrary({ session, userId }: { session: Session; user
           >
             My Videos
           </button>
+          <button
+            onClick={() => setTab('tag')}
+            className={`px-5 py-2 rounded-full font-semibold transition ${
+              tab === 'tag' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+            }`}
+          >
+            💰 Tag & Earn
+          </button>
         </div>
 
-        {loading ? (
+        {tab === 'tag' ? (
+          <TagAndEarn userId={userId} />
+        ) : loading ? (
           <div className="text-center py-12 text-gray-400">Loading videos...</div>
         ) : videos.length === 0 ? (
           <div className="text-center py-12">
@@ -266,7 +289,7 @@ export default function VODLibrary({ session, userId }: { session: Session; user
                 <X size={24} />
               </button>
             </div>
-            <video src={playingVideo.url} controls autoPlay className="w-full rounded-lg bg-black" />
+            <VideoPlayer url={playingVideo.url} />
           </div>
         </div>
       )}
@@ -482,4 +505,28 @@ function UploadModal({
       </div>
     </div>
   )
+}
+
+function VideoPlayer({ url }: { url: string }) {
+  const videoRef = useRef<HTMLVideoElement>(null)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+
+    if (url.endsWith('.m3u8')) {
+      if (Hls.isSupported()) {
+        const hls = new Hls()
+        hls.loadSource(url)
+        hls.attachMedia(video)
+        return () => hls.destroy()
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = url // Safari/iOS native HLS support
+      }
+    } else {
+      video.src = url
+    }
+  }, [url])
+
+  return <video ref={videoRef} controls autoPlay className="w-full rounded-lg bg-black" />
 }

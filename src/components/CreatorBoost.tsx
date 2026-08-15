@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
-import { Rocket, Star, Loader2, Check } from 'lucide-react'
+import { Rocket, Star, Crown, Loader2, Check } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 
 const TIERS = [
   { id: 'boost', label: 'Boost', price: '$9.99/mo', icon: Rocket, description: 'Higher placement in the discovery feed.' },
   { id: 'featured', label: 'Featured', price: '$24.99/mo', icon: Star, description: 'Top placement, plus rotating platform-wide special features as they come up.' },
+  { id: 'elite', label: 'Elite', price: '$99.99/mo', icon: Crown, description: 'Everything in Featured, plus first eligibility for every new promotional feature as it launches.' },
 ]
 
 export default function CreatorBoost({ userId }: { userId: string }) {
@@ -66,14 +67,14 @@ export default function CreatorBoost({ userId }: { userId: string }) {
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-3">
+      <div className="grid md:grid-cols-3 gap-3">
         {TIERS.map((t) => {
           const Icon = t.icon
           const isCurrent = current?.tier === t.id
           return (
             <div key={t.id} className={`border rounded-lg p-4 ${isCurrent ? 'border-green-500/50 bg-green-500/5' : 'border-gray-700 bg-gray-800'}`}>
               <div className="flex items-center gap-2 mb-1">
-                <Icon size={18} className={t.id === 'featured' ? 'text-yellow-400' : 'text-cyan-400'} />
+                <Icon size={18} className={t.id === 'elite' ? 'text-amber-400' : t.id === 'featured' ? 'text-yellow-400' : 'text-cyan-400'} />
                 <span className="font-semibold">{t.label}</span>
                 <span className="ml-auto text-sm text-gray-400">{t.price}</span>
               </div>

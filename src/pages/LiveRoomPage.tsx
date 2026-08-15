@@ -30,6 +30,10 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
   const [tokenBalance, setTokenBalance] = useState<number | null>(null)
   const [tipping, setTipping] = useState(false)
   const [customTipAmount, setCustomTipAmount] = useState('')
+  const [showPrivateShowModal, setShowPrivateShowModal] = useState(false)
+  const [privateShowOffer, setPrivateShowOffer] = useState('200')
+  const [privateShowRequestSent, setPrivateShowRequestSent] = useState(false)
+  const [privateShowError, setPrivateShowError] = useState('')
   const [isFollowing, setIsFollowing] = useState(false)
   const [followLoading, setFollowLoading] = useState(false)
   const [showBuyPrompt, setShowBuyPrompt] = useState(false)
@@ -127,6 +131,28 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
         setReportDetails('')
       }, 1500)
     }
+  }
+
+  const requestPrivateShow = async () => {
+    setPrivateShowError('')
+    if (!room) return
+    const amt = parseInt(privateShowOffer, 10)
+    if (!amt || amt <= 0) {
+      setPrivateShowError('Enter a token amount')
+      return
+    }
+    const { error: insertError } = await supabase.from('private_show_requests').insert({
+      room_id: roomId,
+      requester_id: session.user.id,
+      streamer_id: room.streamer_id,
+      offered_tokens: amt,
+    })
+    if (insertError) {
+      setPrivateShowError(insertError.message)
+      return
+    }
+    setPrivateShowRequestSent(true)
+    setShowPrivateShowModal(false)
   }
 
   const handleBuyTokens = async (packageIndex: number) => {
@@ -349,6 +375,22 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
               </button>
             </div>
           </div>
+
+          {room && room.streamer_id !== session.user.id && !privateShowRequestSent && (
+            <div className="border-t border-gray-800 pt-2 mt-1">
+              <button
+                onClick={() => setShowPrivateShowModal(true)}
+                className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 text-white px-3 py-2 rounded text-sm font-semibold transition"
+              >
+                🔒 Request Private Show
+              </button>
+            </div>
+          )}
+          {privateShowRequestSent && (
+            <div className="border-t border-gray-800 pt-2 mt-1 text-xs text-yellow-400 text-center">
+              Request sent — waiting for response
+            </div>
+          )}
         </div>
       </div>
 
@@ -390,6 +432,42 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
             >
               Cancel
             </button>
+          </div>
+        </div>
+      )}
+
+      {showPrivateShowModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-pink-500/30 rounded-lg w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold mb-2">Request a Private Show</h2>
+            <p className="text-sm text-gray-400 mb-4">
+              Offer tokens for an exclusive session. The creator can accept or decline — you're only charged if they accept.
+            </p>
+            {privateShowError && (
+              <div className="mb-3 p-2 bg-red-500/10 border border-red-500/30 rounded text-red-300 text-xs">{privateShowError}</div>
+            )}
+            <label className="text-sm text-gray-400 block mb-1">Offer (tokens)</label>
+            <input
+              type="number"
+              min={1}
+              value={privateShowOffer}
+              onChange={(e) => setPrivateShowOffer(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white mb-4"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowPrivateShowModal(false)}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-semibold transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={requestPrivateShow}
+                className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 py-2 rounded font-semibold transition"
+              >
+                Send Request
+              </button>
+            </div>
           </div>
         </div>
       )}

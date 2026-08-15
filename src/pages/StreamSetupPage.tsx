@@ -23,6 +23,16 @@ export default function StreamSetupPage({ session }: { session: Session }) {
   const [connectionConfirmed, setConnectionConfirmed] = useState(false)
   const connectionPollRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const [verificationStatus, setVerificationStatus] = useState<string | null>(null)
+  const [pendingShowRequests, setPendingShowRequests] = useState<any[]>([])
+  const [recordingOffer, setRecordingOffer] = useState<{
+    playbackId: string
+    thumbnailUrl: string
+    durationSeconds: number
+    defaultTitle: string
+    requesterId: string | null
+  } | null>(null)
+  const [listingPrice, setListingPrice] = useState('300')
+  const [listingSaving, setListingSaving] = useState(false)
 
   useEffect(() => {
     const checkVerification = async () => {
@@ -144,6 +154,46 @@ export default function StreamSetupPage({ session }: { session: Session }) {
   // arriving -- not just that credentials were generated or a socket
   // opened. Called by the polling loop below, or manually if a streamer
   // hits "I'm ready" before the poll catches up.
+  useEffect(() => {
+    if (!roomId) return
+
+    const loadRequests = async () => {
+      const { data } = await supabase
+        .from('private_show_requests')
+        .select('id, offered_tokens, requester:requester_id(username)')
+        .eq('room_id', roomId)
+        .eq('status', 'pending')
+        .order('created_at')
+      setPendingShowRequests(data || [])
+    }
+    loadRequests()
+
+    const channel = supabase
+      .channel(`private-shows:${roomId}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'private_show_requests', filter: `room_id=eq.${roomId}` },
+        () => loadRequests()
+      )
+      .subscribe()
+
+    return () => {
+      channel.unsubscribe()
+    }
+  }, [roomId])
+
+  const respondToPrivateShow = async (requestId: string, accept: boolean) => {
+    setError('')
+    const { error: rpcError } = await supabase.rpc(accept ? 'accept_private_show' : 'decline_private_show', {
+      p_request_id: requestId,
+    })
+    if (rpcError) {
+      setError(rpcError.message)
+      return
+    }
+    setPendingShowRequests((prev) => prev.filter((r) => r.id !== requestId))
+  }
+
   const confirmGoLive = async () => {
     if (!roomId) return
     const { error: updateError } = await supabase.from('rooms').update({ is_live: true }).eq('id', roomId)
@@ -287,6 +337,54 @@ export default function StreamSetupPage({ session }: { session: Session }) {
     setBroadcasting(false)
   }
 
+  const listRecording = async () => {
+    if (!recordingOffer) return
+    setListingSaving(true)
+    const price = parseInt(listingPrice, 10) || 0
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    await supabase.from('vod_library').insert({
+      user_id: user.id,
+      title: `${recordingOffer.defaultTitle} (Private Recording)`,
+      thumbnail_url: recordingOffer.thumbnailUrl,
+      mux_playback_id: recordingOffer.playbackId,
+      duration_seconds: recordingOffer.durationSeconds,
+      is_public: true,
+      price_tokens: price,
+      is_private_show_recording: true,
+      original_requester_id: recordingOffer.requesterId,
+    })
+
+    setListingSaving(false)
+    setRecordingOffer(null)
+  }
+
+  const pollForRecording = (streamId: string, defaultTitle: string, requesterId: string | null | undefined) => {
+    let attempts = 0
+    const interval = setInterval(async () => {
+      attempts++
+      try {
+        const res = await fetch(`/api/mux-stream-status?action=get-recording&muxStreamId=${encodeURIComponent(streamId)}`)
+        const data = await res.json()
+        if (data.ready) {
+          clearInterval(interval)
+          setRecordingOffer({
+            playbackId: data.playbackId,
+            thumbnailUrl: data.thumbnailUrl,
+            durationSeconds: data.durationSeconds,
+            defaultTitle,
+            requesterId: requesterId || null,
+          })
+        } else if (attempts > 20) {
+          clearInterval(interval) // give up after ~2 minutes, recording still exists in Mux either way
+        }
+      } catch {
+        // transient -- next tick retries
+      }
+    }, 6000)
+  }
+
   const endStream = async () => {
     if (!roomId) return
     setLoading(true)
@@ -298,12 +396,23 @@ export default function StreamSetupPage({ session }: { session: Session }) {
         connectionPollRef.current = null
       }
 
+      const { data: roomBefore } = await supabase
+        .from('rooms')
+        .select('is_private_show, private_show_requester_id, title')
+        .eq('id', roomId)
+        .single()
+
       const { error: updateError } = await supabase
         .from('rooms')
         .update({ is_live: false, ended_at: new Date().toISOString() })
         .eq('id', roomId)
 
       if (updateError) throw updateError
+
+      const wasPrivateShow = roomBefore?.is_private_show
+      const requesterId = roomBefore?.private_show_requester_id
+      const endedTitle = roomBefore?.title || title
+      const endedMuxStreamId = muxStreamId
 
       setIsLive(false)
       setTestingConnection(false)
@@ -314,6 +423,10 @@ export default function StreamSetupPage({ session }: { session: Session }) {
       setHlsUrl('')
       setMuxStreamId('')
       setMethod('choose')
+
+      if (wasPrivateShow && endedMuxStreamId) {
+        pollForRecording(endedMuxStreamId, endedTitle, requesterId)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -574,6 +687,37 @@ export default function StreamSetupPage({ session }: { session: Session }) {
           </div>
         )}
 
+        {/* Private show requests */}
+        {roomId && pendingShowRequests.length > 0 && (
+          <div className="bg-gradient-to-br from-pink-900/20 to-purple-900/20 border border-pink-500/30 rounded-lg p-6 mb-6">
+            <h2 className="text-lg font-bold mb-4">🔒 Private Show Requests</h2>
+            <div className="space-y-3">
+              {pendingShowRequests.map((req) => (
+                <div key={req.id} className="bg-gray-900/60 rounded p-3 flex items-center justify-between">
+                  <div>
+                    <span className="font-semibold">{req.requester?.username || 'A viewer'}</span>
+                    <span className="text-pink-400 font-bold ml-2">{req.offered_tokens} tokens</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => respondToPrivateShow(req.id, true)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-semibold transition"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => respondToPrivateShow(req.id, false)}
+                      className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm font-semibold transition"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Live chat -- streamer's own view of viewer messages, tips, follows */}
         {roomId && (
           <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-6">
@@ -610,6 +754,42 @@ export default function StreamSetupPage({ session }: { session: Session }) {
           </div>
         </div>
       </div>
+
+      {recordingOffer && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-pink-500/30 rounded-lg w-full max-w-sm p-6">
+            <h2 className="text-lg font-bold mb-2">Sell this private recording?</h2>
+            <img src={recordingOffer.thumbnailUrl} alt="" className="w-full rounded mb-3" />
+            <p className="text-sm text-gray-400 mb-4">
+              Your private show was recorded. List it for other viewers to purchase, or skip and it stays private.
+            </p>
+            <label className="text-sm text-gray-400 block mb-1">Price (tokens)</label>
+            <input
+              type="number"
+              min={1}
+              value={listingPrice}
+              onChange={(e) => setListingPrice(e.target.value)}
+              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white mb-4"
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRecordingOffer(null)}
+                disabled={listingSaving}
+                className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-semibold transition"
+              >
+                Skip
+              </button>
+              <button
+                onClick={listRecording}
+                disabled={listingSaving}
+                className="flex-1 bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 py-2 rounded font-semibold transition"
+              >
+                {listingSaving ? 'Listing...' : 'List for Sale'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

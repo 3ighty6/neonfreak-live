@@ -60,7 +60,7 @@ export default function HomePage({
         .select('user_id, tier')
         .eq('status', 'active')
       const tierByUser = new Map((activeSubs || []).map((s) => [s.user_id, s.tier]))
-      const tierRank: Record<string, number> = { featured: 2, boost: 1 }
+      const tierRank: Record<string, number> = { elite: 3, featured: 2, boost: 1 }
 
       const sortedStreams = [...(liveStreams || [])]
         .map((s) => ({ ...s, promotionTier: tierByUser.get(s.streamer_id) || null }))
