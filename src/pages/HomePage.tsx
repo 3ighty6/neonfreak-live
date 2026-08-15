@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient'
 import { Search, Users, TrendingUp, Radio, Heart } from 'lucide-react'
 import LiveStreamCard from '../components/LiveStreamCard'
 import DiscoverCreators from '../components/DiscoverCreators'
+import Leaderboard from '../components/Leaderboard'
 
 export default function HomePage({
   session,
@@ -184,6 +185,8 @@ export default function HomePage({
           ))}
         </div>
       </div>
+
+      <Leaderboard />
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Users, TrendingUp, Shield, AlertCircle, Check, X, BadgeCheck, Tag, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
+import LeaderboardEventsAdmin from '../components/LeaderboardEventsAdmin'
 
 interface UserRow {
   id: string
@@ -30,7 +31,7 @@ interface CategoryRow {
 }
 
 export default function AdminDashboard() {
-  const [tab, setTab] = useState<'overview' | 'users' | 'reports' | 'categories' | 'identity'>('overview')
+  const [tab, setTab] = useState<'overview' | 'users' | 'reports' | 'categories' | 'identity' | 'events'>('overview')
   const [stats, setStats] = useState({ totalUsers: 0, activeStreams: 0, totalRevenue: 0, pendingReports: 0 })
   const [users, setUsers] = useState<UserRow[]>([])
   const [reports, setReports] = useState<ReportRow[]>([])
@@ -152,7 +153,7 @@ export default function AdminDashboard() {
         <p className="text-gray-400 mb-6">Platform overview and management</p>
 
         <div className="flex gap-2 mb-8">
-          {(['overview', 'users', 'reports', 'categories', 'identity'] as const).map((t) => (
+          {(['overview', 'users', 'reports', 'categories', 'identity', 'events'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -313,7 +314,7 @@ export default function AdminDashboard() {
               ))}
             </div>
           </div>
-        ) : (
+        ) : tab === 'identity' ? (
           <div className="space-y-4">
             {verifications.length === 0 ? (
               <div className="text-center py-12 text-gray-400">No pending verifications.</div>
@@ -365,6 +366,8 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
+        ) : (
+          <LeaderboardEventsAdmin />
         )}
       </div>
     </div>
