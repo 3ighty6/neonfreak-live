@@ -102,6 +102,7 @@ export default function StreamSetupPage() {
           rtmp_key: data.rtmpStreamKey,
           hls_url: data.hlsUrl,
           is_live: true,
+          started_at: new Date().toISOString(),
         })
         .select()
         .single()

@@ -181,6 +181,34 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
 
   // Subscribe to new messages
   useEffect(() => {
+    // Real viewer count via Supabase Realtime Presence -- previously
+    // rooms.viewer_count was read everywhere but written nowhere, so
+    // it always showed 0. Every connected viewer tracks their own
+    // presence; on sync, whoever's client processes it writes the
+    // count via an RPC (RLS otherwise only lets the room owner write
+    // to rooms, so a plain update from a viewer would be rejected).
+    const presenceChannel = supabase.channel(`presence:room:${roomId}`, {
+      config: { presence: { key: session.user.id } },
+    })
+
+    presenceChannel
+      .on('presence', { event: 'sync' }, () => {
+        const count = Object.keys(presenceChannel.presenceState()).length
+        setRoom((prev) => (prev ? { ...prev, viewer_count: count } : prev))
+        supabase.rpc('update_room_viewer_count', { p_room_id: roomId, p_count: count })
+      })
+      .subscribe(async (status) => {
+        if (status === 'SUBSCRIBED') {
+          await presenceChannel.track({ online_at: new Date().toISOString() })
+        }
+      })
+
+    return () => {
+      presenceChannel.unsubscribe()
+    }
+  }, [roomId, session.user.id])
+
+  useEffect(() => {
     const subscription = supabase
       .channel(`room:${roomId}`)
       .on(
