@@ -170,7 +170,7 @@ export default function MainApp({ session }: MainAppProps) {
       {/* Main Content */}
       <div className="md:ml-64 pb-20 md:pb-0">
         {currentPage === 'home' && <HomePage session={session} onSelectStream={openRoom} onSelectCreator={openCreator} />}
-        {currentPage === 'setup' && <StreamSetupPage />}
+        {currentPage === 'setup' && <StreamSetupPage session={session} />}
         {currentPage === 'tips' && <TipPage />}
         {currentPage === 'analytics' && <AnalyticsDashboard userId={user.id} />}
         {currentPage === 'vods' && <VODLibrary session={session} userId={user.id} />}

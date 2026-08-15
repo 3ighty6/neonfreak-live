@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
+import { Session } from '@supabase/supabase-js'
 import { Copy, Check, Video, AlertCircle, Radio, Square, Camera, Cable } from 'lucide-react'
 import { supabase } from '../supabaseClient'
+import RoomChat from '../components/RoomChat'
 
 // WebSocket relay running on Railway — the browser records with
 // MediaRecorder and pushes chunks here, and the relay transcodes and
@@ -8,7 +10,7 @@ import { supabase } from '../supabaseClient'
 // See 3ighty6/ralph-sons-digital-platform for the relay itself.
 const WS_RELAY_URL = 'wss://whip-relay-v3-production.up.railway.app'
 
-export default function StreamSetupPage() {
+export default function StreamSetupPage({ session }: { session: Session }) {
   const [copied, setCopied] = useState<string | null>(null)
   const [title, setTitle] = useState('')
   const [rtmpUrl, setRtmpUrl] = useState('')
@@ -458,6 +460,16 @@ export default function StreamSetupPage() {
                 {loading ? 'Ending...' : 'End Stream'}
               </button>
             </div>
+          </div>
+        )}
+
+        {/* Live chat -- streamer's own view of viewer messages, tips, follows */}
+        {roomId && (
+          <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 mb-6">
+            <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <Radio size={18} className="text-cyan-400" /> Live Chat
+            </h2>
+            <RoomChat session={session} roomId={roomId} streamerId={session.user.id} compact />
           </div>
         )}
 

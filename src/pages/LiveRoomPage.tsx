@@ -3,7 +3,8 @@ import { Session } from '@supabase/supabase-js'
 import Hls from 'hls.js'
 import { supabase } from '../supabaseClient'
 import { TOKEN_PACKAGES, createTokenCheckout } from '../lib/stripe'
-import { Send, Heart, HeartOff, Users, Share2, ArrowLeft, ShoppingCart, Flag, X } from 'lucide-react'
+import { Heart, HeartOff, Users, Share2, ArrowLeft, ShoppingCart, Flag, X } from 'lucide-react'
+import RoomChat from '../components/RoomChat'
 
 interface LiveRoomPageProps {
   session: Session
@@ -22,18 +23,8 @@ interface RoomInfo {
   users?: { username: string; is_ai_creator?: boolean }
 }
 
-interface ChatMessage {
-  id: string
-  user_id: string
-  content: string
-  username?: string
-  type?: 'chat' | 'tip' | 'follow'
-}
-
 export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }: LiveRoomPageProps) {
   const [room, setRoom] = useState<RoomInfo | null>(null)
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [newMessage, setNewMessage] = useState('')
   const [tips, setTips] = useState<{ amount: number }[]>([])
   const [tipError, setTipError] = useState('')
   const [tokenBalance, setTokenBalance] = useState<number | null>(null)
@@ -47,7 +38,6 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
   const [reportDetails, setReportDetails] = useState('')
   const [reportSubmitting, setReportSubmitting] = useState(false)
   const [reportSubmitted, setReportSubmitted] = useState(false)
-  const messageEndRef = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   const TIP_AMOUNTS = [
@@ -156,39 +146,13 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
     }
   }, [room?.hls_url])
 
-  // Load recent chat history with usernames
+  // Real viewer count via Supabase Realtime Presence -- previously
+  // rooms.viewer_count was read everywhere but written nowhere, so
+  // it always showed 0. Every connected viewer tracks their own
+  // presence; on sync, whoever's client processes it writes the
+  // count via an RPC (RLS otherwise only lets the room owner write
+  // to rooms, so a plain update from a viewer would be rejected).
   useEffect(() => {
-    const loadMessages = async () => {
-      const { data } = await supabase
-        .from('messages')
-        .select('id, user_id, content, users:user_id(username)')
-        .eq('room_id', roomId)
-        .order('created_at', { ascending: true })
-        .limit(50)
-
-      if (data) {
-        setMessages(
-          data.map((m: any) => ({
-            id: m.id,
-            user_id: m.user_id,
-            content: m.content,
-            username: m.users?.username,
-            type: 'chat' as const,
-          }))
-        )
-      }
-    }
-    loadMessages()
-  }, [roomId])
-
-  // Subscribe to new messages
-  useEffect(() => {
-    // Real viewer count via Supabase Realtime Presence -- previously
-    // rooms.viewer_count was read everywhere but written nowhere, so
-    // it always showed 0. Every connected viewer tracks their own
-    // presence; on sync, whoever's client processes it writes the
-    // count via an RPC (RLS otherwise only lets the room owner write
-    // to rooms, so a plain update from a viewer would be rejected).
     const presenceChannel = supabase.channel(`presence:room:${roomId}`, {
       config: { presence: { key: session.user.id } },
     })
@@ -209,91 +173,6 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
       presenceChannel.unsubscribe()
     }
   }, [roomId, session.user.id])
-
-  useEffect(() => {
-    const subscription = supabase
-      .channel(`room:${roomId}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'messages', filter: `room_id=eq.${roomId}` },
-        async (payload) => {
-          const row = payload.new as any
-          const { data: userRow } = await supabase
-            .from('users')
-            .select('username')
-            .eq('id', row.user_id)
-            .single()
-          setMessages((prev) => [
-            ...prev,
-            { id: row.id, user_id: row.user_id, content: row.content, username: userRow?.username, type: 'chat' },
-          ])
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'tips', filter: `room_id=eq.${roomId}` },
-        async (payload) => {
-          const row = payload.new as any
-          const { data: userRow } = await supabase
-            .from('users')
-            .select('username')
-            .eq('id', row.sender_id)
-            .single()
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `tip-${row.id}`,
-              user_id: row.sender_id,
-              content: `tipped ${row.amount} tokens! 🎉`,
-              username: userRow?.username || 'Someone',
-              type: 'tip',
-            },
-          ])
-        }
-      )
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'followers', filter: `streamer_id=eq.${room?.streamer_id}` },
-        async (payload) => {
-          if (!room?.streamer_id) return
-          const row = payload.new as any
-          const { data: userRow } = await supabase
-            .from('users')
-            .select('username')
-            .eq('id', row.follower_id)
-            .single()
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `follow-${row.id}`,
-              user_id: row.follower_id,
-              content: 'started following! 💜',
-              username: userRow?.username || 'Someone',
-              type: 'follow',
-            },
-          ])
-        }
-      )
-      .subscribe()
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [roomId, room?.streamer_id])
-
-  useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return
-    const { error } = await supabase.from('messages').insert({
-      room_id: roomId,
-      user_id: session.user.id,
-      content: newMessage.trim(),
-    })
-    if (!error) setNewMessage('')
-  }
 
   const sendTip = async (amount: number) => {
     setTipError('')
@@ -412,53 +291,8 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
 
       {/* Chat & Tips Section */}
       <div className="h-80 bg-gray-950 border-t border-cyan-500/20 flex flex-col md:flex-row">
-        <div className="flex-1 flex flex-col border-r border-cyan-500/20">
-          <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {messages.map((msg) => (
-              <div
-                key={msg.id}
-                className={`text-sm ${
-                  msg.type === 'tip'
-                    ? 'bg-purple-500/10 border border-purple-500/20 rounded px-2 py-1'
-                    : msg.type === 'follow'
-                      ? 'bg-pink-500/10 border border-pink-500/20 rounded px-2 py-1'
-                      : ''
-                }`}
-              >
-                <span
-                  className={
-                    msg.type === 'tip'
-                      ? 'text-purple-400 font-semibold'
-                      : msg.type === 'follow'
-                        ? 'text-pink-400 font-semibold'
-                        : 'text-cyan-400 font-semibold'
-                  }
-                >
-                  {msg.username || 'User'}
-                  {msg.type === 'chat' ? ':' : ''}
-                </span>
-                <span className="text-gray-300 ml-2">{msg.content}</span>
-              </div>
-            ))}
-            <div ref={messageEndRef} />
-          </div>
-
-          <div className="border-t border-gray-800 p-3 flex gap-2">
-            <input
-              type="text"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-              placeholder="Send a message..."
-              className="flex-1 bg-gray-900 text-white rounded px-3 py-2 text-sm border border-gray-800 focus:border-cyan-500 outline-none"
-            />
-            <button
-              onClick={sendMessage}
-              className="bg-cyan-500 hover:bg-cyan-600 text-black px-3 py-2 rounded font-semibold flex items-center gap-1"
-            >
-              <Send size={16} />
-            </button>
-          </div>
+        <div className="flex-1 border-r border-cyan-500/20">
+          <RoomChat session={session} roomId={roomId} streamerId={room?.streamer_id} compact />
         </div>
 
         <div className="w-full md:w-48 p-3 flex flex-col gap-2 border-t md:border-t-0 md:border-l border-gray-800">
