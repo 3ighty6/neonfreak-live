@@ -27,7 +27,13 @@ export default function StreamSetupPage() {
   const websocketRef = useRef<WebSocket | null>(null)
 
   // Resume an in-progress / already-live room on load, so refreshing this
-  // page doesn't orphan your stream key.
+  // page doesn't orphan your stream key. Uses a ref (not the method state
+  // directly) so this async check can't clobber a choice the user makes
+  // in the chooser while this fetch is still in flight -- it previously
+  // could, and would silently force the OBS view over whatever the user
+  // had just picked.
+  const methodChosenByUserRef = useRef(false)
+
   useEffect(() => {
     const loadExisting = async () => {
       const { data: { user } } = await supabase.auth.getUser()
@@ -39,9 +45,10 @@ export default function StreamSetupPage() {
         .eq('is_live', true)
         .maybeSingle()
 
-      if (data) {
+      if (data && !methodChosenByUserRef.current) {
         setRoomId(data.id)
         setTitle(data.title || '')
+        setRtmpUrl('rtmp://global-live.mux.com:5222/app')
         setRtmpKey(data.rtmp_key || '')
         setHlsUrl(data.hls_url || '')
         setIsLive(true)
@@ -254,7 +261,10 @@ export default function StreamSetupPage() {
         {method === 'choose' && !rtmpKey && (
           <div className="grid md:grid-cols-2 gap-4 mb-6">
             <button
-              onClick={() => setMethod('browser')}
+              onClick={() => {
+                methodChosenByUserRef.current = true
+                setMethod('browser')
+              }}
               className="bg-gray-900 border border-cyan-500/20 hover:border-cyan-500/50 rounded-lg p-6 text-left transition"
             >
               <Camera className="text-cyan-400 mb-3" size={32} />
@@ -264,7 +274,10 @@ export default function StreamSetupPage() {
               </p>
             </button>
             <button
-              onClick={() => setMethod('obs')}
+              onClick={() => {
+                methodChosenByUserRef.current = true
+                setMethod('obs')
+              }}
               className="bg-gray-900 border border-cyan-500/20 hover:border-cyan-500/50 rounded-lg p-6 text-left transition"
             >
               <Cable className="text-cyan-400 mb-3" size={32} />
