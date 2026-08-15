@@ -44,47 +44,76 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Invalid signature' })
   }
 
-  if (event.type !== 'checkout.session.completed') {
-    return res.json({ received: true })
-  }
-
-  const session = event.data.object as Stripe.Checkout.Session
-  const { kind, userId, creatorId, tokens } = session.metadata || {}
-  const amountUsd = (session.amount_total || 0) / 100
-
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
   try {
-    if (kind === 'tokens' && userId) {
-      const tokenAmount = parseInt(tokens || '0', 10)
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session
+      const { kind, userId, creatorId, tokens, tier } = session.metadata || {}
+      const amountUsd = (session.amount_total || 0) / 100
 
-      const { data: user } = await supabase.from('users').select('token_balance').eq('id', userId).single()
+      if (kind === 'tokens' && userId) {
+        const tokenAmount = parseInt(tokens || '0', 10)
+
+        const { data: user } = await supabase.from('users').select('token_balance').eq('id', userId).single()
+        await supabase
+          .from('users')
+          .update({ token_balance: (user?.token_balance || 0) + tokenAmount })
+          .eq('id', userId)
+
+        await supabase.from('transactions').insert({
+          user_id: userId,
+          type: 'token_purchase',
+          amount: amountUsd,
+          tokens: tokenAmount,
+          description: `Purchased ${tokenAmount} tokens`,
+          status: 'completed',
+          stripe_id: session.id,
+        })
+      } else if (kind === 'tip' && userId && creatorId) {
+        await supabase.from('tips').insert({
+          sender_id: userId,
+          receiver_id: creatorId,
+          amount: amountUsd,
+        })
+
+        const { data: creator } = await supabase.from('users').select('total_earnings').eq('id', creatorId).single()
+        await supabase
+          .from('users')
+          .update({ total_earnings: Number(creator?.total_earnings || 0) + amountUsd * 0.7 })
+          .eq('id', creatorId)
+      } else if (kind === 'creator_subscription' && userId && tier && session.subscription && session.customer) {
+        // Initial subscription record. Renewal/cancellation status is
+        // kept in sync by the customer.subscription.* events below --
+        // this just creates the row so those have something to update.
+        await supabase.from('creator_subscriptions').insert({
+          user_id: userId,
+          tier,
+          stripe_subscription_id: session.subscription as string,
+          stripe_customer_id: session.customer as string,
+          status: 'active',
+        })
+      }
+    } else if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
+      const sub = event.data.object as Stripe.Subscription
+      const status = event.type === 'customer.subscription.deleted'
+        ? 'canceled'
+        : sub.status === 'active' || sub.status === 'trialing'
+          ? 'active'
+          : sub.status === 'past_due'
+            ? 'past_due'
+            : 'canceled'
+
       await supabase
-        .from('users')
-        .update({ token_balance: (user?.token_balance || 0) + tokenAmount })
-        .eq('id', userId)
-
-      await supabase.from('transactions').insert({
-        user_id: userId,
-        type: 'token_purchase',
-        amount: amountUsd,
-        tokens: tokenAmount,
-        description: `Purchased ${tokenAmount} tokens`,
-        status: 'completed',
-        stripe_id: session.id,
-      })
-    } else if (kind === 'tip' && userId && creatorId) {
-      await supabase.from('tips').insert({
-        sender_id: userId,
-        receiver_id: creatorId,
-        amount: amountUsd,
-      })
-
-      const { data: creator } = await supabase.from('users').select('total_earnings').eq('id', creatorId).single()
-      await supabase
-        .from('users')
-        .update({ total_earnings: Number(creator?.total_earnings || 0) + amountUsd * 0.7 })
-        .eq('id', creatorId)
+        .from('creator_subscriptions')
+        .update({
+          status,
+          current_period_end: (sub as any).current_period_end
+            ? new Date((sub as any).current_period_end * 1000).toISOString()
+            : null,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('stripe_subscription_id', sub.id)
     }
 
     res.json({ received: true })

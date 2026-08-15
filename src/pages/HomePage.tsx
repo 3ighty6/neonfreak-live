@@ -53,7 +53,25 @@ export default function HomePage({
         .eq('is_live', true)
         .order('viewer_count', { ascending: false })
 
-      setStreams(liveStreams || [])
+      // Featured/Boosted creators sort above everyone else, featured
+      // above boost, viewer count as the tiebreaker within each tier.
+      const { data: activeSubs } = await supabase
+        .from('creator_subscriptions')
+        .select('user_id, tier')
+        .eq('status', 'active')
+      const tierByUser = new Map((activeSubs || []).map((s) => [s.user_id, s.tier]))
+      const tierRank: Record<string, number> = { featured: 2, boost: 1 }
+
+      const sortedStreams = [...(liveStreams || [])]
+        .map((s) => ({ ...s, promotionTier: tierByUser.get(s.streamer_id) || null }))
+        .sort((a, b) => {
+          const rankA = tierRank[a.promotionTier || ''] || 0
+          const rankB = tierRank[b.promotionTier || ''] || 0
+          if (rankA !== rankB) return rankB - rankA
+          return (b.viewer_count || 0) - (a.viewer_count || 0)
+        })
+
+      setStreams(sortedStreams)
 
       // Real "Trending" signal -- was Math.random() before. Count of
       // tips sent platform-wide today, a genuine activity indicator.

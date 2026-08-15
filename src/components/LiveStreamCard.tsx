@@ -23,6 +23,15 @@ export default function LiveStreamCard({
             <div className="text-gray-500">Stream Preview</div>
           </div>
         )}
+        {stream.promotionTier && (
+          <div
+            className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold ${
+              stream.promotionTier === 'featured' ? 'bg-yellow-500 text-black' : 'bg-purple-600 text-white'
+            }`}
+          >
+            {stream.promotionTier === 'featured' ? '⭐ Featured' : '🚀 Boosted'}
+          </div>
+        )}
         <div className="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
           <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
           LIVE

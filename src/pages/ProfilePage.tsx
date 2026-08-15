@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient'
 import type { User } from '../types'
 import EarningsPayouts from '../components/EarningsPayouts'
 import IdVerification from '../components/IdVerification'
+import CreatorBoost from '../components/CreatorBoost'
 
 export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfile?: () => void }) {
   const [profile, setProfile] = useState<User | null>(null)
@@ -378,6 +379,9 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
 
         {/* Earnings & Payouts */}
         <EarningsPayouts userId={profile.id} />
+
+        {/* Promotion Subscription */}
+        <CreatorBoost userId={profile.id} />
 
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-4">
