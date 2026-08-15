@@ -20,6 +20,7 @@ export default function HomePage({
   const [loading, setLoading] = useState(true)
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set())
   const [followingOnly, setFollowingOnly] = useState(false)
+  const [tipsToday, setTipsToday] = useState(0)
 
   useEffect(() => {
     const loadFollowed = async () => {
@@ -53,6 +54,16 @@ export default function HomePage({
         .order('viewer_count', { ascending: false })
 
       setStreams(liveStreams || [])
+
+      // Real "Trending" signal -- was Math.random() before. Count of
+      // tips sent platform-wide today, a genuine activity indicator.
+      const todayStart = new Date()
+      todayStart.setHours(0, 0, 0, 0)
+      const { count } = await supabase
+        .from('tips')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', todayStart.toISOString())
+      setTipsToday(count || 0)
       setLoading(false)
     }
 
@@ -160,9 +171,9 @@ export default function HomePage({
         </div>
         <div className="bg-gradient-to-br from-yellow-600/20 to-pink-600/20 border border-yellow-500/30 rounded-lg p-4 shadow-lg shadow-yellow-500/10">
           <div className="flex items-center gap-2 text-yellow-300 text-sm mb-2">
-            <TrendingUp size={16} /> Trending
+            <TrendingUp size={16} /> Tips Today
           </div>
-          <div className="text-2xl font-bold text-yellow-400">{Math.floor(Math.random() * 100) + 20}</div>
+          <div className="text-2xl font-bold text-yellow-400">{tipsToday.toLocaleString()}</div>
         </div>
       </div>
 
