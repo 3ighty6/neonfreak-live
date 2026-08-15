@@ -75,12 +75,20 @@ export default function GoLiveWizard({ session }: { session: Session }) {
               A quick 3-step setup — tip menu, on-screen alerts, then your stream details. Takes about a minute.
             </p>
 
-            <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 text-left mb-8">
+            <div className="bg-gray-900 border border-cyan-500/20 rounded-lg p-6 text-left mb-6">
               <h3 className="font-semibold mb-3">What you'll need</h3>
               <ul className="space-y-2 text-sm text-gray-400">
                 <li>• A camera and mic — your laptop's built-in ones work fine</li>
                 <li>• <strong className="text-gray-300">Optional:</strong> OBS Studio, if you want scenes/overlays beyond the browser option</li>
               </ul>
+            </div>
+
+            <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 border border-purple-500/20 rounded-lg p-4 text-left mb-8">
+              <p className="text-sm text-gray-300">
+                <span className="font-semibold text-yellow-300">Streaming is just one of your income streams here.</span>{' '}
+                Once you're set up, check your Profile for perks & extras, private shows, and video/photo sales too — most
+                creators do best combining a few.
+              </p>
             </div>
 
             <button

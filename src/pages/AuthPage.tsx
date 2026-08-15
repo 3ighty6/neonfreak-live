@@ -183,16 +183,47 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="text-center mb-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 flex items-center justify-center">
+      <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-10 items-center">
+        {/* Marketing / earning breakdown */}
+        <div className="order-2 lg:order-1">
           <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-cyan-400 to-yellow-300 mb-2">
             🎬 NeonLights
           </h1>
-          <p className="text-cyan-300 text-lg">Creator Platform</p>
+          <p className="text-cyan-300 text-lg mb-6">The all-in-one creator platform</p>
+
+          <p className="text-gray-300 mb-6 max-w-md">
+            Every other platform makes you pick one thing — subscriptions, or cam tips, or clip sales. NeonLights pays you
+            for all of it, in one place, with an <span className="text-yellow-300 font-semibold">85% creator share</span> —
+            notably above the industry-standard 80%.
+          </p>
+
+          <div className="space-y-3 max-w-md">
+            {[
+              { emoji: '💬', title: 'Live tips', desc: 'Fixed menu or any custom amount, straight from viewers watching you' },
+              { emoji: '🎬', title: 'Video & photo sales', desc: 'Pay-per-view videos and photo bundles, priced however you want' },
+              { emoji: '⭐', title: 'Perks & extras', desc: 'Sell access to your Snapchat, a subscription, custom requests — your call' },
+              { emoji: '🔒', title: 'Private shows', desc: 'Get paid up front for an exclusive session' },
+              { emoji: '📼', title: 'Private show resale', desc: 'Recordings can keep earning after the show ends' },
+              { emoji: '🚀', title: 'Get boosted', desc: 'Paid promotion tiers put you higher in the discovery feed' },
+            ].map((item) => (
+              <div key={item.title} className="flex gap-3 items-start bg-slate-800/40 border border-pink-500/10 rounded-lg p-3">
+                <span className="text-xl">{item.emoji}</span>
+                <div>
+                  <div className="font-semibold text-sm">{item.title}</div>
+                  <div className="text-xs text-gray-400">{item.desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <p className="text-xs text-gray-500 mt-6 max-w-md">
+            Even watching helps you earn — suggest tags and titles on other creators' videos and get paid tokens when they're approved.
+          </p>
         </div>
 
+        {/* Login / Signup */}
+        <div className="order-1 lg:order-2 w-full max-w-md mx-auto">
         {/* Card */}
         <div className="bg-slate-800/50 backdrop-blur border border-pink-500/30 rounded-lg p-8 shadow-2xl shadow-pink-500/20">
           {error && (
@@ -395,6 +426,7 @@ export default function AuthPage() {
         <div className="flex justify-center gap-4 mt-6 text-xs text-gray-500">
           <a href="/terms" className="hover:text-gray-300 transition">Terms of Service</a>
           <a href="/privacy" className="hover:text-gray-300 transition">Privacy Policy</a>
+        </div>
         </div>
       </div>
     </div>
