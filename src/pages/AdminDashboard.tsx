@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Users, TrendingUp, Shield, AlertCircle, Check, X, BadgeCheck, Tag, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import LeaderboardEventsAdmin from '../components/LeaderboardEventsAdmin'
+import AdminUserDetail from '../components/AdminUserDetail'
 
 interface UserRow {
   id: string
@@ -30,13 +31,14 @@ interface CategoryRow {
   icon: string | null
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ onOpenMessages }: { onOpenMessages?: (userId: string) => void }) {
   const [tab, setTab] = useState<'overview' | 'users' | 'reports' | 'categories' | 'identity' | 'events'>('overview')
   const [stats, setStats] = useState({ totalUsers: 0, activeStreams: 0, totalRevenue: 0, pendingReports: 0 })
   const [users, setUsers] = useState<UserRow[]>([])
   const [reports, setReports] = useState<ReportRow[]>([])
   const [categories, setCategories] = useState<CategoryRow[]>([])
   const [verifications, setVerifications] = useState<any[]>([])
+  const [viewingUser, setViewingUser] = useState<UserRow | null>(null)
   const [verificationUrls, setVerificationUrls] = useState<Record<string, { id: string; selfie: string }>>({})
   const [newCategoryName, setNewCategoryName] = useState('')
   const [newCategoryIcon, setNewCategoryIcon] = useState('')
@@ -203,7 +205,11 @@ export default function AdminDashboard() {
               <tbody>
                 {users.map((u) => (
                   <tr key={u.id} className="border-t border-gray-800">
-                    <td className="p-3 font-semibold">{u.username}</td>
+                    <td className="p-3">
+                      <button onClick={() => setViewingUser(u)} className="font-semibold text-cyan-400 hover:text-cyan-300 transition">
+                        {u.username}
+                      </button>
+                    </td>
                     <td className="p-3 text-gray-400">{u.email}</td>
                     <td className="p-3">{u.token_balance}</td>
                     <td className="p-3 text-gray-500">{new Date(u.created_at).toLocaleDateString()}</td>
@@ -370,6 +376,10 @@ export default function AdminDashboard() {
           <LeaderboardEventsAdmin />
         )}
       </div>
+
+      {viewingUser && (
+        <AdminUserDetail user={viewingUser} onClose={() => setViewingUser(null)} onOpenMessages={onOpenMessages} />
+      )}
     </div>
   )
 }

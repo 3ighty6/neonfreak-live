@@ -194,7 +194,7 @@ export default function MainApp({ session }: MainAppProps) {
         {currentPage === 'vods' && <VODLibrary session={session} userId={user.id} />}
         {currentPage === 'profile' && <ProfilePage onViewPublicProfile={() => openCreator(user.id)} />}
         {currentPage === 'messages' && <MessagesPage session={session} initialOtherUserId={messagesTargetUserId} />}
-        {currentPage === 'admin' && isAdmin && <AdminDashboard />}
+        {currentPage === 'admin' && isAdmin && <AdminDashboard onOpenMessages={openMessages} />}
         <Footer />
       </div>
     </div>
