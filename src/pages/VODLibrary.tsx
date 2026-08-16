@@ -30,6 +30,7 @@ export default function VODLibrary({ session, userId }: { session: Session; user
   const [unlockedIds, setUnlockedIds] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [showUpload, setShowUpload] = useState(false)
+  const [isCreator, setIsCreator] = useState(false)
   const [playingVideo, setPlayingVideo] = useState<{ row: VideoRow; url: string } | null>(null)
   const [unlockTarget, setUnlockTarget] = useState<VideoRow | null>(null)
   const [buyPromptFor, setUnlockOutOfTokens] = useState<VideoRow | null>(null)
@@ -58,6 +59,12 @@ export default function VODLibrary({ session, userId }: { session: Session; user
 
   useEffect(() => {
     loadVideos()
+    supabase
+      .from('users')
+      .select('is_streamer')
+      .eq('id', userId)
+      .single()
+      .then(({ data }) => setIsCreator(!!data?.is_streamer))
   }, [userId])
 
   const formatDuration = (seconds: number | null) => {
@@ -141,12 +148,14 @@ export default function VODLibrary({ session, userId }: { session: Session; user
           <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600">
             Video Library
           </h1>
-          <button
-            onClick={() => setShowUpload(true)}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold flex items-center gap-2 transition"
-          >
-            <Upload size={18} /> Upload Video
-          </button>
+          {isCreator && (
+            <button
+              onClick={() => setShowUpload(true)}
+              className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold flex items-center gap-2 transition"
+            >
+              <Upload size={18} /> Upload Video
+            </button>
+          )}
         </div>
         <p className="text-gray-400 mb-6">Browse videos or manage your own uploads</p>
 
@@ -239,7 +248,7 @@ export default function VODLibrary({ session, userId }: { session: Session; user
                     <div className="flex gap-3 text-sm text-gray-400 mb-3">
                       <div className="flex items-center gap-1">
                         <Eye size={14} />
-                        <span>{video.view_count} views</span>
+                        <span>{video.view_count} purchased</span>
                       </div>
                       <div className="text-gray-600">{new Date(video.created_at).toLocaleDateString()}</div>
                     </div>

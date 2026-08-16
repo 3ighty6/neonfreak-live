@@ -14,6 +14,7 @@ import CreatorProfilePage from './CreatorProfilePage'
 import MessagesPage from './MessagesPage'
 import Footer from '../components/Footer'
 import logoWordmark from '../assets/logo-wordmark.png'
+import BecomeCreatorGate from '../components/BecomeCreatorGate'
 
 type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin' | 'creator' | 'messages'
 
@@ -179,9 +180,17 @@ export default function MainApp({ session }: MainAppProps) {
       {/* Main Content */}
       <div className="md:ml-64 pb-20 md:pb-0">
         {currentPage === 'home' && <HomePage session={session} onSelectStream={openRoom} onSelectCreator={openCreator} />}
-        {currentPage === 'setup' && <GoLiveWizard session={session} />}
+        {currentPage === 'setup' && (
+          <BecomeCreatorGate userId={user.id}>
+            <GoLiveWizard session={session} />
+          </BecomeCreatorGate>
+        )}
         {currentPage === 'tips' && <TipPage />}
-        {currentPage === 'analytics' && <AnalyticsDashboard userId={user.id} />}
+        {currentPage === 'analytics' && (
+          <BecomeCreatorGate userId={user.id}>
+            <AnalyticsDashboard userId={user.id} />
+          </BecomeCreatorGate>
+        )}
         {currentPage === 'vods' && <VODLibrary session={session} userId={user.id} />}
         {currentPage === 'profile' && <ProfilePage onViewPublicProfile={() => openCreator(user.id)} />}
         {currentPage === 'messages' && <MessagesPage session={session} initialOtherUserId={messagesTargetUserId} />}

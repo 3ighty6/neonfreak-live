@@ -6,6 +6,7 @@ import ProfileEditModal from '../components/ProfileEditModal'
 import TokenBalance from '../components/TokenBalance'
 import PhotoBundleShop from '../components/PhotoBundleShop'
 import CreatorPerks from '../components/CreatorPerks'
+import BecomeCreatorGate from '../components/BecomeCreatorGate'
 
 interface Profile {
   id: string
@@ -273,7 +274,7 @@ export default function CreatorProfilePage({
                     <div className="p-3">
                       <p className="text-sm font-semibold truncate">{video.title}</p>
                       <p className="text-xs text-gray-500">
-                        {video.price_tokens > 0 ? `${video.price_tokens} tokens` : 'Free'} · {video.view_count} views
+                        {video.price_tokens > 0 ? `${video.price_tokens} tokens` : 'Free'} · {video.view_count} purchased
                       </p>
                     </div>
                   </div>
@@ -287,11 +288,23 @@ export default function CreatorProfilePage({
         )}
 
         {activeTab === 'bundles' && (
-          <PhotoBundleShop session={session} creatorId={creatorId} isOwnProfile={isOwnProfile} />
+          isOwnProfile && !profile.is_streamer ? (
+            <BecomeCreatorGate userId={profile.id}>
+              <PhotoBundleShop session={session} creatorId={creatorId} isOwnProfile={isOwnProfile} />
+            </BecomeCreatorGate>
+          ) : (
+            <PhotoBundleShop session={session} creatorId={creatorId} isOwnProfile={isOwnProfile} />
+          )
         )}
 
         {activeTab === 'perks' && (
-          <CreatorPerks session={session} creatorId={creatorId} isOwnProfile={isOwnProfile} />
+          isOwnProfile && !profile.is_streamer ? (
+            <BecomeCreatorGate userId={profile.id}>
+              <CreatorPerks session={session} creatorId={creatorId} isOwnProfile={isOwnProfile} />
+            </BecomeCreatorGate>
+          ) : (
+            <CreatorPerks session={session} creatorId={creatorId} isOwnProfile={isOwnProfile} />
+          )
         )}
       </div>
 
