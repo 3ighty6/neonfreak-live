@@ -22,6 +22,7 @@ interface VideoRow {
   price_tokens: number
   created_at: string
   users?: { username: string }
+  ai_profile?: { username: string } | null
 }
 
 export default function VODLibrary({ session, userId }: { session: Session; userId: string }) {
@@ -42,12 +43,12 @@ export default function VODLibrary({ session, userId }: { session: Session; user
     const [{ data: all }, { data: mine }, { data: unlocks }] = await Promise.all([
       supabase
         .from('vod_library')
-        .select('*, users:user_id(username)')
+        .select('*, users:user_id(username), ai_profile:posted_as_ai_profile_id(username)')
         .eq('is_public', true)
         .order('created_at', { ascending: false }),
       supabase
         .from('vod_library')
-        .select('*, users:user_id(username)')
+        .select('*, users:user_id(username), ai_profile:posted_as_ai_profile_id(username)')
         .eq('user_id', userId)
         .order('created_at', { ascending: false }),
       supabase.from('video_unlocks').select('video_id').eq('user_id', userId),
@@ -243,8 +244,11 @@ export default function VODLibrary({ session, userId }: { session: Session; user
                     <h3 className="font-semibold mb-1 group-hover:text-cyan-400 transition truncate">
                       {video.title}
                     </h3>
-                    {tab === 'all' && video.users?.username && (
-                      <p className="text-xs text-gray-500 mb-2">by {video.users.username}</p>
+                    {tab === 'all' && (video.ai_profile?.username || video.users?.username) && (
+                      <p className="text-xs text-gray-500 mb-2">
+                        by {video.ai_profile?.username || video.users?.username}
+                        {video.ai_profile && <span className="text-purple-400 ml-1">🤖 AI</span>}
+                      </p>
                     )}
                     <div className="flex gap-3 text-sm text-gray-400 mb-3">
                       <div className="flex items-center gap-1">
@@ -390,7 +394,18 @@ function UploadModal({
   const [file, setFile] = useState<File | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
+  const [aiProfile, setAiProfile] = useState<{ id: string; username: string } | null>(null)
+  const [postAsAi, setPostAsAi] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    supabase
+      .from('creator_ai_profiles')
+      .select('id, username')
+      .eq('parent_user_id', userId)
+      .maybeSingle()
+      .then(({ data }) => setAiProfile(data))
+  }, [userId])
 
   const handleUpload = async () => {
     setError('')
@@ -419,6 +434,7 @@ function UploadModal({
           description: description.trim() || null,
           price_tokens: priceTokens,
           is_public: isPublic,
+          posted_as_ai_profile_id: postAsAi && aiProfile ? aiProfile.id : null,
         })
         .select()
         .single()
@@ -492,6 +508,12 @@ function UploadModal({
             <input type="checkbox" checked={isPublic} onChange={(e) => setIsPublic(e.target.checked)} />
             Show in the public "All Videos" feed
           </label>
+          {aiProfile && (
+            <label className="flex items-center gap-2 text-sm text-purple-300 bg-purple-500/10 border border-purple-500/20 rounded px-3 py-2">
+              <input type="checkbox" checked={postAsAi} onChange={(e) => setPostAsAi(e.target.checked)} />
+              Post as {aiProfile.username} (AI persona) instead of my own name
+            </label>
+          )}
           <div>
             <label className="text-sm text-gray-400 block mb-1">Video file</label>
             <input

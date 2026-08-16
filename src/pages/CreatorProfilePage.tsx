@@ -68,6 +68,7 @@ export default function CreatorProfilePage({
         .select('id, title, thumbnail_url, price_tokens, view_count')
         .eq('user_id', creatorId)
         .eq('is_public', true)
+        .is('posted_as_ai_profile_id', null)
         .order('created_at', { ascending: false }),
       supabase.from('rooms').select('id').eq('streamer_id', creatorId).eq('is_live', true).maybeSingle(),
     ])

@@ -211,7 +211,7 @@ export default function MainApp({ session }: MainAppProps) {
           </BecomeCreatorGate>
         )}
         {currentPage === 'vods' && <VODLibrary session={session} userId={user.id} />}
-        {currentPage === 'profile' && <ProfilePage onViewPublicProfile={() => openCreator(user.id)} />}
+        {currentPage === 'profile' && <ProfilePage onViewPublicProfile={() => openCreator(user.id)} onOpenAIProfile={openAIProfile} />}
         {currentPage === 'messages' && <MessagesPage session={session} initialOtherUserId={messagesTargetUserId} />}
         {currentPage === 'admin' && isAdmin && <AdminDashboard onOpenMessages={openMessages} />}
         <Footer />

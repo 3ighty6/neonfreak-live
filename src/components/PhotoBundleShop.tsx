@@ -36,7 +36,7 @@ export default function PhotoBundleShop({
   const load = async () => {
     setLoading(true)
     const [{ data: bundleData }, { data: unlocks }] = await Promise.all([
-      supabase.from('photo_bundles').select('*').eq('user_id', creatorId).order('created_at', { ascending: false }),
+      supabase.from('photo_bundles').select('*').eq('user_id', creatorId).is('posted_as_ai_profile_id', null).order('created_at', { ascending: false }),
       supabase.from('bundle_unlocks').select('bundle_id').eq('user_id', session.user.id),
     ])
     setBundles(bundleData || [])

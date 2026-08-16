@@ -5,8 +5,15 @@ import type { User } from '../types'
 import EarningsPayouts from '../components/EarningsPayouts'
 import IdVerification from '../components/IdVerification'
 import CreatorBoost from '../components/CreatorBoost'
+import AICreatorProfileManager from '../components/AICreatorProfileManager'
 
-export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfile?: () => void }) {
+export default function ProfilePage({
+  onViewPublicProfile,
+  onOpenAIProfile,
+}: {
+  onViewPublicProfile?: () => void
+  onOpenAIProfile?: (id: string) => void
+}) {
   const [profile, setProfile] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -404,6 +411,13 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
 
         {/* Identity Verification */}
         <IdVerification userId={profile.id} />
+
+        {/* AI Creator Persona */}
+        <AICreatorProfileManager
+          userId={profile.id}
+          isVerified={profile.id_verification_status === 'approved'}
+          onOpenAIProfile={onOpenAIProfile}
+        />
 
         {/* Earnings & Payouts */}
         <EarningsPayouts userId={profile.id} />
