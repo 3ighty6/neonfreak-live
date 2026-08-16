@@ -1,4 +1,14 @@
+import { useState } from 'react'
 import { Users, Heart } from 'lucide-react'
+
+// Extracts the Mux playback ID from an HLS URL (https://stream.mux.com/{id}.m3u8)
+// so we can hit Mux's Image API directly -- works on active live
+// streams too via ?latest=true, refreshed within 10s of the live edge.
+function getMuxPlaybackId(hlsUrl: string | null | undefined): string | null {
+  if (!hlsUrl) return null
+  const match = hlsUrl.match(/stream\.mux\.com\/([^.]+)\.m3u8/)
+  return match ? match[1] : null
+}
 
 export default function LiveStreamCard({
   stream,
@@ -9,14 +19,37 @@ export default function LiveStreamCard({
   onClick?: () => void
   onCreatorClick?: (creatorId: string) => void
 }) {
+  const [hovering, setHovering] = useState(false)
+  const playbackId = getMuxPlaybackId(stream.hls_url)
+
   return (
     <div
       onClick={onClick}
+      onMouseEnter={() => setHovering(true)}
+      onMouseLeave={() => setHovering(false)}
       className="neon-card group cursor-pointer overflow-hidden"
     >
       {/* Thumbnail */}
       <div className="relative bg-gradient-to-b from-purple-600/30 to-black h-40 overflow-hidden">
-        {stream.thumbnail_url ? (
+        {playbackId ? (
+          <>
+            <img
+              src={`https://image.mux.com/${playbackId}/thumbnail.jpg?width=400&latest=true`}
+              alt={stream.title}
+              className={`w-full h-full object-cover transition-opacity duration-200 ${hovering ? 'opacity-0' : 'opacity-100'}`}
+              onError={(e) => {
+                ;(e.target as HTMLImageElement).style.display = 'none'
+              }}
+            />
+            {/* Animated preview on hover -- Mux's Image API also serves
+                GIFs from live streams, not just VOD */}
+            <img
+              src={`https://image.mux.com/${playbackId}/animated.gif?width=400&latest=true`}
+              alt=""
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${hovering ? 'opacity-100' : 'opacity-0'}`}
+            />
+          </>
+        ) : stream.thumbnail_url ? (
           <img src={stream.thumbnail_url} alt={stream.title} className="w-full h-full object-cover" />
         ) : (
           <div className="absolute inset-0 flex items-center justify-center">
