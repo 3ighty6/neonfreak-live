@@ -16,6 +16,7 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
   const [bio, setBio] = useState('')
   const [isAiCreator, setIsAiCreator] = useState(false)
   const [aiDisclosure, setAiDisclosure] = useState('')
+  const [pricePerMinute, setPricePerMinute] = useState('')
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [error, setError] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -51,6 +52,7 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
       setBio(data.bio || '')
       setIsAiCreator(!!data.is_ai_creator)
       setAiDisclosure(data.ai_disclosure || '')
+      setPricePerMinute(data.price_per_minute_tokens ? String(data.price_per_minute_tokens) : '')
     }
     setLoading(false)
   }
@@ -67,6 +69,7 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
         bio: bio.trim(),
         is_ai_creator: isAiCreator,
         ai_disclosure: isAiCreator ? aiDisclosure.trim() || 'This profile features AI-generated content.' : null,
+        price_per_minute_tokens: pricePerMinute ? parseInt(pricePerMinute, 10) : null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', profile.id)
@@ -78,7 +81,14 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
       return
     }
 
-    setProfile({ ...profile, username: username.trim(), bio: bio.trim(), is_ai_creator: isAiCreator, ai_disclosure: aiDisclosure.trim() || null })
+    setProfile({
+      ...profile,
+      username: username.trim(),
+      bio: bio.trim(),
+      is_ai_creator: isAiCreator,
+      ai_disclosure: aiDisclosure.trim() || null,
+      price_per_minute_tokens: pricePerMinute ? parseInt(pricePerMinute, 10) : null,
+    })
     setIsEditing(false)
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
@@ -90,6 +100,7 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
       setBio(profile.bio || '')
       setIsAiCreator(!!profile.is_ai_creator)
       setAiDisclosure(profile.ai_disclosure || '')
+      setPricePerMinute(profile.price_per_minute_tokens ? String(profile.price_per_minute_tokens) : '')
     }
     setIsEditing(false)
     setError('')
@@ -283,6 +294,23 @@ export default function ProfilePage({ onViewPublicProfile }: { onViewPublicProfi
                   className="w-full bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm text-white disabled:opacity-50"
                 />
               )}
+            </div>
+
+            <div>
+              <label className="text-sm text-gray-400 block mb-2">Private show rate (tokens/min, optional)</label>
+              <input
+                type="number"
+                min={1}
+                value={pricePerMinute}
+                onChange={(e) => setPricePerMinute(e.target.value)}
+                disabled={!isEditing}
+                placeholder="e.g. 20"
+                className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-white disabled:opacity-50"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Shown to viewers as a reference rate when they request a private show — they still name their own offer,
+                this just sets expectations.
+              </p>
             </div>
 
             <div>

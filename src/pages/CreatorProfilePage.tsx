@@ -19,6 +19,7 @@ interface Profile {
   is_verified: boolean
   is_streamer: boolean
   is_ai_creator?: boolean
+  price_per_minute_tokens?: number | null
   ai_disclosure?: string | null
 }
 
@@ -59,7 +60,7 @@ export default function CreatorProfilePage({
     const [{ data: profileData }, { data: videoData }, { data: roomData }] = await Promise.all([
       supabase
         .from('users')
-        .select('id, username, bio, avatar_url, followers_count, following_count, total_earnings, is_verified, is_streamer, is_ai_creator, ai_disclosure')
+        .select('id, username, bio, avatar_url, followers_count, following_count, total_earnings, is_verified, is_streamer, is_ai_creator, ai_disclosure, price_per_minute_tokens')
         .eq('id', creatorId)
         .single(),
       supabase
@@ -160,6 +161,12 @@ export default function CreatorProfilePage({
               )}
 
               <p className="text-gray-400 mb-4">{profile.bio || 'No bio yet.'}</p>
+
+              {profile.price_per_minute_tokens && (
+                <p className="text-sm text-pink-300 mb-4">
+                  🔒 Private show rate: <span className="font-semibold">{profile.price_per_minute_tokens} tokens/min</span>
+                </p>
+              )}
 
               <div className="flex gap-8 mb-6">
                 <div>

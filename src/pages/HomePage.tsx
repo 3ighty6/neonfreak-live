@@ -122,7 +122,8 @@ export default function HomePage({
     const matchesSearch =
       !query ||
       stream.title.toLowerCase().includes(query) ||
-      (stream.users?.username || '').toLowerCase().includes(query)
+      (stream.users?.username || '').toLowerCase().includes(query) ||
+      (stream.tags || []).some((t: string) => t.toLowerCase().includes(query))
     const matchesFollowing = !followingOnly || followedIds.has(stream.streamer_id)
     return matchesCategory && matchesSearch && matchesFollowing
   })
@@ -143,7 +144,7 @@ export default function HomePage({
           <Search className="absolute left-4 top-3 text-pink-500" size={20} />
           <input
             type="text"
-            placeholder="Search creators..."
+            placeholder="Search creators, titles, or tags..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-pink-500/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-pink-400 transition focus:shadow-lg focus:shadow-pink-500/30"

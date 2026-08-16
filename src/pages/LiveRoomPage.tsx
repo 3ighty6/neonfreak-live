@@ -20,7 +20,7 @@ interface RoomInfo {
   hls_url: string | null
   is_live: boolean
   viewer_count: number
-  users?: { username: string; is_ai_creator?: boolean }
+  users?: { username: string; is_ai_creator?: boolean; price_per_minute_tokens?: number | null }
 }
 
 export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }: LiveRoomPageProps) {
@@ -66,7 +66,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
     const loadRoom = async () => {
       const { data } = await supabase
         .from('rooms')
-        .select('id, title, streamer_id, hls_url, is_live, viewer_count, users:streamer_id(username, is_ai_creator)')
+        .select('id, title, streamer_id, hls_url, is_live, viewer_count, users:streamer_id(username, is_ai_creator, price_per_minute_tokens)')
         .eq('id', roomId)
         .single()
       if (data) {
@@ -443,6 +443,11 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
             <p className="text-sm text-gray-400 mb-4">
               Offer tokens for an exclusive session. The creator can accept or decline — you're only charged if they accept.
             </p>
+            {room?.users?.price_per_minute_tokens && (
+              <p className="text-xs text-pink-300 mb-4">
+                Reference rate: {room.users.price_per_minute_tokens} tokens/min
+              </p>
+            )}
             {privateShowError && (
               <div className="mb-3 p-2 bg-red-500/10 border border-red-500/30 rounded text-red-300 text-xs">{privateShowError}</div>
             )}

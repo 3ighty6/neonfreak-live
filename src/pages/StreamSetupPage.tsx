@@ -13,6 +13,7 @@ const WS_RELAY_URL = 'wss://whip-relay-v3-production.up.railway.app'
 export default function StreamSetupPage({ session }: { session: Session }) {
   const [copied, setCopied] = useState<string | null>(null)
   const [title, setTitle] = useState('')
+  const [tagsInput, setTagsInput] = useState('')
   const [rtmpUrl, setRtmpUrl] = useState('')
   const [rtmpKey, setRtmpKey] = useState('')
   const [hlsUrl, setHlsUrl] = useState('')
@@ -134,6 +135,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
           rtmp_key: data.rtmpStreamKey,
           hls_url: data.hlsUrl,
           mux_stream_id: data.muxStreamId || null,
+          tags: tagsInput.split(',').map((t) => t.trim().toLowerCase()).filter(Boolean),
           is_live: false,
           started_at: new Date().toISOString(),
         })
@@ -520,6 +522,16 @@ export default function StreamSetupPage({ session }: { session: Session }) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="What are you streaming today?"
+                className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-white"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="text-sm text-gray-400 block mb-2">Tags (comma separated — helps viewers find you)</label>
+              <input
+                type="text"
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+                placeholder="e.g. blonde, roleplay, gaming"
                 className="w-full bg-gray-800 border border-gray-700 rounded px-4 py-2 text-white"
               />
             </div>

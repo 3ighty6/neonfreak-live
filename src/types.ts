@@ -16,6 +16,7 @@ export interface User {
   view_count: number
   last_login: string | null
   is_ai_creator?: boolean
+  price_per_minute_tokens?: number | null
   ai_disclosure?: string | null
   stripe_connect_id?: string | null
   stripe_connect_onboarded?: boolean

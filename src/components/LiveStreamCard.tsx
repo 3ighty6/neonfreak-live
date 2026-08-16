@@ -47,6 +47,15 @@ export default function LiveStreamCard({
       {/* Info */}
       <div className="p-3">
         <h3 className="font-semibold text-white line-clamp-2 mb-2">{stream.title}</h3>
+        {stream.tags && stream.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {stream.tags.slice(0, 3).map((tag: string) => (
+              <span key={tag} className="text-[10px] bg-white/5 border border-white/10 text-cyan-300 px-2 py-0.5 rounded-full">
+                #{tag}
+              </span>
+            ))}
+          </div>
+        )}
         <p
           onClick={(e) => {
             if (onCreatorClick && stream.streamer_id) {
