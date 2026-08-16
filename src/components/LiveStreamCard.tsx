@@ -12,7 +12,7 @@ export default function LiveStreamCard({
   return (
     <div
       onClick={onClick}
-      className="group cursor-pointer rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/50 transition"
+      className="neon-card group cursor-pointer overflow-hidden"
     >
       {/* Thumbnail */}
       <div className="relative bg-gradient-to-b from-purple-600/30 to-black h-40 overflow-hidden">
@@ -23,6 +23,8 @@ export default function LiveStreamCard({
             <div className="text-gray-500">Stream Preview</div>
           </div>
         )}
+        {/* Soft vignette so the frame reads as a "neon window" rather than a flat crop */}
+        <div className="absolute inset-0 shadow-[inset_0_0_40px_10px_rgba(0,0,0,0.6)] pointer-events-none" />
         {stream.promotionTier && (
           <div
             className={`absolute top-3 left-3 px-3 py-1 rounded-full text-xs font-bold ${
@@ -36,14 +38,14 @@ export default function LiveStreamCard({
             {stream.promotionTier === 'elite' ? '👑 Elite' : stream.promotionTier === 'featured' ? '⭐ Featured' : '🚀 Boosted'}
           </div>
         )}
-        <div className="absolute top-3 right-3 bg-red-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-          <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+        <div className="absolute top-3 right-3 bg-gradient-to-r from-pink-600 to-red-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 live-badge-pulse">
+          <span className="w-2 h-2 bg-white rounded-full"></span>
           LIVE
         </div>
       </div>
 
       {/* Info */}
-      <div className="bg-black/50 p-3">
+      <div className="p-3">
         <h3 className="font-semibold text-white line-clamp-2 mb-2">{stream.title}</h3>
         <p
           onClick={(e) => {

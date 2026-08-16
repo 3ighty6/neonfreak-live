@@ -40,4 +40,116 @@
   .card {
     @apply bg-black/50 border border-cyan-500/30 rounded-lg p-6;
   }
+
+  /* ===== Neon design system =====
+     "Midnight strip-club meets high-end neon cyber lounge" -- dark
+     violet/black base, cyan-to-pink neon accents, soft glow instead of
+     hard edges, gold reserved for money/tip moments. Applied broadly
+     across the highest-traffic surfaces (homepage, stream cards, nav)
+     rather than every single component in one pass -- these are the
+     shared primitives so the rest can adopt them incrementally. */
+
+  .glass-panel {
+    @apply bg-gradient-to-br from-[#1a0b2e]/60 to-black/60 backdrop-blur-md border border-cyan-500/20 rounded-xl;
+  }
+
+  .glass-panel-glow {
+    @apply glass-panel shadow-[0_0_20px_-5px_rgba(0,240,255,0.15)] transition-shadow duration-300;
+  }
+
+  .glass-panel-glow:hover {
+    @apply shadow-[0_0_30px_-5px_rgba(0,240,255,0.3)] border-pink-500/30;
+  }
+
+  .neon-card {
+    @apply bg-gradient-to-br from-[#1a0b2e] to-black border border-white/10 rounded-xl transition-all duration-300;
+  }
+
+  .neon-card:hover {
+    @apply border-cyan-400/50 -translate-y-1 shadow-[0_8px_30px_-8px_rgba(255,45,149,0.35)];
+  }
+
+  .neon-pill {
+    @apply px-4 py-2 rounded-full whitespace-nowrap transition-all duration-200 font-semibold border;
+  }
+
+  .neon-pill-active {
+    @apply bg-gradient-to-r from-cyan-400 to-pink-500 text-black border-transparent shadow-[0_0_16px_-2px_rgba(255,45,149,0.6)];
+  }
+
+  .neon-pill-inactive {
+    @apply bg-white/5 text-gray-300 border-white/10 hover:border-cyan-400/40 hover:text-cyan-300;
+  }
+
+  .neon-text {
+    background: linear-gradient(90deg, #00f0ff, #ff2d95);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    filter: drop-shadow(0 0 12px rgba(255, 45, 149, 0.35));
+  }
+
+  .neon-icon-glow {
+    @apply transition-all duration-200;
+    filter: drop-shadow(0 0 0px transparent);
+  }
+
+  .neon-icon-glow:hover,
+  .neon-icon-glow.active {
+    filter: drop-shadow(0 0 6px rgba(0, 240, 255, 0.8));
+  }
+
+  .live-badge-pulse {
+    animation: live-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes live-pulse {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(255, 45, 149, 0.6);
+    }
+    50% {
+      box-shadow: 0 0 0 6px rgba(255, 45, 149, 0);
+    }
+  }
+
+  /* Subtle floating dust/particle field -- decorative only, kept low
+     opacity and slow-moving so it never competes with real content. */
+  .particle-field {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .particle-field span {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 240, 255, 0.8), transparent 70%);
+    animation: particle-drift 18s linear infinite;
+    opacity: 0;
+  }
+
+  .particle-field span:nth-child(odd) {
+    background: radial-gradient(circle, rgba(255, 45, 149, 0.8), transparent 70%);
+  }
+
+  @keyframes particle-drift {
+    0% {
+      transform: translateY(0) translateX(0);
+      opacity: 0;
+    }
+    10% {
+      opacity: 0.6;
+    }
+    90% {
+      opacity: 0.4;
+    }
+    100% {
+      transform: translateY(-120px) translateX(20px);
+      opacity: 0;
+    }
+  }
 }

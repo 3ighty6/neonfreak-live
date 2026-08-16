@@ -5,6 +5,7 @@ import { Search, Users, TrendingUp, Radio, Heart } from 'lucide-react'
 import LiveStreamCard from '../components/LiveStreamCard'
 import DiscoverCreators from '../components/DiscoverCreators'
 import Leaderboard from '../components/Leaderboard'
+import ParticleField from '../components/ParticleField'
 
 export default function HomePage({
   session,
@@ -127,13 +128,15 @@ export default function HomePage({
   })
 
   return (
-    <div className="p-4 md:p-6">
+    <div className="p-4 md:p-6 relative">
+      <ParticleField count={25} />
+      <div className="relative z-10">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-cyan-400 to-yellow-300 mb-2">
-          🎬 NeonLights
+        <h1 className="text-3xl md:text-4xl font-black text-white mb-2">
+          Discover <span className="neon-text">Live Creators</span>
         </h1>
-        <p className="text-cyan-300 text-lg mb-4">Discover Live Creators</p>
+        <p className="text-gray-400 text-sm mb-4">Everything happening on NeonLights right now</p>
         
         {/* Search Bar */}
         <div className="relative mb-6">
@@ -151,22 +154,14 @@ export default function HomePage({
         <div className="flex overflow-x-auto gap-2 pb-2">
           <button
             onClick={() => setFollowingOnly((v) => !v)}
-            className={`px-4 py-2 rounded-full whitespace-nowrap transition font-semibold flex items-center gap-1.5 ${
-              followingOnly
-                ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/50'
-                : 'bg-slate-800/50 text-gray-300 hover:bg-slate-700/50 border border-pink-500/30'
-            }`}
+            className={`neon-pill flex items-center gap-1.5 ${followingOnly ? 'neon-pill-active' : 'neon-pill-inactive'}`}
           >
             <Heart size={14} fill={followingOnly ? 'currentColor' : 'none'} />
             Following
           </button>
           <button
             onClick={() => setSelectedCategory(null)}
-            className={`px-4 py-2 rounded-full whitespace-nowrap transition font-semibold ${
-              !selectedCategory 
-                ? 'bg-gradient-to-r from-pink-500 to-cyan-500 text-white shadow-lg shadow-pink-500/50' 
-                : 'bg-slate-800/50 text-gray-300 hover:bg-slate-700/50 border border-pink-500/30'
-            }`}
+            className={`neon-pill ${!selectedCategory ? 'neon-pill-active' : 'neon-pill-inactive'}`}
           >
             All
           </button>
@@ -174,11 +169,7 @@ export default function HomePage({
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`px-4 py-2 rounded-full whitespace-nowrap transition font-semibold ${
-                selectedCategory === cat.id 
-                  ? 'bg-gradient-to-r from-pink-500 to-cyan-500 text-white shadow-lg shadow-pink-500/50' 
-                  : 'bg-slate-800/50 text-gray-300 hover:bg-slate-700/50 border border-pink-500/30'
-              }`}
+              className={`neon-pill ${selectedCategory === cat.id ? 'neon-pill-active' : 'neon-pill-inactive'}`}
             >
               {cat.icon} {cat.name}
             </button>
@@ -190,13 +181,13 @@ export default function HomePage({
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-gradient-to-br from-pink-600/20 to-cyan-600/20 border border-pink-500/30 rounded-lg p-4 shadow-lg shadow-pink-500/10">
+        <div className="glass-panel-glow p-4">
           <div className="flex items-center gap-2 text-cyan-300 text-sm mb-2">
-            <Radio size={16} /> 🔴 Live Now
+            <Radio size={16} /> <span className="live-badge-pulse w-2 h-2 rounded-full bg-pink-500 inline-block" /> Live Now
           </div>
           <div className="text-2xl font-bold text-pink-400">{streams.length}</div>
         </div>
-        <div className="bg-gradient-to-br from-cyan-600/20 to-yellow-600/20 border border-cyan-500/30 rounded-lg p-4 shadow-lg shadow-cyan-500/10">
+        <div className="glass-panel-glow p-4">
           <div className="flex items-center gap-2 text-cyan-300 text-sm mb-2">
             <Users size={16} /> Viewers
           </div>
@@ -204,7 +195,7 @@ export default function HomePage({
             {streams.reduce((sum, s) => sum + s.viewer_count, 0).toLocaleString()}
           </div>
         </div>
-        <div className="bg-gradient-to-br from-yellow-600/20 to-pink-600/20 border border-yellow-500/30 rounded-lg p-4 shadow-lg shadow-yellow-500/10">
+        <div className="glass-panel-glow p-4">
           <div className="flex items-center gap-2 text-yellow-300 text-sm mb-2">
             <TrendingUp size={16} /> Tips Today
           </div>
@@ -241,6 +232,7 @@ export default function HomePage({
       {!loading && !followingOnly && (
         <DiscoverCreators creators={allCreators} onSelectCreator={onSelectCreator} />
       )}
+      </div>
     </div>
   )
 }

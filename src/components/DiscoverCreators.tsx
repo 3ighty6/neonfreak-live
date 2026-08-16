@@ -18,12 +18,9 @@ interface Creator {
 
 function CreatorTile({ creator, onClick }: { creator: Creator; onClick: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      className="bg-slate-800/50 border border-pink-500/20 hover:border-pink-500/50 rounded-lg p-4 text-left transition group"
-    >
+    <button onClick={onClick} className="neon-card group text-left p-4">
       <div className="flex items-center gap-3 mb-2">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-500 to-cyan-500 flex items-center justify-center text-xl overflow-hidden flex-shrink-0">
+        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center text-xl overflow-hidden flex-shrink-0 ring-2 ring-white/10 group-hover:ring-cyan-400/40 transition">
           {creator.avatar_url ? (
             <img src={creator.avatar_url} alt="" className="w-full h-full object-cover" />
           ) : (

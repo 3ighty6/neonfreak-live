@@ -13,6 +13,7 @@ import AdminDashboard from './AdminDashboard'
 import CreatorProfilePage from './CreatorProfilePage'
 import MessagesPage from './MessagesPage'
 import Footer from '../components/Footer'
+import logoWordmark from '../assets/logo-wordmark.png'
 
 type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin' | 'creator' | 'messages'
 
@@ -124,29 +125,25 @@ export default function MainApp({ session }: MainAppProps) {
               key={id}
               onClick={() => setCurrentPage(id)}
               className={`flex-1 py-3 flex justify-center transition min-w-max ${
-                currentPage === id
-                  ? 'text-pink-400 border-t-2 border-pink-500 drop-shadow-lg drop-shadow-pink-500'
-                  : 'text-gray-400 hover:text-cyan-300'
+                currentPage === id ? 'text-pink-400 border-t-2 border-pink-500' : 'text-gray-400 hover:text-cyan-300'
               }`}
             >
-              <Icon size={24} />
+              <Icon size={24} className={`neon-icon-glow ${currentPage === id ? 'active' : ''}`} />
             </button>
           ))}
           <button
             onClick={handleLogout}
             className="flex-1 py-3 flex justify-center transition min-w-max text-gray-400 hover:text-pink-400"
           >
-            <LogOut size={24} />
+            <LogOut size={24} className="neon-icon-glow" />
           </button>
         </div>
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:fixed md:left-0 md:top-0 md:w-64 md:h-screen md:bg-gradient-to-b md:from-slate-900 md:to-slate-950 md:border-r md:border-pink-500/30 md:flex md:flex-col md:z-50">
+      <div className="hidden md:fixed md:left-0 md:top-0 md:w-64 md:h-screen md:bg-gradient-to-b md:from-[#0d0a1a] md:to-black md:border-r md:border-white/5 md:flex md:flex-col md:z-50">
         <div className="p-6 border-b border-pink-500/30">
-          <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-cyan-400 to-yellow-300">
-            🎬 NeonLights
-          </h1>
+          <img src={logoWordmark} alt="NeonLights" className="h-8 w-auto drop-shadow-[0_0_12px_rgba(255,45,149,0.4)]" />
           <p className="text-xs text-cyan-400 mt-1">Creator Platform</p>
         </div>
 
@@ -155,13 +152,13 @@ export default function MainApp({ session }: MainAppProps) {
             <button
               key={id}
               onClick={() => setCurrentPage(id)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition ${
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 currentPage === id
-                  ? 'bg-gradient-to-r from-pink-500 to-cyan-500 text-white font-semibold shadow-lg shadow-pink-500/50'
-                  : 'text-gray-300 hover:text-cyan-300 hover:bg-slate-800/50'
+                  ? 'bg-white/5 text-cyan-300 font-semibold border border-cyan-400/30 shadow-[0_0_16px_-4px_rgba(0,240,255,0.4)]'
+                  : 'text-gray-400 hover:text-cyan-300 hover:bg-white/5'
               }`}
             >
-              <Icon size={20} />
+              <Icon size={20} className={`neon-icon-glow ${currentPage === id ? 'active' : ''}`} />
               {label}
             </button>
           ))}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
+import logoWordmark from '../assets/logo-wordmark.png'
 
 type Mode = 'login' | 'signup' | 'forgot' | 'recovery'
 
@@ -187,9 +188,7 @@ export default function AuthPage() {
       <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-10 items-center">
         {/* Marketing / earning breakdown */}
         <div className="order-2 lg:order-1">
-          <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-cyan-400 to-yellow-300 mb-2">
-            🎬 NeonLights
-          </h1>
+          <img src={logoWordmark} alt="NeonLights" className="h-16 w-auto mb-2 drop-shadow-[0_0_18px_rgba(255,45,149,0.45)]" />
           <p className="text-cyan-300 text-lg mb-6">The all-in-one creator platform</p>
 
           <p className="text-gray-300 mb-6 max-w-md">
