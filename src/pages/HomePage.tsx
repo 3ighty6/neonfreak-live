@@ -27,6 +27,7 @@ export default function HomePage({
   const [followingOnly, setFollowingOnly] = useState(false)
   const [tipsToday, setTipsToday] = useState(0)
   const [allCreators, setAllCreators] = useState<any[]>([])
+  const [viewerIsVip, setViewerIsVip] = useState(false)
 
   useEffect(() => {
     const loadFollowed = async () => {
@@ -88,6 +89,14 @@ export default function HomePage({
         .select('*', { count: 'exact', head: true })
         .gte('created_at', todayStart.toISOString())
       setTipsToday(count || 0)
+
+      const { data: vip } = await supabase
+        .from('viewer_vip_subscriptions')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('status', 'active')
+        .maybeSingle()
+      setViewerIsVip(!!vip)
 
       // Everyone with a discoverable footprint (streamed, or has
       // videos/bundles/perks listed) -- not just who's live right now.
@@ -247,6 +256,7 @@ export default function HomePage({
               stream={stream}
               onClick={() => onSelectStream?.(stream.id)}
               onCreatorClick={onSelectCreator}
+              viewerIsVip={viewerIsVip}
             />
           ))}
         </div>

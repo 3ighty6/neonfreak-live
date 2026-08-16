@@ -14,13 +14,16 @@ export default function LiveStreamCard({
   stream,
   onClick,
   onCreatorClick,
+  viewerIsVip,
 }: {
   stream: any
   onClick?: () => void
   onCreatorClick?: (creatorId: string) => void
+  viewerIsVip?: boolean
 }) {
   const [hovering, setHovering] = useState(false)
   const playbackId = getMuxPlaybackId(stream.hls_url)
+  const showAnimatedPreview = hovering && viewerIsVip
 
   return (
     <div
@@ -36,18 +39,23 @@ export default function LiveStreamCard({
             <img
               src={`https://image.mux.com/${playbackId}/thumbnail.jpg?width=400&latest=true`}
               alt={stream.title}
-              className={`w-full h-full object-cover transition-opacity duration-200 ${hovering ? 'opacity-0' : 'opacity-100'}`}
+              className={`w-full h-full object-cover transition-opacity duration-200 ${showAnimatedPreview ? 'opacity-0' : 'opacity-100'}`}
               onError={(e) => {
                 ;(e.target as HTMLImageElement).style.display = 'none'
               }}
             />
-            {/* Animated preview on hover -- Mux's Image API also serves
-                GIFs from live streams, not just VOD */}
+            {/* Animated preview on hover -- VIP only. Mux's Image API
+                also serves GIFs from live streams, not just VOD */}
             <img
               src={`https://image.mux.com/${playbackId}/animated.gif?width=400&latest=true`}
               alt=""
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${hovering ? 'opacity-100' : 'opacity-0'}`}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-200 ${showAnimatedPreview ? 'opacity-100' : 'opacity-0'}`}
             />
+            {hovering && !viewerIsVip && (
+              <div className="absolute bottom-2 left-2 bg-black/80 text-amber-300 text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+                👑 VIP sees a live preview here
+              </div>
+            )}
           </>
         ) : stream.thumbnail_url ? (
           <img src={stream.thumbnail_url} alt={stream.title} className="w-full h-full object-cover" />

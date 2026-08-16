@@ -6,6 +6,7 @@ import EarningsPayouts from '../components/EarningsPayouts'
 import IdVerification from '../components/IdVerification'
 import CreatorBoost from '../components/CreatorBoost'
 import AICreatorProfileManager from '../components/AICreatorProfileManager'
+import ViewerVIP from '../components/ViewerVIP'
 
 export default function ProfilePage({
   onViewPublicProfile,
@@ -408,6 +409,9 @@ export default function ProfilePage({
             </button>
           </div>
         </div>
+
+        {/* VIP Membership -- relevant to every account, not just creators */}
+        <ViewerVIP userId={profile.id} />
 
         {/* Identity Verification */}
         <IdVerification userId={profile.id} />

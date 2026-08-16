@@ -25,6 +25,11 @@ const CREATOR_TIER_PRICES_USD_CENTS: Record<string, number> = {
   elite: 9999, // $99.99/mo -- high-anchor tier
 }
 
+// Viewer-side membership -- one tier for now, modeled on Chaturbate's
+// Premium ($19.95/mo per the competitive research) and Flirt4Free's
+// VIP (bonus value on spend, not a content unlock).
+const VIEWER_VIP_PRICE_USD_CENTS = 1999 // $19.99/mo
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
@@ -35,7 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const { kind, userId, creatorId, amountUsdCents, tokens, label, returnRoomId, tier } = req.body as {
-    kind: 'tip' | 'tokens' | 'creator_subscription'
+    kind: 'tip' | 'tokens' | 'creator_subscription' | 'viewer_vip'
     userId: string
     creatorId?: string
     amountUsdCents?: number
@@ -54,7 +59,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (kind === 'creator_subscription' && (!tier || !CREATOR_TIER_PRICES_USD_CENTS[tier])) {
     return res.status(400).json({ error: 'Missing or invalid tier' })
   }
-  if (kind !== 'creator_subscription' && !amountUsdCents) {
+  if (kind !== 'creator_subscription' && kind !== 'viewer_vip' && !amountUsdCents) {
     return res.status(400).json({ error: 'Missing amountUsdCents' })
   }
 
@@ -64,6 +69,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const successUrl = returnRoomId
       ? `${SITE_URL}/?checkout=success&room=${returnRoomId}`
       : `${SITE_URL}/?checkout=success`
+
+    if (kind === 'viewer_vip') {
+      const session = await stripe.checkout.sessions.create({
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              unit_amount: VIEWER_VIP_PRICE_USD_CENTS,
+              recurring: { interval: 'month' },
+              product_data: { name: 'NeonLights VIP Membership' },
+            },
+            quantity: 1,
+          },
+        ],
+        metadata: { kind, userId },
+        success_url: `${SITE_URL}/?checkout=success`,
+        cancel_url: `${SITE_URL}/?checkout=cancelled`,
+      })
+      return res.json({ checkoutUrl: session.url, sessionId: session.id })
+    }
 
     if (kind === 'creator_subscription') {
       const session = await stripe.checkout.sessions.create({

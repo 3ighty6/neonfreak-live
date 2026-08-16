@@ -93,6 +93,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           stripe_customer_id: session.customer as string,
           status: 'active',
         })
+      } else if (kind === 'viewer_vip' && userId && session.subscription && session.customer) {
+        await supabase.from('viewer_vip_subscriptions').insert({
+          user_id: userId,
+          stripe_subscription_id: session.subscription as string,
+          stripe_customer_id: session.customer as string,
+          status: 'active',
+        })
       }
     } else if (event.type === 'customer.subscription.updated' || event.type === 'customer.subscription.deleted') {
       const sub = event.data.object as Stripe.Subscription
@@ -104,16 +111,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             ? 'past_due'
             : 'canceled'
 
-      await supabase
-        .from('creator_subscriptions')
-        .update({
-          status,
-          current_period_end: (sub as any).current_period_end
-            ? new Date((sub as any).current_period_end * 1000).toISOString()
-            : null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('stripe_subscription_id', sub.id)
+      const updatePayload = {
+        status,
+        current_period_end: (sub as any).current_period_end
+          ? new Date((sub as any).current_period_end * 1000).toISOString()
+          : null,
+        updated_at: new Date().toISOString(),
+      }
+
+      // A given subscription ID only ever exists in one of these two
+      // tables -- updating both is harmless (the non-matching one
+      // just affects zero rows) and avoids needing to track which
+      // table a subscription belongs to separately.
+      await supabase.from('creator_subscriptions').update(updatePayload).eq('stripe_subscription_id', sub.id)
+      await supabase.from('viewer_vip_subscriptions').update(updatePayload).eq('stripe_subscription_id', sub.id)
     }
 
     res.json({ received: true })
