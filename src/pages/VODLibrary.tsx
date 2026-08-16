@@ -5,6 +5,7 @@ import { Play, Trash2, Eye, Lock, Upload, X, Loader2, ShoppingCart } from 'lucid
 import { supabase } from '../supabaseClient'
 import { TOKEN_PACKAGES, createTokenCheckout } from '../lib/stripe'
 import TagAndEarn from '../components/TagAndEarn'
+import ContentReviews from '../components/ContentReviews'
 
 interface VideoRow {
   id: string
@@ -291,7 +292,7 @@ export default function VODLibrary({ session, userId }: { session: Session; user
 
       {playingVideo && (
         <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-4xl">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-2">
               <h3 className="font-semibold">{playingVideo.row.title}</h3>
               <button onClick={() => setPlayingVideo(null)} className="text-gray-400 hover:text-white">
@@ -299,6 +300,12 @@ export default function VODLibrary({ session, userId }: { session: Session; user
               </button>
             </div>
             <VideoPlayer url={playingVideo.url} />
+            <ContentReviews
+              contentType="video"
+              contentId={playingVideo.row.id}
+              userId={userId}
+              canReview={playingVideo.row.user_id === userId || unlockedIds.has(playingVideo.row.id)}
+            />
           </div>
         </div>
       )}

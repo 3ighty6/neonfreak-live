@@ -3,6 +3,7 @@ import { Session } from '@supabase/supabase-js'
 import { ShoppingBag, Lock, Upload, X, Loader2, Trash2 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { TOKEN_PACKAGES, createTokenCheckout } from '../lib/stripe'
+import ContentReviews from './ContentReviews'
 
 interface Bundle {
   id: string
@@ -204,6 +205,12 @@ export default function PhotoBundleShop({
                 <img key={i} src={url} className="w-full aspect-square object-cover rounded" alt="" />
               ))}
             </div>
+            <ContentReviews
+              contentType="bundle"
+              contentId={viewingBundle.bundle.id}
+              userId={session.user.id}
+              canReview={viewingBundle.bundle.user_id === session.user.id || unlockedIds.has(viewingBundle.bundle.id)}
+            />
           </div>
         </div>
       )}
