@@ -14,6 +14,7 @@ interface Creator {
   bundle_count: number
   perk_count: number
   promotionTier?: string | null
+  isAiProfile?: boolean
 }
 
 function CreatorTile({ creator, onClick }: { creator: Creator; onClick: () => void }) {
@@ -74,10 +75,20 @@ function CreatorTile({ creator, onClick }: { creator: Creator; onClick: () => vo
 export default function DiscoverCreators({
   creators,
   onSelectCreator,
+  onSelectAIProfile,
 }: {
   creators: Creator[]
   onSelectCreator?: (id: string) => void
+  onSelectAIProfile?: (id: string) => void
 }) {
+  const handleClick = (c: Creator) => {
+    if (c.isAiProfile) {
+      onSelectAIProfile?.(c.id)
+    } else {
+      onSelectCreator?.(c.id)
+    }
+  }
+
   const sortedByFollowers = [...creators].sort((a, b) => b.followers_count - a.followers_count)
   const newest = [...creators]
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
@@ -95,7 +106,7 @@ export default function DiscoverCreators({
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {newest.map((c) => (
-              <CreatorTile key={c.id} creator={c} onClick={() => onSelectCreator?.(c.id)} />
+              <CreatorTile key={c.id} creator={c} onClick={() => handleClick(c)} />
             ))}
           </div>
         </div>
@@ -106,7 +117,7 @@ export default function DiscoverCreators({
         <p className="text-sm text-gray-500 mb-4">Not everyone's live right now — browse creators and what they're selling.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {sortedByFollowers.map((c) => (
-            <CreatorTile key={c.id} creator={c} onClick={() => onSelectCreator?.(c.id)} />
+            <CreatorTile key={c.id} creator={c} onClick={() => handleClick(c)} />
           ))}
         </div>
       </div>

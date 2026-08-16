@@ -331,6 +331,7 @@ export default function AuthPage() {
             <>
               <div className="flex gap-2 mb-6">
                 <button
+                  type="button"
                   onClick={() => setMode('login')}
                   className={`flex-1 py-3 rounded-lg font-semibold transition ${
                     mode === 'login'
@@ -341,6 +342,7 @@ export default function AuthPage() {
                   Login
                 </button>
                 <button
+                  type="button"
                   onClick={() => setMode('signup')}
                   className={`flex-1 py-3 rounded-lg font-semibold transition ${
                     mode === 'signup'

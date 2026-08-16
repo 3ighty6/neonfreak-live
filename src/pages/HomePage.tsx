@@ -11,10 +11,12 @@ export default function HomePage({
   session,
   onSelectStream,
   onSelectCreator,
+  onSelectAIProfile,
 }: {
   session: Session
   onSelectStream?: (roomId: string) => void
   onSelectCreator?: (creatorId: string) => void
+  onSelectAIProfile?: (profileId: string) => void
 }) {
   const [streams, setStreams] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
@@ -92,11 +94,31 @@ export default function HomePage({
       const { data: creators } = await supabase
         .from('discoverable_creators')
         .select('*')
-      setAllCreators(
-        (creators || [])
+      const { data: aiProfiles } = await supabase
+        .from('discoverable_ai_profiles')
+        .select('*')
+
+      setAllCreators([
+        ...(creators || [])
           .filter((c) => c.id !== session.user.id)
-          .map((c) => ({ ...c, promotionTier: tierByUser.get(c.id) || null }))
-      )
+          .map((c) => ({ ...c, promotionTier: tierByUser.get(c.id) || null, isAiProfile: false })),
+        ...(aiProfiles || []).map((p) => ({
+          id: p.id,
+          username: p.username,
+          avatar_url: p.avatar_url,
+          bio: p.bio,
+          is_verified: false,
+          is_ai_creator: true,
+          followers_count: 0,
+          created_at: p.created_at,
+          has_streamed: false,
+          video_count: p.video_count,
+          bundle_count: p.bundle_count,
+          perk_count: 0,
+          promotionTier: null,
+          isAiProfile: true,
+        })),
+      ])
 
       setLoading(false)
     }
@@ -231,7 +253,7 @@ export default function HomePage({
       )}
 
       {!loading && !followingOnly && (
-        <DiscoverCreators creators={allCreators} onSelectCreator={onSelectCreator} />
+        <DiscoverCreators creators={allCreators} onSelectCreator={onSelectCreator} onSelectAIProfile={onSelectAIProfile} />
       )}
       </div>
     </div>
