@@ -1,9 +1,27 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabaseClient'
 
-export default function DiagnosticPage() {
+export default function DiagnosticPage({ session }: { session: Session }) {
   const [results, setResults] = useState<Record<string, any>>({})
   const [loading, setLoading] = useState(false)
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    supabase
+      .from('users')
+      .select('is_admin')
+      .eq('id', session.user.id)
+      .single()
+      .then(({ data }) => setIsAdmin(!!data?.is_admin))
+  }, [session.user.id])
+
+  if (isAdmin === null) {
+    return <div className="min-h-screen bg-black text-gray-400 flex items-center justify-center">Loading...</div>
+  }
+  if (!isAdmin) {
+    return <div className="min-h-screen bg-black text-red-400 flex items-center justify-center">Access denied.</div>
+  }
 
   const runDiagnostics = async () => {
     setLoading(true)

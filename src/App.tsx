@@ -62,7 +62,7 @@ export default function App() {
   }
 
   if (isDiagnostic) {
-    return <DiagnosticPage />
+    return session ? <DiagnosticPage session={session} /> : <AuthPage />
   }
 
   // OBS Browser Sources have no session and can't click through an age
