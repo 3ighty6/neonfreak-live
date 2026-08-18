@@ -67,15 +67,14 @@ const TermsOfService: React.FC = () => {
 
           <section>
             <h2 className="text-2xl font-bold text-cyan-400 mb-4">6. Revenue, Payments & Refunds</h2>
-            <p>NeonLights uses a multi-stream revenue model:</p>
+            <p>NeonLights uses a token-based revenue model:</p>
             <ul className="list-disc list-inside space-y-2 ml-4">
-              <li>Live tips (cash): Creators receive 60%, platform keeps 40%</li>
-              <li>Live tips (tokens): Creators receive 15-25%, platform keeps 60-85%</li>
-              <li>Private shows: Creators receive 15%, platform 60%, director 15%, pool 10%</li>
-              <li>VOD sales: Creators receive 60%, platform keeps 40%</li>
-              <li>Subscriptions: Creators receive 85%, platform keeps 15%</li>
-              <li>Clip monetization: Creators receive 50%, platform keeps 50%</li>
-              <li>Custom content: Creators receive 70%, platform keeps 30%</li>
+              <li>Live tips: Creators receive 85%, platform keeps 15%</li>
+              <li>Private show requests: Creators receive 85%, platform keeps 15%</li>
+              <li>Video, photo bundle & perk unlocks: Creators receive 85%, platform keeps 15%</li>
+              <li>Private show recording resale: Original streamer receives 70%, the viewer who requested the show receives a 10% referral share, 10% goes to the platform savings pool, platform keeps the remainder</li>
+              <li>Creator subscriptions (Boost/Featured/Elite): Platform-paid promotion tiers, billed directly to the creator</li>
+              <li>Viewer VIP membership: Recurring viewer subscription; does not pay out to creators</li>
             </ul>
             <p className="mt-4"><strong>Payouts:</strong> Creators can withdraw earnings monthly via Stripe Connect. Minimum payout: $50. Payouts processed within 3-5 business days.</p>
             <p><strong>Refunds:</strong> Transactions are generally non-refundable. Disputed charges must be reported within 30 days.</p>
