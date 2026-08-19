@@ -30,10 +30,11 @@ export default function LiveStreamCard({
       onClick={onClick}
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
-      className="neon-card group cursor-pointer overflow-hidden"
+      className="neon-liquid group cursor-pointer overflow-hidden"
     >
+      <div className="light-streak" />
       {/* Thumbnail */}
-      <div className="relative bg-gradient-to-b from-purple-600/30 to-black h-40 overflow-hidden">
+      <div className="relative z-10 bg-gradient-to-b from-purple-600/30 to-black h-40 overflow-hidden">
         {playbackId ? (
           <>
             <img
@@ -86,7 +87,7 @@ export default function LiveStreamCard({
       </div>
 
       {/* Info */}
-      <div className="p-3">
+      <div className="relative z-10 p-3">
         <h3 className="font-semibold text-white line-clamp-2 mb-2">{stream.title}</h3>
         {stream.tags && stream.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 mb-2">

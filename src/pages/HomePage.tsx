@@ -213,25 +213,28 @@ export default function HomePage({
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-        <div className="glass-panel-glow p-4">
-          <div className="flex items-center gap-2 text-cyan-300 text-sm mb-2">
+        <div className="neon-liquid p-4">
+          <div className="light-streak" />
+          <div className="relative z-10 flex items-center gap-2 text-cyan-300 text-sm mb-2">
             <Radio size={16} /> <span className="live-badge-pulse w-2 h-2 rounded-full bg-pink-500 inline-block" /> Live Now
           </div>
-          <div className="text-2xl font-bold text-pink-400">{streams.length}</div>
+          <div className="relative z-10 text-2xl font-bold text-pink-400">{streams.length}</div>
         </div>
-        <div className="glass-panel-glow p-4">
-          <div className="flex items-center gap-2 text-cyan-300 text-sm mb-2">
+        <div className="neon-liquid p-4">
+          <div className="light-streak" />
+          <div className="relative z-10 flex items-center gap-2 text-cyan-300 text-sm mb-2">
             <Users size={16} /> Viewers
           </div>
-          <div className="text-2xl font-bold text-cyan-400">
+          <div className="relative z-10 text-2xl font-bold text-cyan-400">
             {streams.reduce((sum, s) => sum + s.viewer_count, 0).toLocaleString()}
           </div>
         </div>
-        <div className="glass-panel-glow p-4">
-          <div className="flex items-center gap-2 text-yellow-300 text-sm mb-2">
+        <div className="neon-liquid p-4">
+          <div className="light-streak" />
+          <div className="relative z-10 flex items-center gap-2 text-yellow-300 text-sm mb-2">
             <TrendingUp size={16} /> Tips Today
           </div>
-          <div className="text-2xl font-bold text-yellow-400">{tipsToday.toLocaleString()}</div>
+          <div className="relative z-10 text-2xl font-bold text-yellow-400">{tipsToday.toLocaleString()}</div>
         </div>
       </div>
 

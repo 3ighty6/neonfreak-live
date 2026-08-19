@@ -19,8 +19,9 @@ interface Creator {
 
 function CreatorTile({ creator, onClick }: { creator: Creator; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="neon-card group text-left p-4">
-      <div className="flex items-center gap-3 mb-2">
+    <button onClick={onClick} className="neon-liquid group text-left p-4">
+      <div className="light-streak" />
+      <div className="relative z-10 flex items-center gap-3 mb-2">
         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cyan-400 to-pink-500 flex items-center justify-center text-xl overflow-hidden flex-shrink-0 ring-2 ring-white/10 group-hover:ring-cyan-400/40 transition">
           {creator.avatar_url ? (
             <img src={creator.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -49,8 +50,8 @@ function CreatorTile({ creator, onClick }: { creator: Creator; onClick: () => vo
           </span>
         )}
       </div>
-      {creator.bio && <p className="text-xs text-gray-400 mb-2 line-clamp-2">{creator.bio}</p>}
-      <div className="flex gap-3 text-xs text-gray-500">
+      {creator.bio && <p className="relative z-10 text-xs text-gray-400 mb-2 line-clamp-2">{creator.bio}</p>}
+      <div className="relative z-10 flex gap-3 text-xs text-gray-500">
         {creator.video_count > 0 && (
           <span className="flex items-center gap-1">
             <Video size={12} /> {creator.video_count}
