@@ -2,9 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== Theme variables =====
+   Dark is the existing look (default, no class needed -- zero risk to
+   pages that don't opt in). Add class="light" to <html> (see
+   ThemeToggle.tsx) to switch. New .neon-liquid primitive below is
+   theme-aware; existing glass-panel/neon-card primitives are untouched
+   and stay dark-only until migrated page by page. */
+:root {
+  --nl-bg-primary: #0a0612;
+  --nl-glass-bg: rgba(14, 6, 28, 0.58);
+  --nl-glass-border: rgba(255, 255, 255, 0.12);
+  --nl-text-primary: #ffffff;
+  --nl-text-secondary: rgba(255, 255, 255, 0.62);
+  --nl-neon-cyan: #00f0ff;
+  --nl-neon-pink: #ff2d95;
+  --nl-neon-violet: #b14eff;
+  --nl-card-shadow: 0 16px 48px rgba(0, 0, 0, 0.55);
+}
+
+html.light {
+  --nl-bg-primary: #f4f0ff;
+  --nl-glass-bg: rgba(255, 255, 255, 0.72);
+  --nl-glass-border: rgba(120, 80, 180, 0.18);
+  --nl-text-primary: #1a0b2e;
+  --nl-text-secondary: #5c4a7a;
+  --nl-neon-cyan: #00c4d4;
+  --nl-neon-pink: #e91e8c;
+  --nl-neon-violet: #9b4dca;
+  --nl-card-shadow: 0 10px 30px rgba(100, 60, 180, 0.12);
+}
+
 @layer base {
   body {
-    @apply bg-black text-white;
+    @apply text-white;
+    background-color: var(--nl-bg-primary);
+    transition: background-color 0.35s ease, color 0.35s ease;
+  }
+
+  html.light body {
+    color: var(--nl-text-primary);
   }
 
   /* Smooth scrolling */
@@ -151,5 +187,138 @@
       transform: translateY(-120px) translateX(20px);
       opacity: 0;
     }
+  }
+
+  /* ===== neon-liquid =====
+     Theme-aware upgrade of glass-panel/neon-card: stronger animated
+     refraction + a moving gradient border + a hover light streak.
+     Opt-in per element (wrap content, add a .light-streak child div)
+     so existing glass-panel/neon-card usage is untouched. */
+  .neon-liquid {
+    position: relative;
+    background: var(--nl-glass-bg);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: 20px;
+    border: 1px solid transparent;
+    overflow: hidden;
+    isolation: isolate;
+    box-shadow: var(--nl-card-shadow);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.4s ease, background 0.35s ease;
+  }
+
+  .neon-liquid::before {
+    content: '';
+    position: absolute;
+    inset: -40%;
+    background:
+      radial-gradient(circle at 20% 15%, color-mix(in srgb, var(--nl-neon-cyan) 30%, transparent) 0%, transparent 40%),
+      radial-gradient(circle at 80% 85%, color-mix(in srgb, var(--nl-neon-pink) 26%, transparent) 0%, transparent 42%);
+    filter: blur(52px);
+    opacity: 0.8;
+    animation: liquid-surge 9s ease-in-out infinite alternate;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  html.light .neon-liquid::before {
+    opacity: 0.55;
+    filter: blur(40px);
+  }
+
+  .neon-liquid::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1.5px;
+    background: linear-gradient(135deg, var(--nl-neon-cyan), var(--nl-neon-pink), var(--nl-neon-violet), var(--nl-neon-cyan));
+    background-size: 400% 400%;
+    animation: neon-rage 7s linear infinite;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.7;
+    z-index: 3;
+    transition: opacity 0.3s ease, filter 0.3s ease;
+  }
+
+  html.light .neon-liquid::after {
+    opacity: 0.55;
+  }
+
+  .neon-liquid:hover::after,
+  .neon-liquid:active::after {
+    opacity: 1;
+    filter: brightness(1.25);
+  }
+
+  .neon-liquid .light-streak {
+    position: absolute;
+    top: -80%;
+    left: -80%;
+    width: 260%;
+    height: 260%;
+    background: linear-gradient(115deg, transparent 38%, rgba(255, 255, 255, 0.09) 46%, rgba(255, 255, 255, 0.18) 50%, rgba(255, 255, 255, 0.09) 54%, transparent 62%);
+    transform: rotate(25deg);
+    transition: transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: none;
+    z-index: 2;
+  }
+
+  .neon-liquid:hover .light-streak {
+    transform: rotate(25deg) translateX(40%);
+  }
+
+  @keyframes liquid-surge {
+    0%   { transform: translate(0%, 0%) scale(1) rotate(0deg); }
+    25%  { transform: translate(8%, -6%) scale(1.07) rotate(1.2deg); }
+    50%  { transform: translate(-5%, 9%) scale(0.96) rotate(-0.8deg); }
+    75%  { transform: translate(6%, 4%) scale(1.05) rotate(0.9deg); }
+    100% { transform: translate(-7%, -3%) scale(1.02) rotate(-0.4deg); }
+  }
+
+  @keyframes neon-rage {
+    0%   { background-position: 0% 50%; }
+    100% { background-position: 400% 50%; }
+  }
+
+  @media (min-width: 1024px) {
+    .neon-liquid:hover {
+      transform: translateY(-6px) scale(1.015);
+    }
+  }
+
+  @media (max-width: 768px) {
+    .neon-liquid {
+      border-radius: 16px;
+      backdrop-filter: blur(18px) saturate(170%);
+      -webkit-backdrop-filter: blur(18px) saturate(170%);
+    }
+    .neon-liquid::before {
+      filter: blur(36px);
+    }
+    .neon-liquid:active {
+      transform: scale(0.98);
+    }
+  }
+
+  .theme-toggle-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--nl-glass-bg);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--nl-glass-border);
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+
+  .theme-toggle-btn:hover {
+    transform: scale(1.06);
   }
 }

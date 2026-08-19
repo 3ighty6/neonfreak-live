@@ -14,6 +14,7 @@ import CreatorProfilePage from './CreatorProfilePage'
 import AIProfilePage from './AIProfilePage'
 import MessagesPage from './MessagesPage'
 import Footer from '../components/Footer'
+import ThemeToggle from '../components/ThemeToggle'
 import logoWordmark from '../assets/logo-wordmark.png'
 import BecomeCreatorGate from '../components/BecomeCreatorGate'
 
@@ -162,9 +163,12 @@ export default function MainApp({ session }: MainAppProps) {
 
       {/* Desktop Sidebar */}
       <div className="hidden md:fixed md:left-0 md:top-0 md:w-64 md:h-screen md:bg-gradient-to-b md:from-[#0d0a1a] md:to-black md:border-r md:border-white/5 md:flex md:flex-col md:z-50">
-        <div className="p-6 border-b border-pink-500/30">
-          <img src={logoWordmark} alt="NeonLights" className="h-8 w-auto drop-shadow-[0_0_12px_rgba(255,45,149,0.4)]" />
-          <p className="text-xs text-cyan-400 mt-1">Watch. Tip. Or Become a Creator.</p>
+        <div className="p-6 border-b border-pink-500/30 flex items-start justify-between">
+          <div>
+            <img src={logoWordmark} alt="NeonLights" className="h-8 w-auto drop-shadow-[0_0_12px_rgba(255,45,149,0.4)]" />
+            <p className="text-xs text-cyan-400 mt-1">Watch. Tip. Or Become a Creator.</p>
+          </div>
+          <ThemeToggle />
         </div>
 
         <nav className="flex-1 p-4 space-y-2">

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { Camera, Mail, Loader2, Check, Lock } from 'lucide-react'
+import { Camera, Loader2, Check, Lock } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import type { User } from '../types'
 import EarningsPayouts from '../components/EarningsPayouts'
@@ -7,6 +7,7 @@ import IdVerification from '../components/IdVerification'
 import CreatorBoost from '../components/CreatorBoost'
 import AICreatorProfileManager from '../components/AICreatorProfileManager'
 import ViewerVIP from '../components/ViewerVIP'
+import ChangeEmail from '../components/ChangeEmail'
 
 export default function ProfilePage({
   onViewPublicProfile,
@@ -321,13 +322,7 @@ export default function ProfilePage({
               </p>
             </div>
 
-            <div>
-              <label className="text-sm text-gray-400 block mb-2">Email</label>
-              <div className="flex items-center gap-2 bg-gray-800 border border-gray-700 rounded px-4 py-2 text-gray-300">
-                <Mail size={18} />
-                <span>{profile.email}</span>
-              </div>
-            </div>
+            <ChangeEmail currentEmail={profile.email} />
           </div>
 
           <div className="flex gap-3 mt-6">
