@@ -82,16 +82,16 @@ export default function TipPage() {
                 <div className="flex justify-between items-start mb-3">
                   <div>
                     <div className="text-3xl font-bold text-cyan-400">{pkg.tokens}</div>
-                    <div className="text-sm text-gray-400">base tokens</div>
+                    <div className="text-sm text-gray-400">tokens</div>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold">${pkg.priceUSD.toFixed(2)}</div>
                   </div>
                 </div>
 
-                {pkg.bonus > 0 && (
+                {pkg.bonusPercent > 0 && (
                   <div className="bg-green-500/20 border border-green-500/30 rounded px-3 py-2 text-sm text-green-300 mb-4">
-                    + {pkg.bonus} bonus tokens! 🎁
+                    {pkg.bonusPercent}% bonus vs. base rate! 🎁
                   </div>
                 )}
 

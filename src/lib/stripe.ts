@@ -13,14 +13,22 @@ export const TIP_PRODUCTS = {
   fire: { amount: 50, emoji: '🔥', label: 'Fire' },
 }
 
-// Token packages (prices in cents)
+// Token packages (prices in cents). tokens is the TOTAL credited amount
+// (bonus already included) -- bonusPercent is display-only, mirrors how
+// Chaturbate-style sites market bundles: bigger bundle = bigger % off the
+// $0.1099/token base rate set by the 100-token entry tier.
 export const TOKEN_PACKAGES = [
-  { tokens: 10, priceCents: 99, bonus: 0, popular: false, priceUSD: 0.99 },
-  { tokens: 50, priceCents: 499, bonus: 5, popular: false, priceUSD: 4.99 },
-  { tokens: 100, priceCents: 999, bonus: 20, popular: true, priceUSD: 9.99 },
-  { tokens: 500, priceCents: 3999, bonus: 150, popular: false, priceUSD: 39.99 },
-  { tokens: 1000, priceCents: 6999, bonus: 300, popular: false, priceUSD: 69.99 },
-  { tokens: 5000, priceCents: 29999, bonus: 2000, popular: false, priceUSD: 299.99 },
+  { tokens: 100, priceCents: 1099, bonusPercent: 0, popular: false, priceUSD: 10.99 },
+  { tokens: 200, priceCents: 2099, bonusPercent: 5, popular: false, priceUSD: 20.99 },
+  { tokens: 400, priceCents: 3999, bonusPercent: 10, popular: false, priceUSD: 39.99 },
+  { tokens: 550, priceCents: 4999, bonusPercent: 21, popular: false, priceUSD: 49.99 },
+  { tokens: 750, priceCents: 6299, bonusPercent: 31, popular: false, priceUSD: 62.99 },
+  { tokens: 1000, priceCents: 7999, bonusPercent: 37, popular: false, priceUSD: 79.99 },
+  { tokens: 1255, priceCents: 9999, bonusPercent: 38, popular: true, priceUSD: 99.99 },
+  { tokens: 2025, priceCents: 15999, bonusPercent: 39, popular: false, priceUSD: 159.99 },
+  { tokens: 4050, priceCents: 31998, bonusPercent: 39, popular: false, priceUSD: 319.98 },
+  { tokens: 6350, priceCents: 49999, bonusPercent: 40, popular: false, priceUSD: 499.99 },
+  { tokens: 12700, priceCents: 99998, bonusPercent: 40, popular: false, priceUSD: 999.98 },
 ]
 
 /**
@@ -70,7 +78,7 @@ export async function createTokenCheckout(
       kind: 'tokens',
       userId,
       amountUsdCents: pkg.priceCents,
-      tokens: pkg.tokens + pkg.bonus,
+      tokens: pkg.tokens,
       returnRoomId,
     }),
   })
@@ -99,5 +107,14 @@ function getTierNameForAmount(amount: number): string {
  */
 export function calculateTokens(packageIndex: number): number {
   const pkg = TOKEN_PACKAGES[packageIndex]
-  return pkg ? pkg.tokens + pkg.bonus : 0
+  return pkg ? pkg.tokens : 0
+}
+
+/**
+ * Cheapest package whose total tokens covers a given shortfall --
+ * used to pre-select a bundle in low-balance upsell prompts.
+ */
+export function cheapestPackageCovering(neededTokens: number): number {
+  const idx = TOKEN_PACKAGES.findIndex((p) => p.tokens >= neededTokens)
+  return idx === -1 ? TOKEN_PACKAGES.length - 1 : idx
 }

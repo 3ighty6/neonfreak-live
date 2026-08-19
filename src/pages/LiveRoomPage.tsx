@@ -397,7 +397,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
       {/* Buy Tokens popup — shown when a tip fails for insufficient balance */}
       {showBuyPrompt && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-cyan-500/30 rounded-lg w-full max-w-sm p-6">
+          <div className="bg-gray-900 border border-cyan-500/30 rounded-lg w-full max-w-sm p-6 max-h-[85vh] overflow-y-auto">
             <div className="flex items-center gap-2 mb-2">
               <ShoppingCart className="text-cyan-400" size={22} />
               <h2 className="text-lg font-bold">Not enough tokens</h2>
@@ -415,7 +415,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
                   className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 disabled:opacity-50 border border-gray-700 rounded px-4 py-3 transition"
                 >
                   <span className="text-sm">
-                    <span className="font-semibold text-cyan-400">{pkg.tokens + pkg.bonus} tokens</span>
+                    <span className="font-semibold text-cyan-400">{pkg.tokens} tokens</span>
                     {pkg.popular && <span className="ml-2 text-xs text-cyan-500">POPULAR</span>}
                   </span>
                   <span className="font-semibold">

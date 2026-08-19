@@ -12,16 +12,26 @@ export default function HomePage({
   onSelectStream,
   onSelectCreator,
   onSelectAIProfile,
+  searchQuery: externalSearchQuery,
+  onSearchQueryChange,
+  hideOwnSearchBar,
 }: {
   session: Session
   onSelectStream?: (roomId: string) => void
   onSelectCreator?: (creatorId: string) => void
   onSelectAIProfile?: (profileId: string) => void
+  /** Controlled search value -- pass this + onSearchQueryChange when a global top bar owns the search input. */
+  searchQuery?: string
+  onSearchQueryChange?: (q: string) => void
+  /** Hide the inline search bar (e.g. when a global TopBar already renders one). */
+  hideOwnSearchBar?: boolean
 }) {
   const [streams, setStreams] = useState<any[]>([])
   const [categories, setCategories] = useState<any[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [internalSearchQuery, setInternalSearchQuery] = useState('')
+  const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery
+  const setSearchQuery = onSearchQueryChange || setInternalSearchQuery
   const [loading, setLoading] = useState(true)
   const [followedIds, setFollowedIds] = useState<Set<string>>(new Set())
   const [followingOnly, setFollowingOnly] = useState(false)
@@ -170,17 +180,19 @@ export default function HomePage({
         </h1>
         <p className="text-gray-400 text-sm mb-4">Everything happening on NeonLights right now</p>
         
-        {/* Search Bar */}
-        <div className="relative mb-6">
-          <Search className="absolute left-4 top-3 text-pink-500" size={20} />
-          <input
-            type="text"
-            placeholder="Search creators, titles, or tags..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-pink-500/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-pink-400 transition focus:shadow-lg focus:shadow-pink-500/30"
-          />
-        </div>
+        {/* Search Bar (hidden when a global TopBar already owns search) */}
+        {!hideOwnSearchBar && (
+          <div className="relative mb-6">
+            <Search className="absolute left-4 top-3 text-pink-500" size={20} />
+            <input
+              type="text"
+              placeholder="Search creators, titles, or tags..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-slate-800/50 border border-pink-500/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-pink-400 transition focus:shadow-lg focus:shadow-pink-500/30"
+            />
+          </div>
+        )}
 
         {/* Categories */}
         <div className="flex overflow-x-auto gap-2 pb-2">

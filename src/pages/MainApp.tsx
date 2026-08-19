@@ -14,9 +14,9 @@ import CreatorProfilePage from './CreatorProfilePage'
 import AIProfilePage from './AIProfilePage'
 import MessagesPage from './MessagesPage'
 import Footer from '../components/Footer'
-import ThemeToggle from '../components/ThemeToggle'
 import logoWordmark from '../assets/logo-wordmark.png'
 import BecomeCreatorGate from '../components/BecomeCreatorGate'
+import TopBar from '../components/TopBar'
 
 type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin' | 'creator' | 'messages' | 'aiProfile'
 
@@ -37,6 +37,7 @@ export default function MainApp({ session }: MainAppProps) {
   const [activeCreatorId, setActiveCreatorId] = useState<string | null>(null)
   const [activeAIProfileId, setActiveAIProfileId] = useState<string | null>(null)
   const [messagesTargetUserId, setMessagesTargetUserId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     // Clean the checkout/room params out of the visible URL once read
@@ -163,12 +164,9 @@ export default function MainApp({ session }: MainAppProps) {
 
       {/* Desktop Sidebar */}
       <div className="hidden md:fixed md:left-0 md:top-0 md:w-64 md:h-screen md:bg-gradient-to-b md:from-[#0d0a1a] md:to-black md:border-r md:border-white/5 md:flex md:flex-col md:z-50">
-        <div className="p-6 border-b border-pink-500/30 flex items-start justify-between">
-          <div>
-            <img src={logoWordmark} alt="NeonLights" className="h-8 w-auto drop-shadow-[0_0_12px_rgba(255,45,149,0.4)]" />
-            <p className="text-xs text-cyan-400 mt-1">Watch. Tip. Or Become a Creator.</p>
-          </div>
-          <ThemeToggle />
+        <div className="p-6 border-b border-pink-500/30">
+          <img src={logoWordmark} alt="NeonLights" className="h-8 w-auto drop-shadow-[0_0_12px_rgba(255,45,149,0.4)]" />
+          <p className="text-xs text-cyan-400 mt-1">Watch. Tip. Or Become a Creator.</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
@@ -202,7 +200,27 @@ export default function MainApp({ session }: MainAppProps) {
 
       {/* Main Content */}
       <div className="md:ml-64 pb-20 md:pb-0">
-        {currentPage === 'home' && <HomePage session={session} onSelectStream={openRoom} onSelectCreator={openCreator} onSelectAIProfile={openAIProfile} />}
+        <TopBar
+          session={session}
+          searchQuery={searchQuery}
+          onSearchQueryChange={(q) => {
+            setSearchQuery(q)
+            if (currentPage !== 'home') setCurrentPage('home')
+          }}
+          onNavigate={(page) => setCurrentPage(page)}
+          onLogout={handleLogout}
+        />
+        {currentPage === 'home' && (
+          <HomePage
+            session={session}
+            onSelectStream={openRoom}
+            onSelectCreator={openCreator}
+            onSelectAIProfile={openAIProfile}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            hideOwnSearchBar
+          />
+        )}
         {currentPage === 'setup' && (
           <BecomeCreatorGate userId={user.id}>
             <GoLiveWizard session={session} />

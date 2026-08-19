@@ -236,7 +236,7 @@ export default function PhotoBundleShop({
 
       {buyPromptFor && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 border border-cyan-500/30 rounded-lg w-full max-w-sm p-6">
+          <div className="bg-gray-900 border border-cyan-500/30 rounded-lg w-full max-w-sm p-6 max-h-[85vh] overflow-y-auto">
             <h2 className="text-lg font-bold mb-4">Not enough tokens</h2>
             <div className="space-y-2 mb-4">
               {TOKEN_PACKAGES.map((pkg, idx) => (
@@ -248,7 +248,7 @@ export default function PhotoBundleShop({
                   }}
                   className="w-full flex items-center justify-between bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded px-4 py-3 transition"
                 >
-                  <span className="text-sm font-semibold text-cyan-400">{pkg.tokens + pkg.bonus} tokens</span>
+                  <span className="text-sm font-semibold text-cyan-400">{pkg.tokens} tokens</span>
                   <span className="font-semibold">${pkg.priceUSD.toFixed(2)}</span>
                 </button>
               ))}
