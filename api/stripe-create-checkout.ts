@@ -13,7 +13,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import Stripe from 'stripe'
 
 const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || ''
-const SITE_URL = process.env.SITE_URL || 'https://neonfreak-live.vercel.app'
+const SITE_URL = process.env.SITE_URL || 'https://neonlights-live.vercel.app'
 
 // Placeholder pricing -- a business decision, not an engineering one.
 // 3 tiers with a high-anchor top tier, per competitive research

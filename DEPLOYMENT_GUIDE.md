@@ -1,4 +1,4 @@
-# 🚀 NeonFreak Live - Automated Deployment Guide
+# 🚀 NeonLights Live - Automated Deployment Guide
 
 **Status**: Your app is **automatically connected to Vercel**
 
@@ -6,7 +6,7 @@
 
 ## ✅ HOW VERCEL AUTO-DEPLOYMENT WORKS
 
-Your GitHub repository (`https://github.com/3ighty6/neonfreak-live`) is already configured for automatic deployment with Vercel.
+Your GitHub repository (`https://github.com/3ighty6/neonlights-live`) is already configured for automatic deployment with Vercel.
 
 **This means:**
 1. When you push to GitHub `main` branch
@@ -39,7 +39,7 @@ Vercel will automatically:
 ### Option 2: Manual Vercel Dashboard Deployment
 
 1. Go to: https://vercel.com/dashboard
-2. Find project: `neonfreak-live`
+2. Find project: `neonlights-live`
 3. Click "Deploy"
 4. Wait 5 minutes
 5. You'll get your deployment URL
@@ -51,7 +51,7 @@ Vercel will automatically:
 If for some reason the repo isn't connected:
 
 ```
-https://vercel.com/import/git?repo=https://github.com/3ighty6/neonfreak-live
+https://vercel.com/import/git?repo=https://github.com/3ighty6/neonlights-live
 ```
 
 ---
@@ -80,7 +80,7 @@ Value: [YOUR_ANON_KEY_FROM_SUPABASE]
 
 ### Step 1: Add Environment Variables (2 min)
 - [ ] Go to Vercel dashboard
-- [ ] Find neonfreak-live project
+- [ ] Find neonlights-live project
 - [ ] Settings > Environment Variables
 - [ ] Add VITE_SUPABASE_URL
 - [ ] Add VITE_SUPABASE_ANON_KEY
@@ -111,12 +111,12 @@ Value: [YOUR_ANON_KEY_FROM_SUPABASE]
 
 ### In Vercel Dashboard:
 1. Go to: https://vercel.com/dashboard
-2. Find: neonfreak-live
+2. Find: neonlights-live
 3. Look for deployment status
 4. Click on latest deployment to see URL
 
 ### In GitHub:
-1. Go to: https://github.com/3ighty6/neonfreak-live
+1. Go to: https://github.com/3ighty6/neonlights-live
 2. Look for deployment badges
 3. Click to see Vercel status
 
@@ -188,7 +188,7 @@ Your deployment is successful when:
 
 ## 🔗 USEFUL LINKS
 
-- **GitHub Repo**: https://github.com/3ighty6/neonfreak-live
+- **GitHub Repo**: https://github.com/3ighty6/neonlights-live
 - **Vercel Dashboard**: https://vercel.com/dashboard
 - **Supabase Project**: https://app.supabase.com/project/acvdwrkqmyumlmgpfvcu
 - **Deployment URL**: https://your-app.vercel.app (generated after deploy)

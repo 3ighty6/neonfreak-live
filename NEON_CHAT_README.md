@@ -102,8 +102,8 @@ src/
 ## Deployment
 
 ### Vercel
-- **Project:** neonfreak-live
-- **URL:** https://neonfreak-live.vercel.app
+- **Project:** neonlights-live
+- **URL:** https://neonlights-live.vercel.app
 - **Framework:** Vite + React
 - **Build:** `npm run build`
 - **Install:** `npm install`
@@ -199,7 +199,7 @@ git push origin main
 
 ## GitHub Repository
 
-**Repo:** https://github.com/3ighty6/neonfreak-live
+**Repo:** https://github.com/3ighty6/neonlights-live
 **Branch:** main
 **Commits:** Automated deployment on push
 

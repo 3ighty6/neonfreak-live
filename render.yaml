@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: neonfreak-live
+    name: neonlights-live
     buildCommand: npm run build
     startCommand: npx serve -s dist -l $PORT
     envVars:
