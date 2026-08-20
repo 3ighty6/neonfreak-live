@@ -8,6 +8,7 @@ import CreatorBoost from '../components/CreatorBoost'
 import AICreatorProfileManager from '../components/AICreatorProfileManager'
 import ViewerVIP from '../components/ViewerVIP'
 import ChangeEmail from '../components/ChangeEmail'
+import ReferralPanel from '../components/ReferralPanel'
 
 export default function ProfilePage({
   onViewPublicProfile,
@@ -323,6 +324,8 @@ export default function ProfilePage({
             </div>
 
             <ChangeEmail currentEmail={profile.email} />
+
+            <ReferralPanel referralCode={profile.referral_code || null} referredBy={profile.referred_by || null} />
           </div>
 
           <div className="flex gap-3 mt-6">

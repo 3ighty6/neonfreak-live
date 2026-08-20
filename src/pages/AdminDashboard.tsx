@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Users, TrendingUp, Shield, AlertCircle, Check, X, BadgeCheck, Tag, Plus, Trash2 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import LeaderboardEventsAdmin from '../components/LeaderboardEventsAdmin'
+import PromotionsAdmin from '../components/PromotionsAdmin'
 import AdminUserDetail from '../components/AdminUserDetail'
 
 interface UserRow {
@@ -32,7 +33,7 @@ interface CategoryRow {
 }
 
 export default function AdminDashboard({ onOpenMessages }: { onOpenMessages?: (userId: string) => void }) {
-  const [tab, setTab] = useState<'overview' | 'users' | 'reports' | 'categories' | 'identity' | 'events'>('overview')
+  const [tab, setTab] = useState<'overview' | 'users' | 'reports' | 'categories' | 'identity' | 'events' | 'promotions'>('overview')
   const [stats, setStats] = useState({ totalUsers: 0, activeStreams: 0, totalRevenue: 0, pendingReports: 0 })
   const [users, setUsers] = useState<UserRow[]>([])
   const [reports, setReports] = useState<ReportRow[]>([])
@@ -155,7 +156,7 @@ export default function AdminDashboard({ onOpenMessages }: { onOpenMessages?: (u
         <p className="text-gray-400 mb-6">Platform overview and management</p>
 
         <div className="flex gap-2 mb-8">
-          {(['overview', 'users', 'reports', 'categories', 'identity', 'events'] as const).map((t) => (
+          {(['overview', 'users', 'reports', 'categories', 'identity', 'events', 'promotions'] as const).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -372,8 +373,10 @@ export default function AdminDashboard({ onOpenMessages }: { onOpenMessages?: (u
               ))
             )}
           </div>
-        ) : (
+        ) : tab === 'events' ? (
           <LeaderboardEventsAdmin />
+        ) : (
+          <PromotionsAdmin />
         )}
       </div>
 

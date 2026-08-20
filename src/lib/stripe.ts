@@ -62,14 +62,15 @@ export async function createTipCheckout(
 
 /**
  * Create a Stripe Checkout session for buying a token package.
+ * The server looks up the real price + token amount by index (and
+ * applies any active promo) -- nothing money-related is sent from here.
  */
 export async function createTokenCheckout(
   userId: string,
   packageIndex: number,
   returnRoomId?: string
 ): Promise<{ url: string | null }> {
-  const pkg = TOKEN_PACKAGES[packageIndex]
-  if (!pkg) throw new Error('Invalid package')
+  if (!TOKEN_PACKAGES[packageIndex]) throw new Error('Invalid package')
 
   const response = await fetch('/api/stripe-create-checkout', {
     method: 'POST',
@@ -77,8 +78,7 @@ export async function createTokenCheckout(
     body: JSON.stringify({
       kind: 'tokens',
       userId,
-      amountUsdCents: pkg.priceCents,
-      tokens: pkg.tokens,
+      packageIndex,
       returnRoomId,
     }),
   })

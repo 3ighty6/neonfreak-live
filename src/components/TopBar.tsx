@@ -11,6 +11,7 @@ import {
   Settings,
   MessageSquareWarning,
   LogOut,
+  Gift,
 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import ThemeToggle from './ThemeToggle'
@@ -26,22 +27,49 @@ interface TopBarProps {
 
 export default function TopBar({ session, searchQuery, onSearchQueryChange, onNavigate, onLogout }: TopBarProps) {
   const user = session.user
-  const [profile, setProfile] = useState<{ username: string; avatar_url: string | null; token_balance: number; is_verified: boolean } | null>(null)
+  const [profile, setProfile] = useState<{
+    username: string
+    avatar_url: string | null
+    token_balance: number
+    is_verified: boolean
+    last_checkin_date: string | null
+    checkin_streak: number
+  } | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
   const [tokenModalOpen, setTokenModalOpen] = useState(false)
+  const [checkinToast, setCheckinToast] = useState<string | null>(null)
+  const [checkinLoading, setCheckinLoading] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const alreadyCheckedInToday = profile?.last_checkin_date === todayStr
+
+  const loadProfile = async () => {
+    const { data } = await supabase
+      .from('users')
+      .select('username, avatar_url, token_balance, is_verified, last_checkin_date, checkin_streak')
+      .eq('id', user.id)
+      .single()
+    if (data) setProfile(data)
+  }
+
   useEffect(() => {
-    const load = async () => {
-      const { data } = await supabase
-        .from('users')
-        .select('username, avatar_url, token_balance, is_verified')
-        .eq('id', user.id)
-        .single()
-      if (data) setProfile(data)
-    }
-    load()
+    loadProfile()
   }, [user.id])
+
+  const handleCheckin = async () => {
+    if (alreadyCheckedInToday || checkinLoading) return
+    setCheckinLoading(true)
+    const { data, error } = await supabase.rpc('claim_daily_checkin')
+    setCheckinLoading(false)
+    if (error) {
+      setCheckinToast(error.message.includes('Already claimed') ? "You've already checked in today" : 'Something went wrong')
+    } else {
+      setCheckinToast(`+${data.tokensAwarded} tokens! Day ${data.streakDay} streak`)
+      loadProfile()
+    }
+    setTimeout(() => setCheckinToast(null), 4000)
+  }
 
   useEffect(() => {
     const onClickOutside = (e: MouseEvent) => {
@@ -83,6 +111,23 @@ export default function TopBar({ session, searchQuery, onSearchQueryChange, onNa
         >
           <MessageCircle size={20} className="neon-icon-glow" />
         </button>
+
+        {/* Daily check-in */}
+        <div className="relative hidden sm:flex">
+          <button
+            onClick={handleCheckin}
+            disabled={alreadyCheckedInToday || checkinLoading}
+            title={alreadyCheckedInToday ? 'Come back tomorrow for your next freebie' : 'Claim your daily free tokens'}
+            className={`transition ${alreadyCheckedInToday ? 'text-gray-600' : 'text-gray-400 hover:text-yellow-300'}`}
+          >
+            <Gift size={20} className={alreadyCheckedInToday ? '' : 'neon-icon-glow'} />
+          </button>
+          {checkinToast && (
+            <div className="absolute top-full right-0 mt-2 bg-[#151022] border border-yellow-500/30 rounded-lg px-3 py-2 text-xs text-yellow-300 whitespace-nowrap shadow-lg z-40">
+              {checkinToast}
+            </div>
+          )}
+        </div>
 
         {/* Token balance + buy */}
         <button

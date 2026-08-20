@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { X, Zap, Gift } from 'lucide-react'
 import { TOKEN_PACKAGES, createTokenCheckout, cheapestPackageCovering } from '../lib/stripe'
+import { supabase } from '../supabaseClient'
 
 interface TokenPurchaseModalProps {
   userId: string
@@ -23,6 +24,24 @@ export default function TokenPurchaseModal({
 }: TokenPurchaseModalProps) {
   const [loadingIdx, setLoadingIdx] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [activePromo, setActivePromo] = useState<{ title: string; bonus_percent: number } | null>(null)
+
+  useEffect(() => {
+    if (!isOpen) return
+    const loadPromo = async () => {
+      const nowIso = new Date().toISOString()
+      const { data } = await supabase
+        .from('token_promotions')
+        .select('title, bonus_percent')
+        .eq('active', true)
+        .lte('starts_at', nowIso)
+        .gte('ends_at', nowIso)
+        .order('bonus_percent', { ascending: false })
+        .limit(1)
+      setActivePromo(data?.[0] || null)
+    }
+    loadPromo()
+  }, [isOpen])
 
   if (!isOpen) return null
 
@@ -65,7 +84,9 @@ export default function TokenPurchaseModal({
 
         <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg px-4 py-3 mb-5 text-sm text-cyan-200 flex items-center gap-2">
           <Gift size={16} className="shrink-0" />
-          Bigger bundles carry a bigger bonus — up to 40% more tokens free on our largest pack.
+          {activePromo
+            ? `${activePromo.title}: +${activePromo.bonus_percent}% extra tokens on every bundle right now.`
+            : 'Bigger bundles carry a bigger bonus — up to 40% more tokens free on our largest pack.'}
         </div>
 
         {error && (

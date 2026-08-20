@@ -21,6 +21,8 @@ export interface User {
   ai_disclosure?: string | null
   stripe_connect_id?: string | null
   stripe_connect_onboarded?: boolean
+  referral_code?: string | null
+  referred_by?: string | null
   created_at: string
   updated_at: string
 }

@@ -61,6 +61,17 @@ export default function MainApp({ session }: MainAppProps) {
     checkAdmin()
   }, [user.id])
 
+  useEffect(() => {
+    // Consume a stashed ?ref= referral code (see AuthPage) now that
+    // there's an actual authenticated session to apply it with.
+    const pendingCode = localStorage.getItem('nl-pending-referral')
+    if (!pendingCode) return
+    localStorage.removeItem('nl-pending-referral') // one attempt only, success or not
+    supabase.rpc('apply_referral_code', { p_code: pendingCode }).then(({ error }) => {
+      if (error) console.warn('Referral code not applied:', error.message)
+    })
+  }, [user.id])
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
   }

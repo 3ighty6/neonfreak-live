@@ -22,6 +22,16 @@ export default function AuthPage() {
     const token = params.get('token')
     const type = params.get('type')
 
+    // Referral link (?ref=CODE) -- stash it, since signup requires email
+    // confirmation before there's ever an authenticated session to apply
+    // it with. MainApp picks this up and calls apply_referral_code once
+    // the user is actually logged in.
+    const ref = params.get('ref')
+    if (ref) {
+      localStorage.setItem('nl-pending-referral', ref)
+      setMode('signup')
+    }
+
     if (token && type === 'email') {
       verifyEmail(token)
     } else if (token && type === 'recovery') {
