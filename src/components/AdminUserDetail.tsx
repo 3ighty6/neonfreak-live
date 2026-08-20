@@ -57,7 +57,7 @@ export default function AdminUserDetail({
                 onOpenMessages?.(user.id)
                 onClose()
               }}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1.5 transition"
+              className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1.5 transition"
             >
               <MessageCircle size={14} /> Message
             </button>

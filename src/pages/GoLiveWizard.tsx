@@ -126,7 +126,7 @@ export default function GoLiveWizard({ session }: { session: Session }) {
               </button>
               <button
                 onClick={() => setStep('overlay')}
-                className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition"
+                className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition"
               >
                 Next <ArrowRight size={18} />
               </button>
@@ -165,7 +165,7 @@ export default function GoLiveWizard({ session }: { session: Session }) {
                 <button
                   onClick={copyOverlayUrl}
                   disabled={!overlayUrl}
-                  className="bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 px-4 py-2 rounded flex items-center gap-2 transition"
+                  className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 px-4 py-2 rounded flex items-center gap-2 transition"
                 >
                   {copied ? <Check size={18} /> : <Copy size={18} />}
                 </button>

@@ -91,7 +91,7 @@ export default function EarningsPayouts({ userId }: { userId: string }) {
           <button
             onClick={cashOut}
             disabled={cashingOut || available < 10}
-            className="bg-green-600 hover:bg-green-700 disabled:opacity-50 text-white px-4 py-2 rounded font-semibold transition flex items-center gap-2"
+            className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 shadow-lg shadow-green-500/20 disabled:opacity-50 text-white px-4 py-2 rounded font-semibold transition flex items-center gap-2"
           >
             {cashingOut ? <Loader2 className="animate-spin" size={18} /> : <ArrowDownToLine size={18} />}
             {cashingOut ? 'Processing...' : 'Cash Out'}

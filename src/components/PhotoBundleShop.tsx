@@ -117,7 +117,7 @@ export default function PhotoBundleShop({
         {isOwnProfile && (
           <button
             onClick={() => setShowUpload(true)}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition"
+            className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition"
           >
             <Upload size={16} /> New Bundle
           </button>
@@ -223,10 +223,10 @@ export default function PhotoBundleShop({
               "{unlockTarget.title}" costs <span className="text-cyan-400 font-semibold">{unlockTarget.price_tokens} tokens</span>.
             </p>
             <div className="flex gap-3">
-              <button onClick={() => setUnlockTarget(null)} className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-semibold transition">
+              <button onClick={() => setUnlockTarget(null)} className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded font-semibold transition">
                 Cancel
               </button>
-              <button onClick={confirmUnlock} className="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded font-semibold transition">
+              <button onClick={confirmUnlock} className="flex-1 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 py-2 rounded font-semibold transition">
                 Unlock
               </button>
             </div>
@@ -354,7 +354,7 @@ function UploadBundleModal({ userId, onClose, onUploaded }: { userId: string; on
           <button
             onClick={handleUpload}
             disabled={uploading}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-2 rounded font-semibold transition flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white py-2 rounded font-semibold transition flex items-center justify-center gap-2"
           >
             {uploading ? <Loader2 className="animate-spin" size={18} /> : null}
             {uploading ? 'Uploading...' : 'Create Bundle'}

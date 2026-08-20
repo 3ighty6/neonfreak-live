@@ -102,7 +102,7 @@ export default function TipPage() {
                 <button
                   onClick={() => handleTokenPurchase(idx)}
                   disabled={loading === `token-${idx}`}
-                  className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-2 rounded font-semibold transition flex items-center justify-center gap-2"
+                  className="w-full bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white py-2 rounded font-semibold transition flex items-center justify-center gap-2"
                 >
                   {loading === `token-${idx}` ? (
                     <>

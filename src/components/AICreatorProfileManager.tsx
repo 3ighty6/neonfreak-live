@@ -123,10 +123,10 @@ export default function AICreatorProfileManager({
             />
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowCreate(false)} className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-semibold transition">
+            <button onClick={() => setShowCreate(false)} className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded font-semibold transition">
               Cancel
             </button>
-            <button onClick={create} disabled={saving} className="flex-1 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 py-2 rounded font-semibold transition">
+            <button onClick={create} disabled={saving} className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-50 py-2 rounded font-semibold transition">
               {saving ? 'Creating...' : 'Create Persona'}
             </button>
           </div>
@@ -134,7 +134,7 @@ export default function AICreatorProfileManager({
       ) : (
         <button
           onClick={() => setShowCreate(true)}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition"
+          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition"
         >
           <Plus size={16} /> Create AI Persona
         </button>

@@ -342,7 +342,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
               key={tip.amount}
               onClick={() => sendTip(tip.amount)}
               disabled={tipping}
-              className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-3 py-2 rounded text-sm font-semibold flex items-center justify-center gap-2 transition"
+              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-50 text-white px-3 py-2 rounded text-sm font-semibold flex items-center justify-center gap-2 transition"
             >
               <span>{tip.emoji}</span>
               <span>{tip.amount} tokens</span>
@@ -369,7 +369,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
                   }
                 }}
                 disabled={tipping || !customTipAmount || parseInt(customTipAmount, 10) <= 0}
-                className="bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white px-3 py-1.5 rounded text-sm font-semibold transition"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 disabled:opacity-50 text-white px-3 py-1.5 rounded text-sm font-semibold transition"
               >
                 Send
               </button>
@@ -462,7 +462,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
             <div className="flex gap-3">
               <button
                 onClick={() => setShowPrivateShowModal(false)}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-semibold transition"
+                className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded font-semibold transition"
               >
                 Cancel
               </button>
@@ -519,7 +519,7 @@ export default function LiveRoomPage({ session, roomId, onBack, onOpenCreator }:
                 <button
                   onClick={submitReport}
                   disabled={!reportReason || reportSubmitting}
-                  className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-2 rounded font-semibold transition"
+                  className="w-full bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 shadow-lg shadow-red-500/20 disabled:opacity-50 text-white py-2 rounded font-semibold transition"
                 >
                   {reportSubmitting ? 'Submitting...' : 'Submit Report'}
                 </button>

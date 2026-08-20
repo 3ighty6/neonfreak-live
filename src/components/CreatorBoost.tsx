@@ -82,7 +82,7 @@ export default function CreatorBoost({ userId }: { userId: string }) {
               <button
                 onClick={() => subscribe(t.id)}
                 disabled={isCurrent || subscribing !== null}
-                className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-1.5 rounded text-sm font-semibold transition flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white py-1.5 rounded text-sm font-semibold transition flex items-center justify-center gap-2"
               >
                 {subscribing === t.id ? <Loader2 className="animate-spin" size={14} /> : null}
                 {isCurrent ? 'Active' : subscribing === t.id ? 'Redirecting...' : 'Subscribe'}

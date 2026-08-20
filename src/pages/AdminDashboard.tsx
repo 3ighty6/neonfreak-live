@@ -161,7 +161,7 @@ export default function AdminDashboard({ onOpenMessages }: { onOpenMessages?: (u
               key={t}
               onClick={() => setTab(t)}
               className={`px-5 py-2 rounded-full font-semibold capitalize transition ${
-                tab === t ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                tab === t ? 'bg-gradient-to-r from-pink-600 to-cyan-600 text-white' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
               }`}
             >
               {t}
@@ -262,13 +262,13 @@ export default function AdminDashboard({ onOpenMessages }: { onOpenMessages?: (u
                     <div className="flex gap-2">
                       <button
                         onClick={() => resolveReport(r.id, 'reviewed')}
-                        className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1 transition"
+                        className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 shadow-lg shadow-green-500/20 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1 transition"
                       >
                         <Check size={14} /> Mark Reviewed
                       </button>
                       <button
                         onClick={() => resolveReport(r.id, 'dismissed')}
-                        className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1 transition"
+                        className="bg-white/10 hover:bg-white/15 border border-white/10 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1 transition"
                       >
                         <X size={14} /> Dismiss
                       </button>
@@ -302,7 +302,7 @@ export default function AdminDashboard({ onOpenMessages }: { onOpenMessages?: (u
               />
               <button
                 onClick={addCategory}
-                className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold flex items-center gap-1 transition"
+                className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-4 py-2 rounded font-semibold flex items-center gap-1 transition"
               >
                 <Plus size={16} /> Add
               </button>
@@ -358,7 +358,7 @@ export default function AdminDashboard({ onOpenMessages }: { onOpenMessages?: (u
                   <div className="flex gap-2">
                     <button
                       onClick={() => reviewVerification(v, true)}
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded text-sm font-semibold flex items-center justify-center gap-1 transition"
+                      className="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 shadow-lg shadow-green-500/20 text-white px-3 py-2 rounded text-sm font-semibold flex items-center justify-center gap-1 transition"
                     >
                       <Check size={14} /> Approve
                     </button>

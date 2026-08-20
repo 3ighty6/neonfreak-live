@@ -84,7 +84,7 @@ export default function PromotionsAdmin() {
         </h2>
         <button
           onClick={() => setShowCreate(true)}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1 transition"
+          className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1 transition"
         >
           <Plus size={16} /> New Promo
         </button>
@@ -126,10 +126,10 @@ export default function PromotionsAdmin() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowCreate(false)} className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-semibold transition">
+            <button onClick={() => setShowCreate(false)} className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded font-semibold transition">
               Cancel
             </button>
-            <button onClick={createPromo} disabled={saving} className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 py-2 rounded font-semibold transition">
+            <button onClick={createPromo} disabled={saving} className="flex-1 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 py-2 rounded font-semibold transition">
               {saving ? 'Creating...' : 'Create Promo'}
             </button>
           </div>
@@ -166,7 +166,7 @@ export default function PromotionsAdmin() {
                 <div className="text-sm text-green-400 font-semibold mb-2">+{p.bonus_percent}% bonus tokens</div>
                 <button
                   onClick={() => toggleActive(p)}
-                  className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1 transition"
+                  className="bg-white/10 hover:bg-white/15 border border-white/10 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1 transition"
                 >
                   <Power size={14} /> {p.active ? 'Disable' : 'Enable'}
                 </button>

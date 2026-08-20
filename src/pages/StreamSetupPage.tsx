@@ -468,7 +468,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
                   e.preventDefault()
                   window.dispatchEvent(new CustomEvent('navigate-to-profile'))
                 }}
-                className="inline-block bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-2 rounded-lg font-semibold transition"
+                className="inline-block bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-6 py-2 rounded-lg font-semibold transition"
               >
                 Verify Now
               </a>
@@ -538,7 +538,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
             <button
               onClick={createStream}
               disabled={loading}
-              className="bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white px-6 py-3 rounded font-semibold transition"
+              className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white px-6 py-3 rounded font-semibold transition"
             >
               {loading ? 'Creating Stream...' : 'Continue'}
             </button>
@@ -577,7 +577,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
               <button
                 onClick={startBrowserBroadcast}
                 disabled={cameraStarting}
-                className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-3 rounded font-bold transition flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white py-3 rounded font-bold transition flex items-center justify-center gap-2"
               >
                 <Camera size={18} />
                 {cameraStarting ? 'Connecting...' : 'Start Broadcasting'}
@@ -586,7 +586,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
               <button
                 onClick={endStream}
                 disabled={loading}
-                className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-3 rounded font-bold transition flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 shadow-lg shadow-red-500/20 disabled:opacity-50 text-white py-3 rounded font-bold transition flex items-center justify-center gap-2"
               >
                 <Square size={18} />
                 {loading ? 'Ending...' : 'End Stream'}
@@ -631,7 +631,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
                   />
                   <button
                     onClick={() => copyToClipboard(rtmpUrl, 'server')}
-                    className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded flex items-center gap-2 transition"
+                    className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 px-4 py-2 rounded flex items-center gap-2 transition"
                   >
                     {copied === 'server' ? <Check size={18} /> : <Copy size={18} />}
                   </button>
@@ -649,7 +649,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
                   />
                   <button
                     onClick={() => copyToClipboard(rtmpKey, 'key')}
-                    className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded flex items-center gap-2 transition"
+                    className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 px-4 py-2 rounded flex items-center gap-2 transition"
                   >
                     {copied === 'key' ? <Check size={18} /> : <Copy size={18} />}
                   </button>
@@ -668,7 +668,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
                     />
                     <button
                       onClick={() => copyToClipboard(hlsUrl, 'hls')}
-                      className="bg-cyan-600 hover:bg-cyan-700 px-4 py-2 rounded flex items-center gap-2 transition"
+                      className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 px-4 py-2 rounded flex items-center gap-2 transition"
                     >
                       {copied === 'hls' ? <Check size={18} /> : <Copy size={18} />}
                     </button>
@@ -690,7 +690,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
               <button
                 onClick={endStream}
                 disabled={loading}
-                className="w-full bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white py-3 rounded font-bold transition flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-red-600 to-rose-500 hover:from-red-500 hover:to-rose-400 shadow-lg shadow-red-500/20 disabled:opacity-50 text-white py-3 rounded font-bold transition flex items-center justify-center gap-2"
               >
                 <Square size={18} />
                 {loading ? 'Ending...' : 'End Stream'}
@@ -713,13 +713,13 @@ export default function StreamSetupPage({ session }: { session: Session }) {
                   <div className="flex gap-2">
                     <button
                       onClick={() => respondToPrivateShow(req.id, true)}
-                      className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-semibold transition"
+                      className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 shadow-lg shadow-green-500/20 text-white px-3 py-1.5 rounded text-sm font-semibold transition"
                     >
                       Accept
                     </button>
                     <button
                       onClick={() => respondToPrivateShow(req.id, false)}
-                      className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1.5 rounded text-sm font-semibold transition"
+                      className="bg-white/10 hover:bg-white/15 border border-white/10 text-white px-3 py-1.5 rounded text-sm font-semibold transition"
                     >
                       Decline
                     </button>
@@ -787,7 +787,7 @@ export default function StreamSetupPage({ session }: { session: Session }) {
               <button
                 onClick={() => setRecordingOffer(null)}
                 disabled={listingSaving}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-semibold transition"
+                className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded font-semibold transition"
               >
                 Skip
               </button>

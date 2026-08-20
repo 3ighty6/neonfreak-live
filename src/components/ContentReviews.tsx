@@ -104,7 +104,7 @@ export default function ContentReviews({
           <button
             onClick={submit}
             disabled={submitting}
-            className="bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white px-4 py-1.5 rounded text-sm font-semibold transition"
+            className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white px-4 py-1.5 rounded text-sm font-semibold transition"
           >
             {submitting ? 'Saving...' : 'Submit Review'}
           </button>

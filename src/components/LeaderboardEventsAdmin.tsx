@@ -96,7 +96,7 @@ export default function LeaderboardEventsAdmin() {
         </h2>
         <button
           onClick={() => setShowCreate(true)}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1 transition"
+          className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-4 py-2 rounded text-sm font-semibold flex items-center gap-1 transition"
         >
           <Plus size={16} /> New Event
         </button>
@@ -123,10 +123,10 @@ export default function LeaderboardEventsAdmin() {
             <input type="number" min={1} value={pool} onChange={(e) => setPool(Math.max(1, parseInt(e.target.value) || 1))} className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2" />
           </div>
           <div className="flex gap-2">
-            <button onClick={() => setShowCreate(false)} className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-semibold transition">
+            <button onClick={() => setShowCreate(false)} className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded font-semibold transition">
               Cancel
             </button>
-            <button onClick={createEvent} disabled={saving} className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 py-2 rounded font-semibold transition">
+            <button onClick={createEvent} disabled={saving} className="flex-1 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 py-2 rounded font-semibold transition">
               {saving ? 'Creating...' : 'Create Event'}
             </button>
           </div>
@@ -166,7 +166,7 @@ export default function LeaderboardEventsAdmin() {
                 {phase === 'awaiting-payout' && (
                   <button
                     onClick={() => finalizeEvent(event)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1 transition"
+                    className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 shadow-lg shadow-green-500/20 text-white px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1 transition"
                   >
                     <Play size={14} /> Finalize & Pay Out
                   </button>

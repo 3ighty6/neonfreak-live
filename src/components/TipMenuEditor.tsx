@@ -71,7 +71,7 @@ export default function TipMenuEditor({ userId }: { userId: string }) {
           <p className="text-gray-400 text-sm mb-4">No tip menu yet. Start with the standard set, then customize it.</p>
           <button
             onClick={seedDefaults}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold text-sm transition"
+            className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-4 py-2 rounded font-semibold text-sm transition"
           >
             Add Standard Tip Menu
           </button>
@@ -114,7 +114,7 @@ export default function TipMenuEditor({ userId }: { userId: string }) {
         />
         <button
           onClick={addItem}
-          className="bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-2 rounded font-semibold text-sm flex items-center gap-1 transition"
+          className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-3 py-2 rounded font-semibold text-sm flex items-center gap-1 transition"
         >
           <Plus size={16} />
         </button>

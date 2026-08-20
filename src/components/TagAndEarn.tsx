@@ -92,13 +92,13 @@ export default function TagAndEarn({ userId }: { userId: string }) {
                 <div className="flex gap-2">
                   <button
                     onClick={() => review(s.id, true)}
-                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 transition"
+                    className="bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 shadow-lg shadow-green-500/20 text-white px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 transition"
                   >
                     <Check size={12} /> Approve (pays {s.reward_tokens} tokens)
                   </button>
                   <button
                     onClick={() => review(s.id, false)}
-                    className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 transition"
+                    className="bg-white/10 hover:bg-white/15 border border-white/10 text-white px-3 py-1 rounded text-xs font-semibold flex items-center gap-1 transition"
                   >
                     <X size={12} /> Reject
                   </button>
@@ -124,7 +124,7 @@ export default function TagAndEarn({ userId }: { userId: string }) {
               <button
                 onClick={() => setEditingVideo(v)}
                 disabled={v.user_id === userId}
-                className="bg-cyan-600 hover:bg-cyan-700 disabled:opacity-40 text-white px-3 py-1 rounded text-xs font-semibold transition"
+                className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-40 text-white px-3 py-1 rounded text-xs font-semibold transition"
               >
                 {v.user_id === userId ? 'Your video' : 'Suggest tags'}
               </button>
@@ -225,7 +225,7 @@ function SubmitTagsModal({
           <button
             onClick={submit}
             disabled={saving}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-2 rounded font-semibold text-sm flex items-center justify-center gap-2 transition"
+            className="w-full bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white py-2 rounded font-semibold text-sm flex items-center justify-center gap-2 transition"
           >
             {saving ? <Loader2 className="animate-spin" size={16} /> : <Send size={16} />}
             {saving ? 'Submitting...' : 'Submit'}

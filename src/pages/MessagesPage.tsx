@@ -214,7 +214,7 @@ export default function MessagesPage({
               />
               <button
                 onClick={sendMessage}
-                className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded transition"
+                className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-4 py-2 rounded transition"
               >
                 <Send size={16} />
               </button>

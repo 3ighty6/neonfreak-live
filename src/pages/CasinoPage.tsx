@@ -88,13 +88,13 @@ export default function CasinoPage({ session }: { session: Session }) {
             />
             {convertError && <div className="text-red-400 text-xs mb-3">{convertError}</div>}
             <div className="flex gap-2">
-              <button onClick={() => setShowConvert(false)} className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-semibold transition">
+              <button onClick={() => setShowConvert(false)} className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded font-semibold transition">
                 Cancel
               </button>
               <button
                 onClick={doConvert}
                 disabled={converting || !tokenBalance || convertAmount > tokenBalance}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 py-2 rounded font-semibold transition"
+                className="flex-1 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 py-2 rounded font-semibold transition"
               >
                 {converting ? 'Converting...' : 'Convert'}
               </button>
@@ -116,7 +116,7 @@ export default function CasinoPage({ session }: { session: Session }) {
         <button
           onClick={() => setTab('roulette')}
           className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full font-semibold transition ${
-            tab === 'roulette' ? 'bg-pink-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+            tab === 'roulette' ? 'bg-gradient-to-r from-pink-600 to-cyan-600 text-white' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
           }`}
         >
           <Disc3 size={16} /> Roulette
@@ -124,7 +124,7 @@ export default function CasinoPage({ session }: { session: Session }) {
         <button
           onClick={() => setTab('slots')}
           className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-full font-semibold transition ${
-            tab === 'slots' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+            tab === 'slots' ? 'bg-gradient-to-r from-pink-600 to-cyan-600 text-white' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
           }`}
         >
           🍒 Slots

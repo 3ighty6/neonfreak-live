@@ -54,7 +54,7 @@ export default function ReferralPanel({ referralCode, referredBy }: ReferralPane
         />
         <button
           onClick={copyLink}
-          className="bg-pink-600 hover:bg-pink-700 text-white px-3 py-2 rounded text-sm font-semibold flex items-center gap-1 transition"
+          className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-3 py-2 rounded text-sm font-semibold flex items-center gap-1 transition"
         >
           {copied ? <Check size={14} /> : <Copy size={14} />}
           {copied ? 'Copied' : 'Copy'}
@@ -74,7 +74,7 @@ export default function ReferralPanel({ referralCode, referredBy }: ReferralPane
             <button
               onClick={applyCode}
               disabled={applying || !codeInput.trim()}
-              className="bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white px-3 py-2 rounded text-sm font-semibold transition"
+              className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white px-3 py-2 rounded text-sm font-semibold transition"
             >
               {applying ? '...' : 'Apply'}
             </button>

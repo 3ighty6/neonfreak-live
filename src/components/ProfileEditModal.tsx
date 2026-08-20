@@ -136,14 +136,14 @@ export default function ProfileEditModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded font-semibold transition"
+              className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 text-white py-2 rounded font-semibold transition"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-2 rounded font-semibold transition"
+              className="flex-1 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white py-2 rounded font-semibold transition"
             >
               {loading ? 'Saving...' : 'Save Changes'}
             </button>

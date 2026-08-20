@@ -89,7 +89,7 @@ export default function CreatorPerks({
         {isOwnProfile && (
           <button
             onClick={() => setShowAdd(true)}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition"
+            className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition"
           >
             <Plus size={16} /> New Perk
           </button>
@@ -122,7 +122,7 @@ export default function CreatorPerks({
                 <div className="flex gap-2">
                   <button
                     onClick={() => openPerk(perk)}
-                    className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white py-1.5 rounded text-sm font-semibold flex items-center justify-center gap-1.5 transition"
+                    className="flex-1 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white py-1.5 rounded text-sm font-semibold flex items-center justify-center gap-1.5 transition"
                   >
                     {unlocked ? <Unlock size={14} /> : <Lock size={14} />}
                     {unlocked ? 'View' : 'Unlock'}
@@ -277,7 +277,7 @@ function AddPerkModal({ userId, onClose, onAdded }: { userId: string; onClose: (
           <button
             onClick={save}
             disabled={saving}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-2 rounded font-semibold transition"
+            className="w-full bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white py-2 rounded font-semibold transition"
           >
             {saving ? 'Saving...' : 'Create Perk'}
           </button>

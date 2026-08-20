@@ -191,14 +191,14 @@ export default function CreatorProfilePage({
                   <>
                     <button
                       onClick={() => setShowEditModal(true)}
-                      className="flex items-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded-lg font-semibold transition"
+                      className="flex items-center gap-2 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-4 py-2 rounded-lg font-semibold transition"
                     >
                       <Edit size={18} />
                       Edit Profile
                     </button>
                     <button
                       onClick={onOpenSetup}
-                      className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+                      className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 text-white px-4 py-2 rounded-lg font-semibold transition"
                     >
                       <Camera size={18} />
                       Go Live
@@ -209,7 +209,7 @@ export default function CreatorProfilePage({
                     onClick={toggleFollow}
                     disabled={followLoading}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition disabled:opacity-50 ${
-                      isFollowing ? 'bg-gray-700 hover:bg-gray-600' : 'bg-cyan-600 hover:bg-cyan-700'
+                      isFollowing ? 'bg-white/10 hover:bg-white/15 border border-white/10' : 'bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500'
                     }`}
                   >
                     {isFollowing ? <HeartOff size={18} /> : <Heart size={18} />}
@@ -219,7 +219,7 @@ export default function CreatorProfilePage({
                 {!isOwnProfile && (
                   <button
                     onClick={() => onOpenMessages?.(creatorId)}
-                    className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+                    className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 text-white px-4 py-2 rounded-lg font-semibold transition"
                   >
                     <MessageCircle size={18} />
                     Message
@@ -227,7 +227,7 @@ export default function CreatorProfilePage({
                 )}
                 <button
                   onClick={handleShare}
-                  className="flex items-center gap-2 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold transition"
+                  className="flex items-center gap-2 bg-white/10 hover:bg-white/15 border border-white/10 text-white px-4 py-2 rounded-lg font-semibold transition"
                 >
                   <Share2 size={18} />
                   Share

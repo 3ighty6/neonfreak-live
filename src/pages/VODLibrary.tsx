@@ -153,7 +153,7 @@ export default function VODLibrary({ session, userId }: { session: Session; user
           {isCreator && (
             <button
               onClick={() => setShowUpload(true)}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white px-4 py-2 rounded font-semibold flex items-center gap-2 transition"
+              className="bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-4 py-2 rounded font-semibold flex items-center gap-2 transition"
             >
               <Upload size={18} /> Upload Video
             </button>
@@ -169,7 +169,7 @@ export default function VODLibrary({ session, userId }: { session: Session; user
           <button
             onClick={() => setTab('all')}
             className={`px-5 py-2 rounded-full font-semibold transition ${
-              tab === 'all' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              tab === 'all' ? 'bg-gradient-to-r from-pink-600 to-cyan-600 text-white' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
             }`}
           >
             All Videos
@@ -177,7 +177,7 @@ export default function VODLibrary({ session, userId }: { session: Session; user
           <button
             onClick={() => setTab('mine')}
             className={`px-5 py-2 rounded-full font-semibold transition ${
-              tab === 'mine' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              tab === 'mine' ? 'bg-gradient-to-r from-pink-600 to-cyan-600 text-white' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
             }`}
           >
             My Videos
@@ -185,7 +185,7 @@ export default function VODLibrary({ session, userId }: { session: Session; user
           <button
             onClick={() => setTab('tag')}
             className={`px-5 py-2 rounded-full font-semibold transition ${
-              tab === 'tag' ? 'bg-cyan-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              tab === 'tag' ? 'bg-gradient-to-r from-pink-600 to-cyan-600 text-white' : 'bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10'
             }`}
           >
             💰 Tag & Earn
@@ -261,7 +261,7 @@ export default function VODLibrary({ session, userId }: { session: Session; user
                     <div className="flex gap-2">
                       <button
                         onClick={() => handleCardClick(video)}
-                        className="flex-1 bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-2 rounded text-sm font-semibold flex items-center justify-center gap-1 transition"
+                        className="flex-1 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white px-3 py-2 rounded text-sm font-semibold flex items-center justify-center gap-1 transition"
                       >
                         {locked ? <Lock size={14} /> : <Play size={14} />}
                         {locked ? `Unlock ${video.price_tokens}` : 'Watch'}
@@ -325,13 +325,13 @@ export default function VODLibrary({ session, userId }: { session: Session; user
             <div className="flex gap-3">
               <button
                 onClick={() => setUnlockTarget(null)}
-                className="flex-1 bg-gray-700 hover:bg-gray-600 py-2 rounded font-semibold transition"
+                className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded font-semibold transition"
               >
                 Cancel
               </button>
               <button
                 onClick={confirmUnlock}
-                className="flex-1 bg-cyan-600 hover:bg-cyan-700 py-2 rounded font-semibold transition"
+                className="flex-1 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 py-2 rounded font-semibold transition"
               >
                 Unlock
               </button>
@@ -534,7 +534,7 @@ function UploadModal({
           <button
             onClick={handleUpload}
             disabled={uploading}
-            className="w-full bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 text-white py-2 rounded font-semibold transition flex items-center justify-center gap-2"
+            className="w-full bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white py-2 rounded font-semibold transition flex items-center justify-center gap-2"
           >
             {uploading ? <Loader2 className="animate-spin" size={18} /> : null}
             {uploading ? 'Uploading...' : 'Upload'}
