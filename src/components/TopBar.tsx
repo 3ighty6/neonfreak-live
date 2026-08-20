@@ -12,6 +12,7 @@ import {
   MessageSquareWarning,
   LogOut,
   Gift,
+  PartyPopper,
 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import ThemeToggle from './ThemeToggle'
@@ -39,7 +40,17 @@ export default function TopBar({ session, searchQuery, onSearchQueryChange, onNa
   const [tokenModalOpen, setTokenModalOpen] = useState(false)
   const [checkinToast, setCheckinToast] = useState<string | null>(null)
   const [checkinLoading, setCheckinLoading] = useState(false)
+  const [claimedWindows, setClaimedWindows] = useState<Set<'day' | 'night'>>(new Set())
+  const [bonusLoading, setBonusLoading] = useState(false)
+  const [bonusToast, setBonusToast] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  const now = new Date()
+  const dow = now.getDay() // 0=Sun..6=Sat
+  const localHour = now.getHours()
+  const isBonusDay = dow === 3 || dow === 5 || dow === 6 // Wed / Fri / Sat
+  const activeWindow: 'day' | 'night' | null = localHour === 12 ? 'day' : localHour === 20 ? 'night' : null
+  const bonusWindowClaimed = activeWindow ? claimedWindows.has(activeWindow) : false
 
   const todayStr = new Date().toISOString().slice(0, 10)
   const alreadyCheckedInToday = profile?.last_checkin_date === todayStr
@@ -53,8 +64,19 @@ export default function TopBar({ session, searchQuery, onSearchQueryChange, onNa
     if (data) setProfile(data)
   }
 
+  const loadBonusWindowStatus = async () => {
+    if (!isBonusDay) return
+    const { data } = await supabase
+      .from('bonus_window_claims')
+      .select('window_type')
+      .eq('user_id', user.id)
+      .eq('claim_date', todayStr)
+    if (data) setClaimedWindows(new Set(data.map((r) => r.window_type as 'day' | 'night')))
+  }
+
   useEffect(() => {
     loadProfile()
+    loadBonusWindowStatus()
   }, [user.id])
 
   const handleCheckin = async () => {
@@ -69,6 +91,21 @@ export default function TopBar({ session, searchQuery, onSearchQueryChange, onNa
       loadProfile()
     }
     setTimeout(() => setCheckinToast(null), 4000)
+  }
+
+  const handleBonusWindow = async () => {
+    if (!activeWindow || bonusWindowClaimed || bonusLoading) return
+    setBonusLoading(true)
+    const { data, error } = await supabase.rpc('claim_bonus_window', { p_local_hour: localHour })
+    setBonusLoading(false)
+    if (error) {
+      setBonusToast(error.message.includes('Already claimed') ? "You've already grabbed this round" : 'Something went wrong')
+    } else {
+      setBonusToast(`+${data.tokensAwarded} bonus tokens!`)
+      setClaimedWindows((prev) => new Set(prev).add(data.window))
+      loadProfile()
+    }
+    setTimeout(() => setBonusToast(null), 4000)
   }
 
   useEffect(() => {
@@ -128,6 +165,33 @@ export default function TopBar({ session, searchQuery, onSearchQueryChange, onNa
             </div>
           )}
         </div>
+
+        {/* Wed/Fri/Sat bonus windows (lunch + night) */}
+        {isBonusDay && (
+          <div className="relative hidden sm:flex">
+            <button
+              onClick={handleBonusWindow}
+              disabled={!activeWindow || bonusWindowClaimed || bonusLoading}
+              title={
+                bonusWindowClaimed
+                  ? "You've already claimed this round"
+                  : activeWindow
+                    ? 'Claim your bonus round now!'
+                    : 'Bonus rounds today at 12pm and 8pm your time'
+              }
+              className={`transition ${
+                activeWindow && !bonusWindowClaimed ? 'text-pink-400 hover:text-pink-300 animate-pulse' : 'text-gray-600'
+              }`}
+            >
+              <PartyPopper size={20} className={activeWindow && !bonusWindowClaimed ? 'neon-icon-glow' : ''} />
+            </button>
+            {bonusToast && (
+              <div className="absolute top-full right-0 mt-2 bg-[#151022] border border-pink-500/30 rounded-lg px-3 py-2 text-xs text-pink-300 whitespace-nowrap shadow-lg z-40">
+                {bonusToast}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Token balance + buy */}
         <button

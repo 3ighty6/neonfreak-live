@@ -198,7 +198,9 @@ export default function AuthPage() {
       <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-10 items-center">
         {/* Marketing / earning breakdown */}
         <div className="order-2 lg:order-1">
-          <img src={logoWordmark} alt="NeonLights" className="h-16 w-auto mb-2 drop-shadow-[0_0_18px_rgba(255,45,149,0.45)]" />
+          <div className="glass-panel-glow rounded-full p-2 inline-block mb-3">
+            <img src={logoWordmark} alt="NeonLights" className="h-16 w-16 rounded-full object-cover" />
+          </div>
           <p className="text-cyan-300 text-lg mb-6">The all-in-one creator platform</p>
 
           <p className="text-gray-300 mb-6 max-w-md">

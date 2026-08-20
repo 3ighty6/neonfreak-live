@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Session } from '@supabase/supabase-js'
 import { supabase } from '../supabaseClient'
-import { LogOut, Home, Radio, BarChart3, Film, User, Heart, ShieldCheck, MessageCircle } from 'lucide-react'
+import { LogOut, Home, Radio, BarChart3, Film, User, Heart, ShieldCheck, MessageCircle, Dices } from 'lucide-react'
 import HomePage from './HomePage'
 import GoLiveWizard from './GoLiveWizard'
 import TipPage from './TipPage'
@@ -13,12 +13,13 @@ import AdminDashboard from './AdminDashboard'
 import CreatorProfilePage from './CreatorProfilePage'
 import AIProfilePage from './AIProfilePage'
 import MessagesPage from './MessagesPage'
+import CasinoPage from './CasinoPage'
 import Footer from '../components/Footer'
 import logoWordmark from '../assets/logo-wordmark.png'
 import BecomeCreatorGate from '../components/BecomeCreatorGate'
 import TopBar from '../components/TopBar'
 
-type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin' | 'creator' | 'messages' | 'aiProfile'
+type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin' | 'creator' | 'messages' | 'aiProfile' | 'casino'
 
 interface MainAppProps {
   session: Session
@@ -101,6 +102,7 @@ export default function MainApp({ session }: MainAppProps) {
     { id: 'setup', label: 'Go Live', icon: Radio },
     { id: 'messages', label: 'Messages', icon: MessageCircle },
     { id: 'tips', label: 'Tips', icon: Heart },
+    { id: 'casino', label: 'Casino', icon: Dices },
     { id: 'analytics', label: 'Analytics', icon: BarChart3 },
     { id: 'vods', label: 'Videos', icon: Film },
     { id: 'profile', label: 'Profile', icon: User },
@@ -175,9 +177,11 @@ export default function MainApp({ session }: MainAppProps) {
 
       {/* Desktop Sidebar */}
       <div className="hidden md:fixed md:left-0 md:top-0 md:w-64 md:h-screen md:bg-gradient-to-b md:from-[#0d0a1a] md:to-black md:border-r md:border-white/5 md:flex md:flex-col md:z-50">
-        <div className="p-6 border-b border-pink-500/30">
-          <img src={logoWordmark} alt="NeonLights" className="h-8 w-auto drop-shadow-[0_0_12px_rgba(255,45,149,0.4)]" />
-          <p className="text-xs text-cyan-400 mt-1">Watch. Tip. Or Become a Creator.</p>
+        <div className="p-6 border-b border-pink-500/30 flex items-center gap-3">
+          <div className="glass-panel-glow rounded-full p-1.5 shrink-0">
+            <img src={logoWordmark} alt="NeonLights" className="h-10 w-10 rounded-full object-cover" />
+          </div>
+          <p className="text-xs text-cyan-400">Watch. Tip. Or Become a Creator.</p>
         </div>
 
         <nav className="flex-1 p-4 space-y-2">
@@ -238,6 +242,7 @@ export default function MainApp({ session }: MainAppProps) {
           </BecomeCreatorGate>
         )}
         {currentPage === 'tips' && <TipPage />}
+        {currentPage === 'casino' && <CasinoPage session={session} />}
         {currentPage === 'analytics' && (
           <BecomeCreatorGate userId={user.id}>
             <AnalyticsDashboard userId={user.id} />
