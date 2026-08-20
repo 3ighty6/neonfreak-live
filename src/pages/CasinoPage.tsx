@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Session } from '@supabase/supabase-js'
-import { Disc3, ArrowRightLeft, ShieldAlert } from 'lucide-react'
+import { Disc3, Gift, ShieldAlert } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import RouletteGame from '../components/RouletteGame'
 import SlotMachineGame from '../components/SlotMachineGame'
@@ -8,38 +8,39 @@ import NeonChip from '../components/NeonChip'
 
 export default function CasinoPage({ session }: { session: Session }) {
   const [tab, setTab] = useState<'roulette' | 'slots'>('roulette')
-  const [chipBalance, setChipBalance] = useState<number | null>(null)
-  const [tokenBalance, setTokenBalance] = useState<number | null>(null)
-  const [showConvert, setShowConvert] = useState(false)
-  const [convertAmount, setConvertAmount] = useState(50)
-  const [converting, setConverting] = useState(false)
-  const [convertError, setConvertError] = useState('')
+  const [balance, setBalance] = useState<number | null>(null)
+  const [lastClaimDate, setLastClaimDate] = useState<string | null>(null)
+  const [claiming, setClaiming] = useState(false)
+  const [claimMsg, setClaimMsg] = useState('')
+
+  const todayStr = new Date().toISOString().slice(0, 10)
+  const alreadyClaimedToday = lastClaimDate === todayStr
 
   const load = async () => {
-    const { data } = await supabase.from('users').select('casino_chip_balance, token_balance').eq('id', session.user.id).single()
-    setChipBalance(data?.casino_chip_balance ?? 0)
-    setTokenBalance(data?.token_balance ?? 0)
+    const { data } = await supabase.from('users').select('lotto_token_balance, last_lotto_claim_date').eq('id', session.user.id).single()
+    setBalance(data?.lotto_token_balance ?? 0)
+    setLastClaimDate(data?.last_lotto_claim_date ?? null)
   }
 
   useEffect(() => {
     load()
   }, [session.user.id])
 
-  const doConvert = async () => {
-    if (converting || convertAmount < 1 || (tokenBalance !== null && convertAmount > tokenBalance)) return
-    setConverting(true)
-    setConvertError('')
-    const { error } = await supabase.rpc('convert_tokens_to_chips', { p_amount: convertAmount })
-    setConverting(false)
+  const claimDaily = async () => {
+    if (claiming || alreadyClaimedToday) return
+    setClaiming(true)
+    setClaimMsg('')
+    const { data, error } = await supabase.rpc('claim_daily_lotto_tokens')
+    setClaiming(false)
     if (error) {
-      setConvertError(error.message)
-      return
+      setClaimMsg(error.message.includes('Already claimed') ? "Already claimed today — come back tomorrow" : 'Something went wrong')
+    } else {
+      setClaimMsg(`+${data.tokensAwarded} free lotto tokens!`)
+      load()
     }
-    setShowConvert(false)
-    load()
   }
 
-  if (chipBalance === null) return <div className="p-8 text-center text-gray-400">Loading...</div>
+  if (balance === null) return <div className="p-8 text-center text-gray-400">Loading...</div>
 
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto">
@@ -50,65 +51,38 @@ export default function CasinoPage({ session }: { session: Session }) {
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-yellow-700 pl-2 pr-3 py-1 rounded-full">
             <NeonChip size={28} />
-            <span className="font-bold text-white text-sm">{chipBalance}</span>
+            <span className="font-bold text-white text-sm">{balance}</span>
           </div>
           <button
-            onClick={() => setShowConvert(true)}
-            title="Convert tokens to chips"
-            className="text-gray-400 hover:text-cyan-300 transition"
+            onClick={claimDaily}
+            disabled={claiming || alreadyClaimedToday}
+            title={alreadyClaimedToday ? 'Already claimed today' : 'Claim your free daily lotto tokens'}
+            className={`transition ${alreadyClaimedToday ? 'text-gray-600' : 'text-gray-400 hover:text-yellow-300'}`}
           >
-            <ArrowRightLeft size={18} />
+            <Gift size={20} className={alreadyClaimedToday ? '' : 'neon-icon-glow'} />
           </button>
         </div>
       </div>
 
+      {claimMsg && <div className="text-xs text-yellow-300 mb-3 text-right">{claimMsg}</div>}
+
       <div className="glass-panel-glow rounded-xl p-3 mb-6 flex items-start gap-2">
         <ShieldAlert size={16} className="text-yellow-400 shrink-0 mt-0.5" />
         <p className="text-[11px] leading-snug text-gray-400">
-          Casino chips are a <strong className="text-gray-300">separate balance</strong> from your NeonLights tokens.
-          Chips have no cash value, can't be redeemed, transferred, or converted back to tokens, and exist purely
-          for in-app play, fun, and bragging rights on the leaderboard. Converting tokens to chips is final. Casino
-          play is 18+ only and offered for entertainment purposes — please play responsibly.
+          Lotto Tokens are a <strong className="text-gray-300">completely separate, free currency</strong> — not
+          real tokens, no purchase necessary, no cash value, and never redeemable or exchangeable for tokens or
+          money in either direction. Claim a free daily allowance below. Play is 18+ only, for entertainment,
+          fun, and bragging rights on the leaderboard — please play responsibly.
         </p>
       </div>
 
-      {showConvert && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowConvert(false)}>
-          <div className="bg-gray-900 border border-cyan-500/30 rounded-lg w-full max-w-sm p-6" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-lg font-bold mb-1">Convert Tokens → Chips</h2>
-            <p className="text-xs text-gray-500 mb-4">1 token = 1 chip. This can't be undone — chips don't convert back.</p>
-            <div className="text-xs text-gray-400 mb-3">Token balance: {tokenBalance}</div>
-            <input
-              type="number"
-              min={1}
-              max={tokenBalance ?? 0}
-              value={convertAmount}
-              onChange={(e) => setConvertAmount(Math.max(1, parseInt(e.target.value) || 1))}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 mb-3"
-            />
-            {convertError && <div className="text-red-400 text-xs mb-3">{convertError}</div>}
-            <div className="flex gap-2">
-              <button onClick={() => setShowConvert(false)} className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 py-2 rounded font-semibold transition">
-                Cancel
-              </button>
-              <button
-                onClick={doConvert}
-                disabled={converting || !tokenBalance || convertAmount > tokenBalance}
-                className="flex-1 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 py-2 rounded font-semibold transition"
-              >
-                {converting ? 'Converting...' : 'Convert'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {chipBalance === 0 && (
+      {balance === 0 && !alreadyClaimedToday && (
         <button
-          onClick={() => setShowConvert(true)}
-          className="w-full mb-6 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 text-white py-3 rounded-full font-bold transition"
+          onClick={claimDaily}
+          disabled={claiming}
+          className="w-full mb-6 bg-gradient-to-r from-pink-600 to-cyan-600 hover:from-pink-500 hover:to-cyan-500 disabled:opacity-50 text-white py-3 rounded-full font-bold transition"
         >
-          Get Chips to Play
+          {claiming ? 'Claiming...' : 'Claim Free Lotto Tokens'}
         </button>
       )}
 
@@ -132,9 +106,9 @@ export default function CasinoPage({ session }: { session: Session }) {
       </div>
 
       {tab === 'roulette' ? (
-        <RouletteGame userId={session.user.id} balance={chipBalance} onBalanceChange={setChipBalance} />
+        <RouletteGame userId={session.user.id} balance={balance} onBalanceChange={setBalance} />
       ) : (
-        <SlotMachineGame userId={session.user.id} balance={chipBalance} onBalanceChange={setChipBalance} />
+        <SlotMachineGame userId={session.user.id} balance={balance} onBalanceChange={setBalance} />
       )}
     </div>
   )

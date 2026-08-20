@@ -131,7 +131,7 @@ export default function SlotMachineGame({ balance, onBalanceChange }: { userId: 
         {result && (
           <div className={`text-center font-bold ${result.payout > amount ? 'text-green-400' : result.payout === amount ? 'text-cyan-300' : 'text-gray-500'}`}>
             {outcomeLabel[result.outcome]}
-            {result.payout > 0 && <span className="ml-2">+{result.payout} chips</span>}
+            {result.payout > 0 && <span className="ml-2">+{result.payout} tokens</span>}
           </div>
         )}
         {error && <div className="text-red-400 text-sm text-center mt-2">{error}</div>}
@@ -152,7 +152,7 @@ export default function SlotMachineGame({ balance, onBalanceChange }: { userId: 
           disabled={spinning}
           className="w-24 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm"
         />
-        <span className="text-xs text-gray-500">chips (max 2000/spin)</span>
+        <span className="text-xs text-gray-500">lotto tokens (max 2000/spin)</span>
         <div className="flex-1" />
         <button
           onClick={spin}

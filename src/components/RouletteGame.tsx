@@ -49,17 +49,17 @@ interface BetOption {
 }
 
 const BET_OPTIONS: BetOption[] = [
-  { id: 'pink', label: 'Pink', multiplier: '1.8x' },
-  { id: 'blue', label: 'Blue', multiplier: '1.8x' },
-  { id: 'high', label: 'High 19-36', multiplier: '1.8x' },
-  { id: 'low', label: 'Low 1-18', multiplier: '1.8x' },
-  { id: 'odd', label: 'Odd', multiplier: '1.8x' },
-  { id: 'even', label: 'Even', multiplier: '1.8x' },
-  { id: 'first12', label: '1st 12', multiplier: '2.8x' },
-  { id: 'third12', label: '3rd 12', multiplier: '2.8x' },
-  { id: 'zero', label: '0', multiplier: '27x', small: true },
-  { id: 'double_zero', label: '00', multiplier: '27x', small: true },
-  { id: 'lucky7', label: 'Lucky 7', multiplier: '27x', small: true },
+  { id: 'pink', label: 'Pink', multiplier: '2x' },
+  { id: 'blue', label: 'Blue', multiplier: '2x' },
+  { id: 'high', label: 'High 19-36', multiplier: '2x' },
+  { id: 'low', label: 'Low 1-18', multiplier: '2x' },
+  { id: 'odd', label: 'Odd', multiplier: '2x' },
+  { id: 'even', label: 'Even', multiplier: '2x' },
+  { id: 'first12', label: '1st 12', multiplier: '3x' },
+  { id: 'third12', label: '3rd 12', multiplier: '3x' },
+  { id: 'zero', label: '0', multiplier: '36x', small: true },
+  { id: 'double_zero', label: '00', multiplier: '36x', small: true },
+  { id: 'lucky7', label: 'Lucky 7', multiplier: '36x', small: true },
 ]
 
 export default function RouletteGame({ userId, balance, onBalanceChange }: { userId: string; balance: number; onBalanceChange: (b: number) => void }) {
@@ -166,7 +166,7 @@ export default function RouletteGame({ userId, balance, onBalanceChange }: { use
           disabled={spinning}
           className="w-24 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm"
         />
-        <span className="text-xs text-gray-500">chips (max 2000/spin)</span>
+        <span className="text-xs text-gray-500">lotto tokens (max 2000/spin)</span>
         <div className="flex-1" />
         <button
           onClick={spin}
