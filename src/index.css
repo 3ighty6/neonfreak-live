@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -123,6 +125,17 @@ html.light {
     background-clip: text;
     color: transparent;
     filter: drop-shadow(0 0 12px rgba(255, 45, 149, 0.35));
+  }
+
+  .neon-banner-text {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+    background: linear-gradient(90deg, #00f0ff, #ff2d95, #b14eff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: 0 0 30px rgba(255, 45, 149, 0.5);
   }
 
   .neon-icon-glow {

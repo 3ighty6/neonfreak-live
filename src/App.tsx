@@ -8,6 +8,7 @@ import AgeVerificationGate from './components/AgeVerificationGate'
 import PrivacyPolicy from './pages/legal/PrivacyPolicy'
 import TermsOfService from './pages/legal/TermsOfService'
 import OverlayPage from './pages/OverlayPage'
+import LoadingScreen from './components/LoadingScreen'
 import './index.css'
 
 export default function App() {
@@ -36,16 +37,7 @@ export default function App() {
   }, [])
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-600 mb-4">
-            Neon Chat
-          </div>
-          <div className="text-gray-400">Loading...</div>
-        </div>
-      </div>
-    )
+    return <LoadingScreen />
   }
 
   // Check if user is trying to access special pages

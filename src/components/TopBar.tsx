@@ -118,7 +118,7 @@ export default function TopBar({ session, searchQuery, onSearchQueryChange, onNa
 
   return (
     <>
-      <div className="sticky top-0 z-30 bg-[#0d0a1a]/95 backdrop-blur border-b border-white/5 px-4 md:px-6 py-3 flex items-center gap-3">
+      <div className="sticky top-9 md:top-10 z-30 bg-[#0d0a1a]/95 backdrop-blur border-b border-white/5 px-4 md:px-6 py-3 flex items-center gap-3">
         {/* Search */}
         <div className="relative flex-1 max-w-xl">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={18} />

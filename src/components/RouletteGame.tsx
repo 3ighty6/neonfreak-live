@@ -166,7 +166,7 @@ export default function RouletteGame({ userId, balance, onBalanceChange }: { use
           disabled={spinning}
           className="w-24 bg-gray-900 border border-gray-700 rounded px-3 py-2 text-sm"
         />
-        <span className="text-xs text-gray-500">tokens (max 2000/spin)</span>
+        <span className="text-xs text-gray-500">chips (max 2000/spin)</span>
         <div className="flex-1" />
         <button
           onClick={spin}

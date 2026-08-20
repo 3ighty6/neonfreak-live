@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
 import logoWordmark from '../assets/logo-wordmark.png'
+import BrandBanner from '../components/BrandBanner'
 
 type Mode = 'login' | 'signup' | 'forgot' | 'recovery'
 
@@ -194,7 +195,18 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white p-4 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative overflow-hidden">
+      <BrandBanner />
+
+      {/* Giant faded logo, purely decorative background */}
+      <img
+        src={logoWordmark}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none select-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140vw] max-w-none h-auto opacity-[0.06] blur-[1px]"
+      />
+
+      <div className="relative p-4 flex items-center justify-center min-h-[calc(100vh-2.5rem)]">
       <div className="w-full max-w-5xl grid lg:grid-cols-2 gap-10 items-center">
         {/* Marketing / earning breakdown */}
         <div className="order-2 lg:order-1">
@@ -441,6 +453,7 @@ export default function AuthPage() {
           <a href="/privacy" className="hover:text-gray-300 transition">Privacy Policy</a>
         </div>
         </div>
+      </div>
       </div>
     </div>
   )

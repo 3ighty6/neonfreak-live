@@ -18,6 +18,7 @@ import Footer from '../components/Footer'
 import logoWordmark from '../assets/logo-wordmark.png'
 import BecomeCreatorGate from '../components/BecomeCreatorGate'
 import TopBar from '../components/TopBar'
+import BrandBanner from '../components/BrandBanner'
 
 type Page = 'home' | 'setup' | 'tips' | 'analytics' | 'vods' | 'profile' | 'live' | 'admin' | 'creator' | 'messages' | 'aiProfile' | 'casino'
 
@@ -152,6 +153,8 @@ export default function MainApp({ session }: MainAppProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+      <BrandBanner />
+
       {/* Mobile Bottom Nav */}
       <div className="fixed bottom-0 left-0 right-0 bg-black/95 border-t border-pink-500/30 md:hidden z-40">
         <div className="flex justify-around overflow-x-auto">
@@ -176,10 +179,10 @@ export default function MainApp({ session }: MainAppProps) {
       </div>
 
       {/* Desktop Sidebar */}
-      <div className="hidden md:fixed md:left-0 md:top-0 md:w-64 md:h-screen md:bg-gradient-to-b md:from-[#0d0a1a] md:to-black md:border-r md:border-white/5 md:flex md:flex-col md:z-50">
+      <div className="hidden md:fixed md:left-0 md:top-10 md:w-64 md:h-[calc(100vh-2.5rem)] md:bg-gradient-to-b md:from-[#0d0a1a] md:to-black md:border-r md:border-white/5 md:flex md:flex-col md:z-50">
         <div className="p-6 border-b border-pink-500/30 flex items-center gap-3">
-          <div className="glass-panel-glow rounded-full p-1.5 shrink-0">
-            <img src={logoWordmark} alt="NeonLights" className="h-10 w-10 rounded-full object-cover" />
+          <div className="glass-panel-glow rounded-full p-2 shrink-0">
+            <img src={logoWordmark} alt="NeonLights" className="h-16 w-16 rounded-full object-cover" />
           </div>
           <p className="text-xs text-cyan-400">Watch. Tip. Or Become a Creator.</p>
         </div>
